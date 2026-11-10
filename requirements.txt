@@ -1,0 +1,9 @@
+numpy
+torch
+pandas
+scipy
+huggingface_hub
+hf_transfer
+open_clip_torch==2.29.0
+einops
+omegaconf
