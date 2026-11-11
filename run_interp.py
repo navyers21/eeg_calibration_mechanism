@@ -38,6 +38,7 @@ def main():
     cfg = env.load(a.config)
     base = os.path.join(os.path.dirname(cfg['results_csv']), 'interp', a.eval_set, a.montage, f't{a.target:02d}')
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    ev = None
     for mode in a.modes:
         tag = mode if mode in ('within', 'f0') else f'{mode}_n{a.n_images}_s{a.seed}'
         out = os.path.join(base, tag)
@@ -46,7 +47,8 @@ def main():
             continue
         os.makedirs(out, exist_ok=True)
         ad = UBPAdapter(mode, a.montage, a.n_images, a.seed, a.eval_set)
-        ev = ad.load_eval_set(a.target) if mode == a.modes[0] else ev
+        if ev is None:                      # same images for every mode: load once, on the first mode that runs
+            ev = ad.load_eval_set(a.target)
         np.save(os.path.join(out, 'low_level.npy'), props.props_for(ev['image_paths']))   # pipeline reuses this
         print(f'[interp] {a.montage} t{a.target} {tag}: running', flush=True)
         probe_df, int_df = pipeline.run(ad, a.target, out, device=dev, n_random=a.n_random,
