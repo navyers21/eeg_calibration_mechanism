@@ -44,3 +44,20 @@ recordings; `sub_rand` is a random control. A new user learns only a 6 x 6 matri
 2. `subspace`: `sub_low` must match or beat the SuLoRA-style map at 25-50 images and beat `sub_rand`.
 
 Targets 2-10 (subject 1 tuned the calibration recipe). Caveat: 8- and 17-channel data use UBP's 63-channel whitening.
+
+## Round 2 (after the first results)
+First-round outcome: the map restored category and within-category retrieval about equally (Decision 1 kill case),
+and k = 6 subspace calibration gained +0.2-0.4 points vs +2-5 for the maps (Decision 2 fail). Three problems with
+that round, fixed here:
+1. The subspace edit barely trained (M from zero, lr 1e-3, absolute pull to zero), so Decision 2 could not separate
+   "wrong subspace" from "edit never moved". `subx_*` adapters: no pull to zero, lr tuned per family on subject 1,
+   random control inside the activations' support, and a random-capacity curve to k = 1024 (the ceiling of any
+   linear edit after layer 1).
+2. The semantic probe used k-means of CLIP features (circular with the CLIP target space) and sat near chance for
+   every model. `run_probes2.py` uses the THINGS human-rated categories (`data/things_concepts.tsv`, CC-BY 4.0;
+   uncategorized concepts excluded) for both probes and retrieval.
+3. Low-level properties are partly explained by category. `lowres_r2` probes low-level properties with the category
+   regressed out. `gap2.py` reports bootstrap CIs of the fraction restored, the low-level vs semantic contrast
+   directly, and Holm-adjusted p-values.
+Input-level erasure was considered and dropped: whitening a 4,250-dimensional input (posterior-17) from ~1,000
+fitting images is ill-posed, so its result would not be interpretable.

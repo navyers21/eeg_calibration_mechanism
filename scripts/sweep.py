@@ -6,6 +6,11 @@
     python scripts/sweep.py gap      --config C [--montage occipital8]
     python scripts/sweep.py subspace --config C                    # mechanism-guided calibration vs the maps
     python scripts/sweep.py summary  --config C --phase subspace
+    python scripts/sweep.py subx_tune --config C                   # v2 subspace: lr per family, subject 1 only
+    python scripts/sweep.py subx      --config C                   # v2 subspace on targets 2-10 with tuned lrs
+    python scripts/sweep.py summary   --config C --phase subspace,subx
+    python scripts/sweep.py probes2   --config C [--eval_set test] # THINGS-category probes, residualized low-level
+    python scripts/sweep.py gap2      --config C --montage posterior17
 
 Fixed before running: targets 2-10 (subject 1 was used to tune the calibration recipe), posterior-17 first, then
 occipital-8; maps for the interp phase fitted on 50 images, seed 0; subspace calibration k = 6 (36 numbers).
@@ -27,6 +32,26 @@ PHASES = {
                      adapters=['f0', 'align', 'sulora2', 'sub_low', 'sub_sem', 'sub_rand'],
                      budgets=['25', '50', '100', '200'], seeds=[0, 1, 2]),
 }
+# v2 subspace calibration. Families: the k=6 low-level / semantic / random comparison of the preregistered test, the
+# largest semantic subspace (rank 19), and a random-capacity curve up to the full first-layer output (k=1024 = any
+# linear edit after layer 1: the ceiling of editing at this point). lr per family chosen on subject 1 (excluded from
+# every analysis), budget 50, by mean test top-1 over 3 seeds.
+SUBX_FAMILIES = ['subx_low_k6', 'subx_sem_k6', 'subx_rand_k6', 'subx_sem_k19', 'subx_rand_k19', 'subx_rand_k64',
+                 'subx_rand_k256', 'subx_rand_k1024']
+SUBX_LRS = ['1e-3', '1e-2', '1e-1']
+
+
+def tuned_lrs(csv_path, montage):
+    import pandas as pd
+    df = pd.read_csv(csv_path)
+    df = df[(df.phase == 'subx_tune') & (df.montage == montage)]
+    best = {}
+    for fam in SUBX_FAMILIES:
+        g = df[df.adapter.str.startswith(fam + '_lr')].groupby('adapter').test_top1.mean()
+        if len(g) < len(SUBX_LRS):
+            raise SystemExit(f'subx_tune not finished for {fam} {montage}: run the subx_tune phase first')
+        best[fam] = g.idxmax()
+    return best
 
 
 def call(script, args, dry):
@@ -38,7 +63,8 @@ def call(script, args, dry):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('cmd', choices=['props', 'within', 'interp', 'gap', 'subspace', 'summary'])
+    p.add_argument('cmd', choices=['props', 'within', 'interp', 'gap', 'subspace', 'summary',
+                                      'subx_tune', 'subx', 'probes2', 'gap2'])
     p.add_argument('--config', required=True)
     p.add_argument('--montages', nargs='+', default=MONTAGES)
     p.add_argument('--montage', default='posterior17')
@@ -69,6 +95,29 @@ def main():
                 call('calibrate.py', c + ['--phase', 'subspace', '--target', str(t), '--montage', mon,
                                           '--adapters', *ph['adapters'], '--budgets', *ph['budgets'],
                                           '--seeds', *map(str, ph['seeds'])], a.dry_run)
+    elif a.cmd == 'subx_tune':
+        for mon in MONTAGES:
+            call('calibrate.py', c + ['--phase', 'subx_tune', '--target', '1', '--montage', mon, '--adapters', 'f0',
+                                      *[f'{f}_lr{lr}' for f in SUBX_FAMILIES for lr in SUBX_LRS],
+                                      '--budgets', '50', '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'subx':
+        import json
+        csv_path = json.load(open(a.config))['results_csv']
+        for mon in MONTAGES:
+            best = tuned_lrs(csv_path, mon) if not a.dry_run else {f: f + '_lr1e-2' for f in SUBX_FAMILIES}
+            print(f'{mon}: tuned on subject 1 ->', best, flush=True)
+            for t in a.targets:
+                call('calibrate.py', c + ['--phase', 'subx', '--target', str(t), '--montage', mon,
+                                          '--adapters', *best.values(), '--budgets', '25', '50', '200',
+                                          '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'probes2':
+        for mon in a.montages:
+            for t in a.targets:
+                call('run_probes2.py', c + ['--target', str(t), '--montage', mon, '--eval_set', a.eval_set,
+                                            '--n_images', str(a.n_images)], a.dry_run)
+    elif a.cmd == 'gap2':
+        call('gap2.py', c + ['--montage', a.montage, '--eval_set', a.eval_set] + (['--out', a.out] if a.out else []),
+             a.dry_run)
     else:
         import json
         import pandas as pd

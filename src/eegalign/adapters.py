@@ -34,6 +34,16 @@ FULL = dict(lr=1e-4, anchor=1.0, rehearse=0.5)        # B's frozen adapter: all-
 ADAPTERS = ['f0', 'ea', 'align', 'align_bias', 'align_full', 'full', 'first_layer', 'later_layers', 'lowrank_first',
             'svd_first', 'sulora_f0', 'sulora', 'lora_first', 'sulora2_f0', 'sulora2', 'sub_low', 'sub_sem', 'sub_rand']
 SUB = dict(lr=1e-3, anchor=1.0)      # subspace calibration: k x k matrix M from zero, absolute L2 pull to zero
+# v2 subspace calibration ('subx_<low|sem|rand>_k<k>[_lr<lr>]'): no pull to zero, lr tuned on subject 1 (subx_tune)
+SUBX = dict(lr=1e-2, anchor=0.0)
+
+
+def parse_subx(name):
+    """'subx_low_k6_lr1e-2' -> ('sub_low', 6, 0.01)."""
+    parts = name.split('_')
+    kind, k = 'sub_' + parts[1], int(parts[2][1:])
+    lr = float(parts[3][2:]) if len(parts) > 3 else SUBX['lr']
+    return kind, k, lr
 LAYER = dict(first_layer=dict(lr=1e-4, anchor=10.0), later_layers=dict(lr=1e-4, anchor=1.0),
              lowrank_first=dict(lr=1e-3, anchor=0.0), svd_first=dict(lr=1e-3, anchor=0.0))
 LAYER['lora_first'] = dict(lr=1e-4, anchor=0.0)     # v2 LoRA: standard init (A random, B = 0), 10x lower lr
@@ -157,6 +167,12 @@ def adapt(name, T, X, Tg, seed, steps=200, batch=64):
     if name == 'full':
         params, starts = _unfreeze(f0)
         return _train(f0, T, X, Tg, params, starts, FULL['lr'], FULL['anchor'], FULL['rehearse'], steps, batch, seed)
+    if name.startswith('subx_'):
+        from . import subspace
+        kind, k, lr = parse_subx(name)
+        m, params = subspace.insert(f0, subspace.basis(T, kind, k=k, seed=seed, v2=True))
+        return _train(m, T, X, Tg, params, [p.detach().clone() for p in params], lr, SUBX['anchor'], 0.0,
+                      steps, batch, seed)
     if name.startswith('sub_'):
         from . import subspace
         m, params = subspace.insert(f0, subspace.basis(T, name))

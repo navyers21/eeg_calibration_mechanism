@@ -17,10 +17,11 @@ def _per_target(df, metric):
 
 def summary(csv_path, phase, metric='test_top1'):
     df = pd.read_csv(csv_path)
-    df = df[df.phase == phase]
+    df = df[df.phase.isin(phase.split(','))]          # 'subspace,subx': maps from one phase, subx from the other
     if df.empty or 'f0' not in set(df.adapter):
         raise SystemExit(f'No finished {phase} runs with an f0 row yet: run the phase first.')
     df['n_images'] = df.n_images.astype(int)
+    df['adapter'] = df.adapter.str.replace(r'_lr[0-9.e-]+$', '', regex=True)   # tuned lr is part of the name
     per = _per_target(df, metric)
     f0 = per.xs('f0', level='adapter').droplevel('n_images')
     full = per.xs('full', level='adapter') if 'full' in df.adapter.values else None

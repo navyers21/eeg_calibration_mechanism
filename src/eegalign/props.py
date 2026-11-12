@@ -46,7 +46,17 @@ def props_for(paths):
     return _P['props'][[_P['index'][str(p)] for p in paths]]
 
 
+_KM = {}
+
+
 def semantic_kmeans(train_paths, k=20, seed=0):
+    key = (len(train_paths), str(train_paths[0]), str(train_paths[-1]), k, seed)
+    if key not in _KM:
+        _KM[key] = _semantic_kmeans(train_paths, k, seed)
+    return _KM[key]
+
+
+def _semantic_kmeans(train_paths, k=20, seed=0):
     from sklearn.cluster import KMeans
     f = U.feats_for(train_paths, 'none', 'RN50').numpy()
     f = f / (np.linalg.norm(f, axis=1, keepdims=True) + 1e-8)

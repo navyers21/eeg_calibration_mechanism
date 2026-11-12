@@ -35,9 +35,12 @@ def _basis(H, Z, k, shrinkage=1e-2):
     return mu, W, Wp, Uw[:, :k], s[:k]
 
 
-def basis(T, kind, k=K, seed=0):
-    """(mu, W, Wp, U) for `kind`, cached per (target, montage) on Drive."""
-    path = os.path.join(U.ENV['ckpt_dir'], f"subspace_{kind}_k{k}_t{T.target:02d}_{T.montage}_{U.ENV['source']}.pt")
+def basis(T, kind, k=K, seed=0, v2=False):
+    """(mu, W, Wp, U) for `kind`, cached per (target, montage) on Drive.
+    v2 (subx adapters): the random basis is drawn inside the activations' support (as in mi/leace.py) and depends on
+    the calibration seed; k may exceed the property rank only for sub_rand (sub_low has rank <= 6, sub_sem <= 20)."""
+    tag = f"v2_s{seed}" if (v2 and kind == 'sub_rand') else ('v2' if v2 else '')
+    path = os.path.join(U.ENV['ckpt_dir'], f"subspace_{kind}{tag}_k{k}_t{T.target:02d}_{T.montage}_{U.ENV['source']}.pt")
     if os.path.exists(path):
         return torch.load(path, weights_only=False)
     dev = U.ENV['device']
@@ -46,15 +49,25 @@ def basis(T, kind, k=K, seed=0):
     with torch.no_grad():
         H = torch.cat([T.f0.model[0](x[i:i + 1024].to(dev).flatten(1)).cpu() for i in range(0, len(x), 1024)])
     paths = T.P[T.reh_t[pick]]
-    if kind == 'sub_low':
+    if kind in ('sub_low', 'sub_rand'):     # sub_rand only uses mu and the whitening; skip the k-means
         Z = props.props_for(paths)
     else:
         km = props.semantic_kmeans(T.P, k=20)
         Z = np.eye(20)[props.semantic_labels(km, paths)]
+    rank = {'sub_low': Z.shape[1], 'sub_sem': Z.shape[1] - 1}.get(kind, H.shape[1])
+    if k > rank:
+        raise ValueError(f'{kind}: k={k} exceeds the property rank {rank}; use sub_rand for larger k')
     mu, W, Wp, Uw, s = _basis(H, Z, k)
     if kind == 'sub_rand':
         g = torch.Generator().manual_seed(seed)
-        Uw, _ = torch.linalg.qr(torch.randn(Uw.shape[0], k, generator=g, dtype=torch.float64))
+        if v2:      # inside the support of the (unshrunk) activation covariance, like mi/leace.py random_control
+            Hc = torch.as_tensor(H).double() - mu.double()
+            ev, V = torch.linalg.eigh(Hc.T @ Hc / len(Hc))
+            B = V[:, ev > 1e-3 * ev.max()]
+            k = min(k, B.shape[1])
+            Uw, _ = torch.linalg.qr(B @ torch.randn(B.shape[1], k, generator=g, dtype=torch.float64))
+        else:
+            Uw, _ = torch.linalg.qr(torch.randn(Uw.shape[0], k, generator=g, dtype=torch.float64))
     out = dict(mu=mu.float(), W=W.float(), Wp=Wp.float(), U=Uw.float(), s=s.float())
     torch.save(out, path)
     return out
