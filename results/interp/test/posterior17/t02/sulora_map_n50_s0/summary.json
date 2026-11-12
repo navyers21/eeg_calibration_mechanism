@@ -1,0 +1,19 @@
+{
+  "subject": 2,
+  "n_eval": 200,
+  "n_score": 100,
+  "confound_eta2": {
+    "luminance": 0.10068375333701898,
+    "contrast": 0.20932235124299634,
+    "saturation": 0.22156996465556794,
+    "colorfulness": 0.2873902049106315,
+    "high_sf_ratio": 0.14525593174249762,
+    "edge_density": 0.24677619135744663
+  },
+  "baseline": {
+    "top1": 0.23,
+    "top5": 0.54,
+    "cluster_acc": 0.36,
+    "within_cluster_top1": 0.55
+  }
+}
