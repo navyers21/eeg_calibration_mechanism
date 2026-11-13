@@ -49,13 +49,20 @@ MECH2_FAMILIES = ['outtgt_k8', 'outtgt_k32', 'outpca_k32', 'outrand_k32', 'pmapl
 MECH2_LRS = ['1e-4', '3e-4', '1e-3', '3e-3', '1e-2']
 
 
-def tuned_lrs(csv_path, montage, phase='subx_tune', families=SUBX_FAMILIES, lrs=SUBX_LRS):
+# Round 4: the output subspace that actually worked in round 3 (top output PCs) combined with the maps, a size sweep,
+# and pattern maps at r = 2 / 8 (r = C at 8 channels is the full map, a sanity check). lr chosen on subject 1 by
+# HELD-OUT-concept top-1 (2,000 trials, SE ~0.4) instead of test top-1 (200 images, SE ~2.3), which was too noisy.
+MECH3_FAMILIES = ['outpca_k16', 'outpca_k64', 'align+outpca_k32', 'sulora2+outpca_k32', 'sulora2+outpca_k64',
+                  'pmaplow_r2', 'pmaplow_r8', 'pmaprand_r2', 'pmaprand_r8']
+
+
+def tuned_lrs(csv_path, montage, phase='subx_tune', families=SUBX_FAMILIES, lrs=SUBX_LRS, metric='test_top1'):
     import pandas as pd
     df = pd.read_csv(csv_path)
     df = df[(df.phase == phase) & (df.montage == montage)]
     best = {}
     for fam in families:
-        g = df[df.adapter.str.startswith(fam + '_lr')].groupby('adapter').test_top1.mean()
+        g = df[df.adapter.str.startswith(fam + '_lr')].groupby('adapter')[metric].mean()
         if len(g) < len(lrs):
             raise SystemExit(f'{phase} not finished for {fam} {montage}: run the {phase} phase first')
         best[fam] = g.idxmax()
@@ -72,7 +79,7 @@ def call(script, args, dry):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('cmd', choices=['props', 'within', 'interp', 'gap', 'subspace', 'summary',
-                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle'])
+                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3'])
     p.add_argument('--config', required=True)
     p.add_argument('--montages', nargs='+', default=MONTAGES)
     p.add_argument('--montage', default='posterior17')
@@ -132,6 +139,22 @@ def main():
             print(f'{mon}: tuned on subject 1 ->', best, flush=True)
             for t in a.targets:
                 call('calibrate.py', c + ['--phase', 'mech2', '--target', str(t), '--montage', mon,
+                                          '--adapters', *best.values(), '--budgets', '25', '50', '200',
+                                          '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'mech3_tune':
+        for mon in MONTAGES:
+            call('calibrate.py', c + ['--phase', 'mech3_tune', '--target', '1', '--montage', mon, '--adapters', 'f0',
+                                      *[f'{f}_lr{lr}' for f in MECH3_FAMILIES for lr in MECH2_LRS],
+                                      '--budgets', '50', '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'mech3':
+        import json
+        csv_path = json.load(open(a.config))['results_csv']
+        for mon in MONTAGES:
+            best = (tuned_lrs(csv_path, mon, 'mech3_tune', MECH3_FAMILIES, MECH2_LRS, 'held_top1') if not a.dry_run
+                    else {f: f + '_lr1e-3' for f in MECH3_FAMILIES})
+            print(f'{mon}: tuned on subject 1 (held-out top-1) ->', best, flush=True)
+            for t in a.targets:
+                call('calibrate.py', c + ['--phase', 'mech3', '--target', str(t), '--montage', mon,
                                           '--adapters', *best.values(), '--budgets', '25', '50', '200',
                                           '--seeds', '0', '1', '2'], a.dry_run)
     elif a.cmd == 'oracle':
