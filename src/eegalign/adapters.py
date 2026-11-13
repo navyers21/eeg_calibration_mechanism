@@ -120,7 +120,10 @@ class LoRALinear(nn.Module):
 
 
 def base(m):
-    return m.f0 if isinstance(m, Aligned) else m
+    """The underlying UBP decoder (has logit_scale), through any wrappers (channel maps, output / pattern edits)."""
+    while hasattr(m, 'f0'):
+        m = m.f0
+    return m
 
 
 def _train(m, T, X, Tg, params, starts, lr, anchor, rehearse, steps, batch, seed, n_neg=1024, wd=1e-4):
@@ -167,6 +170,9 @@ def adapt(name, T, X, Tg, seed, steps=200, batch=64):
     if name == 'full':
         params, starts = _unfreeze(f0)
         return _train(f0, T, X, Tg, params, starts, FULL['lr'], FULL['anchor'], FULL['rehearse'], steps, batch, seed)
+    from . import mechanism2
+    if mechanism2.is_mech2(name):
+        return mechanism2.adapt2(name, T, X, Tg, seed, steps, batch)
     if name.startswith('subx_'):
         from . import subspace
         kind, k, lr = parse_subx(name)
