@@ -56,6 +56,12 @@ MECH3_FAMILIES = ['outpca_k16', 'outpca_k64', 'align+outpca_k32', 'sulora2+outpc
                   'pmaplow_r2', 'pmaplow_r8', 'pmaprand_r2', 'pmaprand_r8']
 
 
+# Data scaling: how much per-user data closes the gap, and from which budget a decoder trained from scratch on the
+# user's own data beats starting from the cross-subject one. 'full' = the whole calibration pool (~14,540 images).
+SCALING = dict(adapters=['f0', 'align', 'sulora2', 'full', 'align_full', 'scratch'],
+               small=(['200', '800'], ['0', '1', '2']), large=(['3200', 'full'], ['0']))
+
+
 def tuned_lrs(csv_path, montage, phase='subx_tune', families=SUBX_FAMILIES, lrs=SUBX_LRS, metric='test_top1'):
     import pandas as pd
     df = pd.read_csv(csv_path)
@@ -79,7 +85,7 @@ def call(script, args, dry):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('cmd', choices=['props', 'within', 'interp', 'gap', 'subspace', 'summary',
-                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3'])
+                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3', 'scaling'])
     p.add_argument('--config', required=True)
     p.add_argument('--montages', nargs='+', default=MONTAGES)
     p.add_argument('--montage', default='posterior17')
@@ -157,6 +163,13 @@ def main():
                 call('calibrate.py', c + ['--phase', 'mech3', '--target', str(t), '--montage', mon,
                                           '--adapters', *best.values(), '--budgets', '25', '50', '200',
                                           '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'scaling':
+        for mon in a.montages:
+            for t in a.targets:
+                for budgets, seeds in (SCALING['small'], SCALING['large']):
+                    call('calibrate.py', c + ['--phase', 'scaling', '--target', str(t), '--montage', mon,
+                                              '--adapters', *SCALING['adapters'], '--budgets', *budgets,
+                                              '--seeds', *seeds], a.dry_run)
     elif a.cmd == 'oracle':
         call('oracle_readout.py', c + ['--targets', *map(str, a.targets), '--montages', *a.montages], a.dry_run)
     elif a.cmd == 'probes2':

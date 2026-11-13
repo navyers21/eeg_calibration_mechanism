@@ -167,6 +167,11 @@ def adapt(name, T, X, Tg, seed, steps=200, batch=64):
     f0 = copy.deepcopy(T.f0).requires_grad_(False)
     if name == 'f0':
         return f0.eval()
+    if name == 'scratch':      # within-subject decoder from scratch on the n images only (UBP lr, 1000 steps)
+        m = U.build_model('EEGProjectLayer', T.C, U.CLIP_MAP['RN50'][1]).to(dev)
+        torch.manual_seed(seed)
+        params = list(m.parameters())
+        return _train(m, T, X, Tg, params, [p.detach().clone() for p in params], 1e-4, 0.0, 0.0, 1000, batch, seed)
     if name == 'full':
         params, starts = _unfreeze(f0)
         return _train(f0, T, X, Tg, params, starts, FULL['lr'], FULL['anchor'], FULL['rehearse'], steps, batch, seed)

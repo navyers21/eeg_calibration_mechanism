@@ -58,7 +58,7 @@ def main():
         t0 = time.time()
         n = T.n if b == 'full' else int(b)
         idx = orders.get(s, orders[a.seeds[0]])[:n]
-        big = n > 800
+        big = n > 800 or (a.phase == 'scaling' and n >= 800)   # scaling: every adapter gets 1000 steps from 800 up
         m = adapt(ad, T, T.x[idx], T.tgt[idx], s, steps=1000 if big else 200, batch=1024 if big else 64)
         ev = evaluate(m, T)
         registry.append(csv_path, dict(tag=tag(ad, b, s), phase=a.phase, target=a.target, montage=a.montage,
