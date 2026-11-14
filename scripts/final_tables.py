@@ -1,4 +1,4 @@
-"""Tables for notebooks/final.ipynb, built from the results CSVs (no training).
+"""Tables for notebooks/calibration_mech.ipynb, built from the results CSVs (no training).
 
     python scripts/final_tables.py calib   --config C   # calibration: gains over f0 + matched-control comparisons
     python scripts/final_tables.py oracle  --config C   # linear readouts on f0's output
