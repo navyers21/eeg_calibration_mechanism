@@ -79,7 +79,9 @@ def contrastive(Ztr, Ytr, Zte, Gte, Zval, Gval, scale, steps=1500, lr=1e-3, seed
     def f(z):
         z = torch.as_tensor(z).float().to(dev)
         return z + (z - mu) @ A.T
-    best, best_A = -1, A.detach().clone()
+    with torch.no_grad():       # step 0 (A = 0, i.e. f0 itself) is a candidate, so the readout never scores below f0
+        best = np.mean([top1(f(z).cpu(), g) for z, g in zip(Zval, Gval)])
+    best_A = A.detach().clone()
     gal_pool = F.normalize(Ytr, dim=-1)
     for step in range(steps):
         i = torch.randint(len(Ztr), (min(256, len(Ztr)),), device=dev)

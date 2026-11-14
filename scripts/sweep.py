@@ -85,7 +85,7 @@ def call(script, args, dry):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('cmd', choices=['props', 'within', 'interp', 'gap', 'subspace', 'summary',
-                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3', 'scaling'])
+                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3', 'scaling', 'final'])
     p.add_argument('--config', required=True)
     p.add_argument('--montages', nargs='+', default=MONTAGES)
     p.add_argument('--montage', default='posterior17')
@@ -162,6 +162,15 @@ def main():
             for t in a.targets:
                 call('calibrate.py', c + ['--phase', 'mech3', '--target', str(t), '--montage', mon,
                                           '--adapters', *best.values(), '--budgets', '25', '50', '200',
+                                          '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'final':
+        # matched random controls for the two round-4 winners, at the same tuned lr per montage
+        ctrl = {'posterior17': ['outrand_k64_lr3e-4', 'sulora2+outrand_k64_lr1e-4'],
+                'occipital8': ['outrand_k64_lr1e-4', 'sulora2+outrand_k64_lr1e-4']}
+        for mon in a.montages:
+            for t in a.targets:
+                call('calibrate.py', c + ['--phase', 'final', '--target', str(t), '--montage', mon,
+                                          '--adapters', *ctrl[mon], '--budgets', '25', '50', '200',
                                           '--seeds', '0', '1', '2'], a.dry_run)
     elif a.cmd == 'scaling':
         for mon in a.montages:
