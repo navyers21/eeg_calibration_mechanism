@@ -85,7 +85,7 @@ def call(script, args, dry):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('cmd', choices=['props', 'within', 'interp', 'gap', 'subspace', 'summary',
-                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3', 'scaling', 'final'])
+                                      'subx_tune', 'subx', 'probes2', 'gap2', 'mech2_tune', 'mech2', 'oracle', 'mech3_tune', 'mech3', 'scaling', 'final', 'confirm'])
     p.add_argument('--config', required=True)
     p.add_argument('--montages', nargs='+', default=MONTAGES)
     p.add_argument('--montage', default='posterior17')
@@ -172,6 +172,15 @@ def main():
                 call('calibrate.py', c + ['--phase', 'final', '--target', str(t), '--montage', mon,
                                           '--adapters', *ctrl[mon], '--budgets', '25', '50', '200',
                                           '--seeds', '0', '1', '2'], a.dry_run)
+    elif a.cmd == 'confirm':
+        # Confirmation of the main result on NEW calibration images (seeds 3-5; seeds 0-2 were used to pick the
+        # method). Recipe frozen: k = 64, lr 1e-4 (tuned on subject 1). Nothing is re-tuned.
+        for mon in a.montages:
+            for t in a.targets:
+                call('calibrate.py', c + ['--phase', 'confirm', '--target', str(t), '--montage', mon,
+                                          '--adapters', 'sulora2', 'sulora2+outpca_k64_lr1e-4',
+                                          'sulora2+outrand_k64_lr1e-4', '--budgets', '25', '50', '200',
+                                          '--seeds', '3', '4', '5'], a.dry_run)
     elif a.cmd == 'scaling':
         for mon in a.montages:
             for t in a.targets:

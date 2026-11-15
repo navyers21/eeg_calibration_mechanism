@@ -128,9 +128,56 @@ def scaling(df):
           'the cross-subject models, starting from other people stops helping.')
 
 
+def confirm(df):
+    """Confirmation on new calibration images (phase 'confirm', seeds 3-5), with the criteria fixed in advance."""
+    c = df[df.phase == 'confirm'].copy()
+    if c.empty:
+        print('no confirmation runs yet')
+        return
+    c['arm'] = c.adapter.str.replace(r'_lr[0-9.e-]+$', '', regex=True).map(
+        {'sulora2': 'map', 'sulora2+outpca_k64': 'map+edit', 'sulora2+outrand_k64': 'map+random'})
+    per = c.groupby(['montage', 'arm', 'n_images', 'target']).test_top1.mean()
+    f0 = df[(df.phase == 'subspace') & (df.adapter == 'f0')].groupby(['montage', 'target']).test_top1.mean()
+    res = {}
+    for mon in ['posterior17', 'occipital8']:
+        print(f'\n=== {mon}: test top-1 (%), new calibration images (seeds 3-5) ===')
+        rows = []
+        for n in BUDGETS:
+            try:
+                m, e, r = (per.xs((mon, arm, n), level=['montage', 'arm', 'n_images'])
+                           for arm in ('map', 'map+edit', 'map+random'))
+            except KeyError:
+                continue
+            m, e = m.align(e, join='inner')
+            r = r.reindex(e.index)
+            d1, d2 = e - m, e - r
+            p1, p2 = ttest_rel(e, m).pvalue, ttest_rel(e, r).pvalue
+            res[(mon, n)] = (d1.mean(), p1, d2.mean(), p2, len(e))
+            rows.append({'images': n, 'subjects': len(e), 'f0': round(f0[mon].reindex(e.index).mean(), 1),
+                         'SuLoRA-style map': round(m.mean(), 1), 'map + output edit': round(e.mean(), 1),
+                         'map + random edit': round(r.mean(), 1),
+                         'edit vs map': f'{d1.mean():+.2f} (p={p1:.3f}, {int((d1 > 0).sum())}/{len(d1)} subj)',
+                         'edit vs random': f'{d2.mean():+.2f} (p={p2:.3f})'})
+        print(pd.DataFrame(rows).to_string(index=False))
+    print('\n=== Criteria fixed before running ===')
+    def chk(name, keys, test):
+        if not all(k in res for k in keys):
+            print(f'{name}: NOT ALL RUNS FINISHED')
+            return
+        ok = all(test(res[k]) for k in keys)
+        print(f'{name}: {"PASS" if ok else "fail"}')
+    both = lambda n: [('posterior17', n), ('occipital8', n)]
+    chk('1. Main: map + edit beats the SuLoRA-style map at 200 images, both montages, p < .05', both(200),
+        lambda v: v[0] > 0 and v[1] < .05)
+    chk('2. Small budget: gain over the map is positive at 50 images, both montages', both(50), lambda v: v[0] > 0)
+    chk('3. Directions matter: map + edit beats map + random edit at 200 images, both montages, p < .05',
+        both(200), lambda v: v[2] > 0 and v[3] < .05)
+    print('If 1 passes, the +1.6-point gain over the SuLoRA-style map is confirmed; if not, report it as exploratory.')
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('cmd', choices=['calib', 'oracle', 'scaling'])
+    p.add_argument('cmd', choices=['calib', 'oracle', 'scaling', 'confirm'])
     p.add_argument('--config', required=True)
     a = p.parse_args()
     cfg = json.load(open(a.config))
@@ -140,7 +187,7 @@ def main():
         return
     df = pd.read_csv(cfg['results_csv'])
     df['n_images'] = df.n_images.astype(int)
-    calib(df) if a.cmd == 'calib' else scaling(df)
+    {'calib': calib, 'scaling': scaling, 'confirm': confirm}[a.cmd](df)
 
 
 if __name__ == '__main__':
