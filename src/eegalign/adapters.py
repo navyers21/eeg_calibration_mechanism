@@ -175,7 +175,9 @@ def adapt(name, T, X, Tg, seed, steps=200, batch=64):
     if name == 'full':
         params, starts = _unfreeze(f0)
         return _train(f0, T, X, Tg, params, starts, FULL['lr'], FULL['anchor'], FULL['rehearse'], steps, batch, seed)
-    from . import mechanism2
+    from . import mechanism2, mechanism3
+    if mechanism3.is_mech3(name):
+        return mechanism3.adapt3(name, T, X, Tg, seed, steps, batch)
     if mechanism2.is_mech2(name):
         return mechanism2.adapt2(name, T, X, Tg, seed, steps, batch)
     if name.startswith('subx_'):

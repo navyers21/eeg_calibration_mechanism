@@ -144,6 +144,165 @@ def run_one(t, mon, out_csv):
     print(f'  saved {out_csv}', flush=True)
 
 
+CURVE_N = [25, 50, 100, 200, 500, 1000, 2000, 0]      # 0 = all available
+
+
+def curve_one(t, mon, out_csv):
+    """E. How many labeled images does a person-specific low-level readout on f0's layer 1 need?"""
+    from eegalign import props
+    from eegalign.data import Target
+    from eegalign.source import ensure_within
+    T = Target(t, mon, train_source=False)
+    rng = np.random.RandomState(0)
+    Xh = np.concatenate(T.held_x).astype(np.float32)
+    Yh = props.props_for([p for ps in T.held_paths for p in ps]).astype(np.float64)
+    pick = rng.choice(len(T.reh_x), min(N_TRAIN, len(T.reh_x)), replace=False)
+    pick = pick[np.abs(T.reh_x[pick].astype(np.float32)).reshape(len(pick), -1).sum(1) > 0]
+    pick = pick[np.unique(T.reh_t[pick], return_index=True)[1]]
+    Xo, Xc = T.x[T.reh_t[pick]].astype(np.float32), T.reh_x[pick].astype(np.float32)
+    Ytr = props.props_for(T.P[T.reh_t[pick]]).astype(np.float64)
+    Ho, Hh = acts(T.f0, Xo, 'layer1'), acts(T.f0, Xh, 'layer1')
+    rows = []
+    for n in CURVE_N:
+        for draw in range(3 if n else 1):
+            ix = np.random.RandomState(draw).permutation(len(Ho))[:n] if n else np.arange(len(Ho))
+            r2, _ = readout(Ho[ix], Ytr[ix], Hh, Yh, max_dim=min(256, len(ix) - 1))
+            rows.append(dict(target=t, montage=mon, readout='f0_own', n=len(ix), draw=draw, **score(r2)))
+    r2, _ = readout(acts(T.f0, Xc, 'layer1'), Ytr, Hh, Yh)
+    rows.append(dict(target=t, montage=mon, readout='f0_cross', n=len(Xc), draw=0, **score(r2)))
+    W = ensure_within(t, mon, train=False)
+    r2, _ = readout(acts(W, Xo, 'layer1'), Ytr, acts(W, Xh, 'layer1'), Yh)
+    rows.append(dict(target=t, montage=mon, readout='within_own', n=len(Xo), draw=0, **score(r2)))
+    pd.DataFrame(rows).to_csv(out_csv, index=False)
+    print(f'  saved {out_csv}', flush=True)
+
+
+def curve_report(base):
+    import glob
+    files = sorted(glob.glob(os.path.join(base, 'curve_t*_*.csv')))
+    if not files:
+        raise SystemExit('no learning-curve results yet: run the curve command first')
+    d = pd.concat([pd.read_csv(f) for f in files])
+    for mon, g in d.groupby('montage'):
+        o = g[g.readout == 'f0_own']
+        per = o.groupby(['target', 'n']).r2.mean().reset_index()
+        per['n'] = np.where(per.n > 2000, 'all', per.n.astype(str))
+        tab = per.groupby('n', sort=False).r2.agg(['mean', 'sem']).round(3)
+        ref = g[g.readout != 'f0_own'].groupby('readout').r2.mean().round(3).to_dict()
+        print(f'\n=== {mon} ({g.target.nunique()} subjects): low-level R^2 of a readout on f0 layer 1, trained on n of '
+              f'the person\'s own images ===')
+        print(tab.to_string())
+        print(f'reference: f0 layer 1 with a readout trained on the other 9 people = {ref.get("f0_cross")}, '
+              f'within-subject decoder layer 1 (own, all images) = {ref.get("within_own")}')
+
+
+# ---- calibration aimed at the finding (src/eegalign/mechanism3.py), run through calibrate.py --------------------
+LL_TREAT = ['llwin_r8', 'llwin_r8_aux', 'occmap', 'sulora2+llwin_r8_aux', 'sulora2+llwin_r8_aux+outpca_k64']
+LL_CTRL = {'llwinctl_r8': 'llwin_r8', 'parmap': 'occmap',
+           'sulora2+llwinctl_r8_aux+outpca_k64': 'sulora2+llwin_r8_aux+outpca_k64'}   # control -> its treatment's lr
+LL_LRS = ['1e-4', '3e-4', '1e-3', '3e-3']
+POSTERIOR_ONLY = ('occmap', 'parmap')
+
+
+def _call(args):
+    import subprocess
+    cmd = [sys.executable, os.path.join(ROOT, 'calibrate.py'), *args]
+    print('$', ' '.join(cmd[1:]), flush=True)
+    subprocess.run(cmd, check=True)
+
+
+def ll_tune(config, montages):
+    for mon in montages:
+        fams = [f for f in LL_TREAT if mon == 'posterior17' or f not in POSTERIOR_ONLY]
+        _call(['--config', config, '--phase', 'll_tune', '--target', '1', '--montage', mon, '--adapters', 'f0',
+               *[f'{f}_lr{lr}' for f in fams for lr in LL_LRS], '--budgets', '50', '--seeds', '0', '1', '2'])
+
+
+def ll_best(csv, mon):
+    df = pd.read_csv(csv)
+    df = df[(df.phase == 'll_tune') & (df.montage == mon)]
+    best = {}
+    for f in LL_TREAT:
+        if mon != 'posterior17' and f in POSTERIOR_ONLY:
+            continue
+        g = df[df.adapter.str.startswith(f + '_lr') & ~df.adapter.str[len(f) + 3:].str.contains('_')]
+        g = g[g.adapter.str.replace(r'_lr[0-9.e-]+$', '', regex=True) == f].groupby('adapter').held_top1.mean()
+        if len(g) < len(LL_LRS):
+            raise SystemExit(f'll_tune not finished for {f} {mon}: run the tuning cell first')
+        best[f] = g.idxmax().rsplit('_lr', 1)[1]
+    for c, f in LL_CTRL.items():
+        if f in best:
+            best[c] = best[f]
+    return best
+
+
+def ll_calib(config, montages, targets):
+    csv = json.load(open(config))['results_csv']
+    for mon in montages:
+        best = ll_best(csv, mon)
+        print(f'{mon}: learning rates chosen on subject 1 (held-out top-1):', best, flush=True)
+        for t in targets:
+            _call(['--config', config, '--phase', 'llcal', '--target', str(t), '--montage', mon,
+                   '--adapters', *[f'{f}_lr{lr}' for f, lr in best.items()], '--budgets', '25', '50', '200',
+                   '--seeds', '0', '1', '2'])
+
+
+LL_ARMS = [('f0', 'subspace', 'f0'), ('Channel map', 'subspace', 'align'), ('SuLoRA-style map', 'subspace', 'sulora2'),
+           ('SuLoRA-style map + output edit (confirmed best)', 'mech3', 'sulora2+outpca_k64'),
+           ('Window adapter (occipital, 80-260 ms)', 'llcal', 'llwin_r8'),
+           ('  control: window adapter at 600-780 ms', 'llcal', 'llwinctl_r8'),
+           ('Window adapter + low-level aux loss', 'llcal', 'llwin_r8_aux'),
+           ('Occipital-only map', 'llcal', 'occmap'), ('  control: parietal-only map', 'llcal', 'parmap'),
+           ('SuLoRA-style map + window adapter + aux', 'llcal', 'sulora2+llwin_r8_aux'),
+           ('Best + window adapter + aux', 'llcal', 'sulora2+llwin_r8_aux+outpca_k64'),
+           ('  control: best + 600-780 ms window + aux', 'llcal', 'sulora2+llwinctl_r8_aux+outpca_k64')]
+LL_CMP = [('Window adapter (occipital, 80-260 ms)', '  control: window adapter at 600-780 ms'),
+          ('Window adapter + low-level aux loss', 'Window adapter (occipital, 80-260 ms)'),
+          ('Occipital-only map', '  control: parietal-only map'), ('Occipital-only map', 'Channel map'),
+          ('SuLoRA-style map + window adapter + aux', 'SuLoRA-style map'),
+          ('Best + window adapter + aux', 'SuLoRA-style map + output edit (confirmed best)'),
+          ('Best + window adapter + aux', '  control: best + 600-780 ms window + aux')]
+
+
+def ll_report(csv):
+    from scipy.stats import ttest_rel
+    df = pd.read_csv(csv)
+    df['arm'] = df.adapter.str.replace(r'_lr[0-9.e-]+$', '', regex=True)
+    pd.set_option('display.width', 250, 'display.max_colwidth', 70)
+    for mon in ['posterior17', 'occipital8']:
+        per = {}
+        for label, phase, arm in LL_ARMS:
+            g = df[(df.phase == phase) & (df.arm == arm) & (df.montage == mon)]
+            if g.empty:
+                continue
+            s = g.groupby(['n_images', 'target']).test_top1.mean()
+            per[label] = {n: s.xs(0, level='n_images') for n in (25, 50, 200)} if arm == 'f0' else \
+                {n: s.xs(n, level='n_images') for n in (25, 50, 200) if n in s.index.get_level_values(0)}
+        if 'f0' not in per:
+            continue
+        print(f'\n=== {mon}: test top-1 % (gain over f0), mean over subjects ===')
+        rows = []
+        for label, d in per.items():
+            r = {'arm': label}
+            for n, v in d.items():
+                r[f'{n} img'] = f'{v.mean():5.1f}' + ('' if label == 'f0' else
+                                                     f' ({(v - per["f0"][n].reindex(v.index)).mean():+.1f})')
+                r['n'] = len(v)
+            rows.append(r)
+        print(pd.DataFrame(rows).set_index('arm').to_string())
+        print(f'--- {mon}: paired comparisons (difference, p across subjects, subjects better) ---')
+        for a, b in LL_CMP:
+            if a not in per or b not in per:
+                continue
+            out = []
+            for n in (25, 50, 200):
+                if n in per[a] and n in per[b]:
+                    x, y = per[a][n].align(per[b][n], join='inner')
+                    out.append(f'{n}: {(x - y).mean():+.2f} (p={ttest_rel(x, y).pvalue:.3f}, '
+                               f'{int(((x - y) > 0).sum())}/{len(x)})')
+            print(f'  {a.strip()}  vs  {b.strip()}:  ' + ' | '.join(out))
+
+
 def report(base):
     import glob
     import matplotlib
@@ -208,7 +367,7 @@ def report(base):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('cmd', choices=['run', 'report'])
+    p.add_argument('cmd', choices=['run', 'report', 'curve', 'curve_report', 'tune', 'calib', 'calib_report'])
     p.add_argument('--config', required=True)
     p.add_argument('--targets', type=int, nargs='+', default=[2, 3, 4, 5, 6, 7, 8, 9, 10])
     p.add_argument('--montages', nargs='+', default=['posterior17', 'occipital8'])
@@ -219,6 +378,24 @@ def main():
     os.makedirs(base, exist_ok=True)
     if a.cmd == 'report':
         return report(base)
+    if a.cmd == 'curve_report':
+        return curve_report(base)
+    if a.cmd == 'tune':
+        return ll_tune(a.config, a.montages)
+    if a.cmd == 'calib':
+        return ll_calib(a.config, a.montages, a.targets)
+    if a.cmd == 'calib_report':
+        return ll_report(cfg['results_csv'])
+    if a.cmd == 'curve':
+        for mon in a.montages:
+            for t in a.targets:
+                out = os.path.join(base, f'curve_t{t:02d}_{mon}.csv')
+                if os.path.exists(out):
+                    print(f'[curve] t{t} {mon}: done, skipping', flush=True)
+                    continue
+                print(f'[curve] t{t} {mon}: running', flush=True)
+                curve_one(t, mon, out)
+        return
     for mon in a.montages:
         for t in a.targets:
             out = os.path.join(base, f't{t:02d}_{mon}.csv')
