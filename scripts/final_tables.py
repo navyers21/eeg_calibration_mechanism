@@ -3,6 +3,7 @@
     python scripts/final_tables.py calib   --config C   # calibration: gains over f0 + matched-control comparisons
     python scripts/final_tables.py oracle  --config C   # linear readouts on f0's output
     python scripts/final_tables.py scaling --config C   # per-user data from 200 images to the whole pool
+    python scripts/final_tables.py confirm --config C   # confirmation on new calibration images (seeds 3-5)
 
 Each calibration arm is read from the phase where it was run with its tuned learning rate (lr is part of the adapter
 name, so arms from different phases never mix). Paired t-tests across subjects, seeds averaged first.
@@ -173,6 +174,60 @@ def confirm(df):
     chk('3. Directions matter: map + edit beats map + random edit at 200 images, both montages, p < .05',
         both(200), lambda v: v[2] > 0 and v[3] < .05)
     print('If 1 passes, the +1.6-point gain over the SuLoRA-style map is confirmed; if not, report it as exploratory.')
+
+
+CONFIRM = [('SuLoRA-style map', 'sulora2'), ('SuLoRA-style map + output edit', 'sulora2+outpca_k64'),
+           ('SuLoRA-style map + random output edit', 'sulora2+outrand_k64')]
+
+
+def confirm(df):
+    """Pre-stated criteria: (1) at 200 images, map + output edit > SuLoRA-style map on both montages, p < .05;
+    (2) at 50 images, the gain over the map is positive on both montages (p reported); (3) at 200 images,
+    map + output edit > map + random output edit on both montages, p < .05."""
+    c = df[df.phase == 'confirm'].copy()
+    if c.empty:
+        print('no confirmation runs yet: run the confirm phase first')
+        return
+    c['arm'] = c.adapter.str.replace(r'_lr[0-9.e-]+$', '', regex=True)
+    per = c.groupby(['montage', 'arm', 'n_images', 'target']).test_top1.mean()
+    f0 = df[(df.phase == 'subspace') & (df.adapter == 'f0')].groupby(['montage', 'target']).test_top1.mean()
+    verdict = {}
+    for mon in ['posterior17', 'occipital8']:
+        if mon not in per.index.get_level_values('montage'):
+            continue
+        print(f'\n=== {mon}: NEW calibration images (seeds 3-5), test top-1 % (gain over f0) ===')
+        rows = []
+        for label, arm in CONFIRM:
+            r = {'arm': label}
+            for n in BUDGETS:
+                try:
+                    v = per.loc[(mon, arm, n)]
+                except KeyError:
+                    continue
+                r[f'{n} img'] = f'{v.mean():5.1f} ({(v - f0.loc[mon].reindex(v.index)).mean():+.1f})'
+                r['subjects'] = len(v)
+            rows.append(r)
+        print(pd.DataFrame(rows).set_index('arm').to_string())
+        print(f'--- {mon}: paired comparisons ---')
+        for a, b, key in [('sulora2+outpca_k64', 'sulora2', 'vs map'),
+                          ('sulora2+outpca_k64', 'sulora2+outrand_k64', 'vs random edit')]:
+            line = []
+            for n in BUDGETS:
+                try:
+                    x, y = per.loc[(mon, a, n)].align(per.loc[(mon, b, n)], join='inner')
+                except KeyError:
+                    continue
+                d, p = (x - y).mean(), ttest_rel(x, y).pvalue
+                verdict[(mon, key, n)] = (d, p)
+                line.append(f'{n} img: {d:+.2f} (p={p:.3f}, {int(((x - y) > 0).sum())}/{len(x)} subjects)')
+            print(f'  map + output edit {key:15s}', ' | '.join(line))
+    mons = ['posterior17', 'occipital8']
+    ok = lambda key, n, need_p: all((m, key, n) in verdict and verdict[(m, key, n)][0] > 0 and
+                                    (not need_p or verdict[(m, key, n)][1] < 0.05) for m in mons)
+    print('\nPre-stated criteria')
+    print(f'  1. 200 img, beats SuLoRA-style map on both montages, p < .05:      {"PASS" if ok("vs map", 200, True) else "fail"}')
+    print(f'  2. 50 img, positive gain over the map on both montages:           {"PASS" if ok("vs map", 50, False) else "fail"}')
+    print(f'  3. 200 img, beats the random output edit on both montages, p < .05: {"PASS" if ok("vs random edit", 200, True) else "fail"}')
 
 
 def main():

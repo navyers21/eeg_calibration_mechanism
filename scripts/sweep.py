@@ -181,6 +181,15 @@ def main():
                                           '--adapters', 'sulora2', 'sulora2+outpca_k64_lr1e-4',
                                           'sulora2+outrand_k64_lr1e-4', '--budgets', '25', '50', '200',
                                           '--seeds', '3', '4', '5'], a.dry_run)
+    elif a.cmd == 'confirm':
+        # Confirmation of the main result on NEW calibration images (seeds 3-5; seeds 0-2 were used to pick the
+        # method). Recipe frozen: same adapters, k and learning rates as phases subspace / mech3 / final.
+        arms = ['sulora2', 'sulora2+outpca_k64_lr1e-4', 'sulora2+outrand_k64_lr1e-4']
+        for mon in a.montages:
+            for t in a.targets:
+                call('calibrate.py', c + ['--phase', 'confirm', '--target', str(t), '--montage', mon,
+                                          '--adapters', *arms, '--budgets', '25', '50', '200',
+                                          '--seeds', '3', '4', '5'], a.dry_run)
     elif a.cmd == 'scaling':
         for mon in a.montages:
             for t in a.targets:
