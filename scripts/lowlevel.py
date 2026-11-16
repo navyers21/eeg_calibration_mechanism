@@ -303,6 +303,81 @@ def ll_report(csv):
             print(f'  {a.strip()}  vs  {b.strip()}:  ' + ' | '.join(out))
 
 
+# ---- v2: the fair test (see mechanism3.py docstring) ----------------------------------------------------------
+WIN_LRS, MAP_LRS = ['1e-5', '3e-5', '1e-4'], ['1e-3', '3e-3', '1e-2']
+LL2_TREAT = {'llwinP_r4_anc': WIN_LRS, 'llwinP_r4_anc_align': WIN_LRS,
+             'sulora2+llwinP_r4_anc_align+outpca_k64': WIN_LRS, 'occmap_align': MAP_LRS,
+             'occmap+outpca_k64': MAP_LRS}
+LL2_CTRL = {'llwinctlP_r4_anc_align': 'llwinP_r4_anc_align', 'parmap_align': 'occmap_align',
+            'sulora2+llwinctlP_r4_anc_align+outpca_k64': 'sulora2+llwinP_r4_anc_align+outpca_k64'}
+POST_ONLY2 = ('occmap_align', 'occmap+outpca_k64', 'parmap_align')
+
+
+def ll2_tune(config, montages):
+    for mon in montages:
+        names = [f'{f}_lr{lr}' for f, lrs in LL2_TREAT.items() for lr in lrs
+                 if mon == 'posterior17' or f not in POST_ONLY2]
+        _call(['--config', config, '--phase', 'll2_tune', '--target', '1', '--montage', mon, '--adapters', 'f0',
+               *names, '--budgets', '50', '--seeds', '0', '1', '2'])
+
+
+def ll2_best(csv, mon):
+    df = pd.read_csv(csv)
+    df = df[(df.phase == 'll2_tune') & (df.montage == mon)].copy()
+    df['fam'] = df.adapter.str.replace(r'_lr[0-9.e-]+$', '', regex=True)
+    best = {}
+    for f, lrs in LL2_TREAT.items():
+        if mon != 'posterior17' and f in POST_ONLY2:
+            continue
+        g = df[df.fam == f].groupby('adapter').held_top1.mean()
+        if len(g) < len(lrs):
+            raise SystemExit(f'll2_tune not finished for {f} {mon}: run the tuning cell first')
+        best[f] = g.idxmax().rsplit('_lr', 1)[1]
+    for c, f in LL2_CTRL.items():
+        if f in best:
+            best[c] = best[f]
+    return best
+
+
+def ll2_calib(config, montages, targets):
+    csv = json.load(open(config))['results_csv']
+    for mon in montages:
+        best = ll2_best(csv, mon)
+        print(f'{mon}: learning rates chosen on subject 1 (held-out top-1):', best, flush=True)
+        for t in targets:
+            _call(['--config', config, '--phase', 'll2cal', '--target', str(t), '--montage', mon,
+                   '--adapters', *[f'{f}_lr{lr}' for f, lr in best.items()], '--budgets', '25', '50', '200',
+                   '--seeds', '0', '1', '2'])
+
+
+LL2_ARMS = [('f0', 'subspace', 'f0'), ('Channel map', 'subspace', 'align'), ('SuLoRA-style map', 'subspace', 'sulora2'),
+            ('Best: SuLoRA-style map + output edit', 'mech3', 'sulora2+outpca_k64'),
+            ('Occipital-only map (v1)', 'llcal', 'occmap'),
+            ('Occipital-only map + align loss', 'll2cal', 'occmap_align'),
+            ('  control: parietal-only map + align loss', 'll2cal', 'parmap_align'),
+            ('Occipital-only map + output edit', 'll2cal', 'occmap+outpca_k64'),
+            ('Window adapter v2 (prior, anchored)', 'll2cal', 'llwinP_r4_anc'),
+            ('Window adapter v2 + align loss', 'll2cal', 'llwinP_r4_anc_align'),
+            ('  control: v2 + align at 600-780 ms', 'll2cal', 'llwinctlP_r4_anc_align'),
+            ('Best + window adapter v2 + align', 'll2cal', 'sulora2+llwinP_r4_anc_align+outpca_k64'),
+            ('  control: best + 600-780 ms window v2 + align', 'll2cal', 'sulora2+llwinctlP_r4_anc_align+outpca_k64')]
+LL2_CMP = [('Window adapter v2 (prior, anchored)', 'f0'),
+           ('Window adapter v2 + align loss', 'Window adapter v2 (prior, anchored)'),
+           ('Window adapter v2 + align loss', '  control: v2 + align at 600-780 ms'),
+           ('Occipital-only map + align loss', 'Occipital-only map (v1)'),
+           ('Occipital-only map + align loss', '  control: parietal-only map + align loss'),
+           ('Occipital-only map + output edit', 'Best: SuLoRA-style map + output edit'),
+           ('Occipital-only map + output edit', 'Occipital-only map (v1)'),
+           ('Best + window adapter v2 + align', 'Best: SuLoRA-style map + output edit'),
+           ('Best + window adapter v2 + align', '  control: best + 600-780 ms window v2 + align')]
+
+
+def ll2_report(csv):
+    global LL_ARMS, LL_CMP
+    LL_ARMS, LL_CMP = LL2_ARMS, LL2_CMP
+    ll_report(csv)
+
+
 def report(base):
     import glob
     import matplotlib
@@ -367,7 +442,8 @@ def report(base):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('cmd', choices=['run', 'report', 'curve', 'curve_report', 'tune', 'calib', 'calib_report'])
+    p.add_argument('cmd', choices=['run', 'report', 'curve', 'curve_report', 'tune', 'calib', 'calib_report', 'tune2', 'calib2',
+                                      'calib2_report'])
     p.add_argument('--config', required=True)
     p.add_argument('--targets', type=int, nargs='+', default=[2, 3, 4, 5, 6, 7, 8, 9, 10])
     p.add_argument('--montages', nargs='+', default=['posterior17', 'occipital8'])
@@ -386,6 +462,12 @@ def main():
         return ll_calib(a.config, a.montages, a.targets)
     if a.cmd == 'calib_report':
         return ll_report(cfg['results_csv'])
+    if a.cmd == 'tune2':
+        return ll2_tune(a.config, a.montages)
+    if a.cmd == 'calib2':
+        return ll2_calib(a.config, a.montages, a.targets)
+    if a.cmd == 'calib2_report':
+        return ll2_report(cfg['results_csv'])
     if a.cmd == 'curve':
         for mon in a.montages:
             for t in a.targets:
