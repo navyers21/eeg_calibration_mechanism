@@ -99,8 +99,8 @@ def build_subject(sub, montages, ch_names, out_dir, local, paths, ubp_file):
         info = dict(order_check_matched_r=round(m, 3), order_check_shuffled_r=round(s, 3))
         print(f'  sub-{sub:02d}: NB vs UBP per-image EEG correlation, matched {m:.3f} vs shuffled {s:.3f}', flush=True)
         if not m > s + 0.05:
-            print('  WARNING: image order may differ between NeuroBridge and UBP data; paths are NOT reliable',
-                  flush=True)
+            print('  note: the quick per-channel check is weak because the two datasets are whitened differently; '
+                  'run scripts/nb_check_order.py for the real check (training does not depend on paths)', flush=True)
     del tr, te, avg, te_trials
     for f in (tr_f, te_f):
         os.remove(f)
