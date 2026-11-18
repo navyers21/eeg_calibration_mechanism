@@ -1,0 +1,34 @@
+{
+ "posterior17": {
+  "lam": {
+   "full": 0.001,
+   "gain": 0.0001,
+   "gainmix": 0.0001,
+   "mix": 0.001,
+   "mix_pc": 0.0001,
+   "scale": 0.0001
+  },
+  "lr": {
+   "full": 0.003,
+   "gain": 0.003,
+   "gainmix": 0.003,
+   "mix": 0.001
+  }
+ },
+ "occipital8": {
+  "lam": {
+   "full": 0.0001,
+   "gain": 0.0001,
+   "gainmix": 0.0001,
+   "mix": 0.001,
+   "mix_pc": 0.0001,
+   "scale": 0.0001
+  },
+  "lr": {
+   "full": 0.01,
+   "gain": 0.003,
+   "gainmix": 0.01,
+   "mix": 0.001
+  }
+ }
+}
