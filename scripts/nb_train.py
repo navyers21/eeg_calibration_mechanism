@@ -204,6 +204,11 @@ def main():
     p.add_argument('--patience', type=int, default=0)
     a = p.parse_args()
     N.setup(a.config)
+    if a.cmd == 'train':
+        dev = N.ENV['device']
+        print(f'device: {dev}' + (f' ({torch.cuda.get_device_name(0)})' if dev == 'cuda' else
+                                  '  WARNING: no GPU, training will be ~10x slower (Runtime > Change runtime type)'),
+              flush=True)
     if a.cmd == 'report':
         return report()
     pool = N.ENV.get('subjects', list(range(1, 11)))
