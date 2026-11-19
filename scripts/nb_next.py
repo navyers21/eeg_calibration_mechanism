@@ -89,7 +89,10 @@ def ridge_svd(X, Y, rel=torch.logspace(-4, 2, 13)):
     """Ridge X -> Y (both centered inside), alpha by generalized cross-validation. Returns (B, x mean, y mean)."""
     xm, ym = X.mean(0), Y.mean(0)
     Xc, Yc = X - xm, Y - ym
-    U, S, Vh = torch.linalg.svd(Xc, full_matrices=False)
+    try:
+        U, S, Vh = torch.linalg.svd(Xc, full_matrices=False)
+    except Exception:                                                  # noqa: BLE001  (degenerate input)
+        U, S, Vh = (a.to(Xc.dtype) for a in torch.linalg.svd(Xc.double(), full_matrices=False))
     UtY = U.T @ Yc
     s2 = S ** 2
     n = len(X)
@@ -129,7 +132,10 @@ def am_family(X, Y):
     R = Y - X
     c = R.mean(0)
     B, xm, rm = ridge_svd(X, R)
-    Qall = torch.linalg.svd((X - xm) @ B, full_matrices=False).Vh
+    try:
+        Qall = torch.linalg.svd((X - xm) @ B, full_matrices=False).Vh
+    except Exception:                                                  # noqa: BLE001
+        Qall = torch.linalg.svd(((X - xm) @ B).double(), full_matrices=False).Vh.to(X.dtype)
     fns = {'off': (lambda Z: Z + c), 'full': (lambda Z: Z + rm + (Z - xm) @ B)}
     for r in RANKS:
         Q = Qall[:r].T
