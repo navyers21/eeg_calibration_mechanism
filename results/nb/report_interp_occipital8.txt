@@ -1,0 +1,222 @@
+device: cuda
+
+====================================================================================================
+occipital8
+====================================================================================================
+
+9 targets. f0 11.9%, within 56.8% (test top-1)
+
+E1 READOUT to f0's image embeddings, by stage (own = fitted on B, cross = on other people):
+readout  cross_held  own_held  own_pool
+stage                                  
+h1              4.5      12.9      22.1
+h2              4.8      13.4      21.7
+h3              5.3      13.7      21.2
+z               5.4      14.4      20.0
+
+E2 PATCHING (patch source = mean of the 9 others; snr = same with ~80 total reps; top-1 %):
+  stage h1:
+basis   diff        full        rand         var      
+source  mean   snr  mean   snr  mean   snr  mean   snr
+k                                                     
+1.0     17.4  17.1   NaN   NaN  12.2  12.1  12.9  12.8
+2.0     19.2  18.8   NaN   NaN  11.8  11.8  12.2  12.0
+4.0     21.9  21.4   NaN   NaN  11.5  11.4  12.8  12.3
+8.0     25.1  24.9   NaN   NaN  11.7  11.5  13.7  13.7
+16.0    29.5  29.0   NaN   NaN  12.1  12.1  15.9  15.2
+32.0    35.6  34.6   NaN   NaN  11.3  11.9  21.0  19.9
+64.0    42.7  41.4   NaN   NaN  12.7  12.7  30.2  28.8
+128.0   47.3  44.4   NaN   NaN  12.9  12.7  37.9  35.8
+256.0   51.7  47.9   NaN   NaN  15.1  15.3  47.4  43.8
+512.0   53.8  48.5   NaN   NaN  20.2  19.4  52.9  48.3
+1024.0   NaN   NaN  54.7  48.6   NaN   NaN   NaN   NaN
+   single-person patch source: {'diff': {1.0: 16.0, 2.0: 17.3, 4.0: 18.5, 8.0: 20.3, 16.0: 20.8, 32.0: 23.7, 64.0: 32.3, 128.0: 44.7, 256.0: 51.5, 512.0: 54.7, 1024.0: nan}, 'full': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: nan, 32.0: nan, 64.0: nan, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: 55.5}, 'rand': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 11.8, 32.0: nan, 64.0: 11.3, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: nan}, 'var': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 11.2, 32.0: nan, 64.0: 24.3, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: nan}}
+  stage h2:
+basis   diff        full        rand         var      
+source  mean   snr  mean   snr  mean   snr  mean   snr
+k                                                     
+1.0     17.1  16.9   NaN   NaN  11.9  11.8  12.5  12.8
+2.0     18.1  17.9   NaN   NaN  11.9  12.0  12.3  12.2
+4.0     21.1  21.1   NaN   NaN  11.8  11.9  12.2  11.8
+8.0     25.4  25.8   NaN   NaN  12.0  12.1  15.8  15.5
+16.0    33.4  32.1   NaN   NaN  11.9  11.9  17.9  17.3
+32.0    42.2  41.0   NaN   NaN  13.1  13.0  22.9  22.3
+64.0    51.2  48.2   NaN   NaN  13.7  13.8  32.9  31.3
+128.0   60.4  57.2   NaN   NaN  16.2  15.7  43.6  40.8
+256.0   73.3  68.3   NaN   NaN  22.9  22.0  62.6  57.5
+512.0   80.4  75.2   NaN   NaN  38.6  36.1  79.6  74.3
+1024.0   NaN   NaN  81.8  76.8   NaN   NaN   NaN   NaN
+   single-person patch source: {'diff': {1.0: 16.5, 2.0: 17.2, 4.0: 18.9, 8.0: 21.8, 16.0: 24.2, 32.0: 25.8, 64.0: 27.0, 128.0: 31.6, 256.0: 44.1, 512.0: 54.3, 1024.0: nan}, 'full': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: nan, 32.0: nan, 64.0: nan, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: 55.5}, 'rand': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 11.8, 32.0: nan, 64.0: 12.9, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: nan}, 'var': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 12.8, 32.0: nan, 64.0: 17.3, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: nan}}
+  stage h3:
+basis   diff        full        rand         var      
+source  mean   snr  mean   snr  mean   snr  mean   snr
+k                                                     
+1.0     18.2  18.3   NaN   NaN  11.9  12.0  12.7  11.8
+2.0     19.9  19.9   NaN   NaN  11.9  12.0  12.3  11.8
+4.0     22.8  22.6   NaN   NaN  11.9  11.8  12.6  11.0
+8.0     28.0  26.7   NaN   NaN  12.1  12.2  14.2  12.1
+16.0    34.5  31.9   NaN   NaN  12.1  12.0  16.7  12.9
+32.0    42.7  39.4   NaN   NaN  12.6  12.4  19.9  15.1
+64.0    51.1  45.7   NaN   NaN  13.5  12.7  24.7  18.1
+128.0   61.6  56.4   NaN   NaN  15.9  14.5  38.6  26.6
+256.0   75.8  69.7   NaN   NaN  22.1  18.7  63.0  49.2
+512.0   82.3  76.7   NaN   NaN  38.6  31.4  81.4  75.4
+1024.0   NaN   NaN  83.9  79.0   NaN   NaN   NaN   NaN
+   single-person patch source: {'diff': {1.0: 17.4, 2.0: 19.3, 4.0: 20.9, 8.0: 23.2, 16.0: 25.6, 32.0: 27.0, 64.0: 27.8, 128.0: 31.8, 256.0: 43.9, 512.0: 54.3, 1024.0: nan}, 'full': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: nan, 32.0: nan, 64.0: nan, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: 55.5}, 'rand': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 11.8, 32.0: nan, 64.0: 13.0, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: nan}, 'var': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 12.7, 32.0: nan, 64.0: 15.8, 128.0: nan, 256.0: nan, 512.0: nan, 1024.0: nan}}
+  stage z:
+basis   diff        full        rand         var      
+source  mean   snr  mean   snr  mean   snr  mean   snr
+k                                                     
+1.0     18.3  18.3   NaN   NaN  11.8  11.9  13.2  12.7
+2.0     21.8  21.3   NaN   NaN  12.1  12.2  12.9  12.2
+4.0     29.0  27.6   NaN   NaN  12.2  12.1  15.3  13.4
+8.0     39.5  36.0   NaN   NaN  12.7  12.5  20.6  16.4
+16.0    56.3  50.4   NaN   NaN  12.8  12.4  36.8  29.8
+32.0    67.1  62.3   NaN   NaN  13.9  13.6  53.6  43.2
+64.0    75.3  69.2   NaN   NaN  17.3  16.3  67.1  58.1
+128.0   81.2  74.6   NaN   NaN  26.1  22.1  77.7  69.8
+256.0   83.8  78.6   NaN   NaN  44.1  36.5  83.5  77.2
+512.0    NaN   NaN  83.9  79.0   NaN   NaN   NaN   NaN
+   single-person patch source: {'diff': {1.0: 18.5, 2.0: 21.2, 4.0: 26.3, 8.0: 33.6, 16.0: 42.5, 32.0: 48.7, 64.0: 52.0, 128.0: 54.0, 256.0: 55.3, 512.0: nan}, 'full': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: nan, 32.0: nan, 64.0: nan, 128.0: nan, 256.0: nan, 512.0: 55.5}, 'rand': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 12.6, 32.0: nan, 64.0: 16.8, 128.0: nan, 256.0: nan, 512.0: nan}, 'var': {1.0: nan, 2.0: nan, 4.0: nan, 8.0: nan, 16.0: 28.1, 32.0: nan, 64.0: 45.8, 128.0: nan, 256.0: nan, 512.0: nan}}
+
+  NOISING: B's component patched into each source person (their clean top-1 55.5%):
+basis  diff              full
+k      4.0   16.0  64.0  0.0 
+stage                        
+h1     28.0  21.7  12.3  11.9
+h2     34.1  27.7  19.8  11.9
+h3     33.2  27.7  20.3  11.9
+z      30.2  19.9  14.5  11.9
+
+E3 DIFFERENCE (B minus sources, test set): share explained by an offset / a linear map (fit on held-out concepts), noise share; top-1 after correcting:
+       frac_offset  frac_linear  frac_noise  top1_offset  top1_linear
+stage                                                                
+h1           0.639        0.902       0.070       16.833       13.444
+h2           0.625        0.889       0.074       17.278       26.444
+h3           0.508        0.881       0.083       16.944       26.389
+z            0.398        0.800       0.099       16.944       24.722
+
+  deployable activation matching (map B -> sources on n calibration images), top-1:
+n             25.0    50.0    100.0   200.0   500.0   1000.0  2000.0
+stage method                                                        
+h1    diag      10.1    10.8    10.7    10.9    11.3    10.9    11.1
+      linear    15.1    14.2    14.1    14.1    14.0    14.4    15.2
+      offset    15.5    15.6    15.8    16.2    16.3    16.4    16.7
+h2    diag      11.7    12.0    11.5    11.9    12.7    12.4    12.7
+      linear    15.3    16.7    18.3    20.0    24.7    29.8    31.9
+      offset    15.1    15.9    16.4    16.6    17.4    17.3    17.1
+h3    diag      14.0    14.9    15.4    15.6    15.6    15.8    15.4
+      linear    16.6    17.9    18.8    20.7    24.4    28.3    30.9
+      offset    15.9    16.8    17.2    17.0    17.7    17.2    17.0
+z     diag      14.2    14.9    15.4    15.7    15.8    15.6    15.6
+      linear    15.3    16.1    17.9    20.1    24.0    26.7    29.1
+      offset    15.9    16.8    17.2    17.0    17.7    17.2    17.0
+
+E4 LABEL-FREE STATISTICS MATCHING (U unlabeled trials; 0 = all), f0 = 11.9:
+U             0.0    25.0   100.0  500.0
+stage method                            
+h1    adabn    18.0   15.1   17.4   17.6
+      coral    15.7    8.5   10.3   13.3
+      mean     16.7   15.3   16.9   16.3
+      perm     14.6   11.4   13.8   14.1
+h2    adabn    17.8   16.7   17.1   17.7
+      coral    15.9   14.7   15.1   16.1
+      mean     17.2   15.9   17.0   17.0
+      perm     16.0   13.7   15.0   16.2
+h3    adabn    17.2   17.2   17.2   17.3
+      coral    15.1   14.0   14.6   14.2
+      mean     17.0   16.6   16.8   17.2
+      perm     16.4   16.0   15.9   16.1
+x     adabn    11.5   11.3   11.4   11.5
+      coral    11.9   12.1   12.0   11.7
+z     adabn    17.4   16.9   17.1   17.2
+      coral    16.7   15.7   15.5   16.6
+      mean     17.0   16.6   16.8   17.2
+      perm     15.2   14.7   14.2   14.7
+
+E5 RSA: reliability (split-half, Spearman-Brown) and agreement:
+                reliability  to_gallery   to_B
+space    is_B                                 
+raw      False        0.701         NaN  0.448
+         True         0.702         NaN    NaN
+z_f0B    False        0.950       0.489  0.581
+         True         0.939       0.436    NaN
+z_within True           NaN       0.377    NaN
+   across targets: raw-EEG reliability vs f0 top-1 Spearman r = -0.54; vs within top-1 r = 0.67
+
+E7 OCCLUSION by channel (mean drop in correct-image margin):
+model  f0_on_B  f0_on_srcEEG  within_on_B
+where                                    
+O1      0.0035        0.0068       0.0102
+O2      0.0041        0.0073       0.0129
+Oz      0.0239        0.0361       0.0332
+PO3     0.0032        0.0064       0.0094
+PO4     0.0050        0.0088       0.0118
+PO7     0.0029        0.0053       0.0097
+PO8     0.0057        0.0068       0.0102
+POz     0.0016        0.0047       0.0090
+   profile correlation f0_on_B vs within_on_B: 0.99; f0_on_B vs f0_on_srcEEG: 0.99
+
+E7 OCCLUSION by window (mean drop in correct-image margin):
+model  f0_on_B  f0_on_srcEEG  within_on_B
+where                                    
+100     0.0178        0.0236       0.0245
+140     0.0073        0.0162       0.0163
+180     0.0069        0.0128       0.0164
+20     -0.0000       -0.0001      -0.0002
+220     0.0071        0.0124       0.0173
+260     0.0046        0.0101       0.0132
+300     0.0011        0.0025       0.0052
+340     0.0017        0.0041       0.0050
+380     0.0018        0.0026       0.0033
+420     0.0005        0.0010       0.0023
+460     0.0003        0.0008       0.0011
+500     0.0002        0.0006       0.0005
+540     0.0000        0.0003       0.0006
+580    -0.0000        0.0001       0.0006
+60      0.0023        0.0032       0.0035
+620     0.0001        0.0003       0.0006
+660     0.0002        0.0002      -0.0003
+700    -0.0001       -0.0000      -0.0001
+740     0.0001        0.0002       0.0004
+780     0.0001        0.0002       0.0006
+820     0.0001       -0.0001       0.0001
+860     0.0000        0.0001       0.0000
+900    -0.0000       -0.0001       0.0001
+940     0.0003        0.0003       0.0006
+980    -0.0001       -0.0000      -0.0001
+   profile correlation f0_on_B vs within_on_B: 0.95; f0_on_B vs f0_on_srcEEG: 0.97
+
+E8 IMAGES: Spearman r of (rank under f0 - rank under within) with image features, pooled:
+   density: -0.126   (rank_f0 alone: -0.178)
+   prop0: -0.019   (rank_f0 alone: -0.027)
+   prop1: 0.096   (rank_f0 alone: 0.096)
+   prop2: -0.022   (rank_f0 alone: -0.006)
+   prop3: 0.010   (rank_f0 alone: 0.029)
+   prop4: -0.025   (rank_f0 alone: -0.025)
+   prop5: 0.054   (rank_f0 alone: 0.046)
+                    rank_f0  rank_within
+category                                
+plant                  12.3          1.5
+toy                    13.4          0.1
+office supply          17.5          2.4
+home decor             19.5          4.6
+sports equipment       20.3          2.8
+tool                   20.4          5.4
+electronic device      21.2          0.9
+vehicle                22.7          1.7
+kitchen                22.9          2.3
+clothing               24.6          2.4
+medical equipment      25.3          1.6
+furniture              26.0          3.2
+animal                 26.6          2.9
+food                   27.0          2.5
+musical instrument     28.3         10.3
+weapon                 32.3          1.3
+
+  2-choice accuracy on held-out concepts (chance 50%):
+foil           category  sibling  unrelated
+model                                      
+f0_on_B            76.6     71.5       80.4
+f0_on_srcmean      98.8     95.1       99.5
+within_on_B        88.1     81.4       91.5
