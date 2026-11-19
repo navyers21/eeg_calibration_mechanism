@@ -348,7 +348,7 @@ def run_shared(B, mon, targets, r_list=(8, 16, 32)):
     fit_idx = torch.as_tensor(np.random.RandomState(0).choice(pool, min(6000, len(pool)), replace=False), device=dev())
     ev_idx = torch.as_tensor(held, device=dev())
     GB, G = T(L[B]['Gtr']), T(L[B]['G'])
-    DB = T(L[B]['D'])
+    DB = -T(L[B]['D'])                    # stored as B - sources; the correction is sources - B
     muB = DB.mean(0)
     VB = topk_basis(DB, 16)
     zt, zc, zS = T(L[B]['zB_test']), T(L[B]['zB_cal']), T(L[B]['zS_cal'])
@@ -357,7 +357,7 @@ def run_shared(B, mon, targets, r_list=(8, 16, 32)):
     R, Dal, mus = {}, {}, {}
     for t in others:
         R[t], r2 = procrustes(T(L[t]['Gtr']), GB, fit_idx, ev_idx)
-        Dal[t] = T(L[t]['D']) @ R[t]
+        Dal[t] = -T(L[t]['D']) @ R[t]
         mus[t] = Dal[t].mean(0)
         Vt = topk_basis(Dal[t], 16)
         rows.append(dict(exp='S1', other=t, align_r2=r2,
@@ -394,7 +394,7 @@ def run_shared(B, mon, targets, r_list=(8, 16, 32)):
     rows += s4_synth(B, others, L, R, zt, zc, zS, G, Dpop, mus, T)
     for r in rows:
         r.update(target=B, montage=mon)
-    I.save(rows, 'shared', B, mon)
+    I.save(rows, 'shared2', B, mon)
     print(f'  shared {B} {mon}: {(time.time() - t0) / 60:.1f} min', flush=True)
 
 
@@ -535,7 +535,8 @@ def report(mons):
             row[f'best_AM_n{n}'] = gg.max()
             row[f'best_AM_n{n}_cfg'] = str(gg.idxmax())
         summary.append(row)
-        f = sorted(glob.glob(os.path.join(I.out_dir(), f'shared_t*_{mon}.csv')))
+        f = sorted(glob.glob(os.path.join(I.out_dir(), f'shared2_t*_{mon}.csv'))) or \
+            sorted(glob.glob(os.path.join(I.out_dir(), f'shared_t*_{mon}.csv')))
         if f:
             s = pd.concat([pd.read_csv(x) for x in f], ignore_index=True)
             s1 = s[s.exp == 'S1']
@@ -574,7 +575,7 @@ def main():
     people = list(range(1, 11))
     for mon in a.montages:
         for B in a.targets:
-            name = 'next' if a.cmd == 'run' else 'shared'
+            name = 'next' if a.cmd == 'run' else 'shared2'
             if I.done(name, B, mon):
                 print(f'[{a.cmd}] {B} {mon}: done')
                 continue
