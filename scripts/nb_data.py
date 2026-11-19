@@ -151,7 +151,9 @@ def main():
         if done:
             print(f'  sub-{sub:02d}: cached')
             continue
-        log[str(sub)] = build_subject(sub, a.montages, ch_names, data_dir, a.local, (tr_paths, te_paths), ubp_file)
+        sub_file = ubp_paths(a.ubp_cache, sub)[2] if ubp_file else None        # same subject's UBP data for the check
+        sub_file = sub_file if sub_file and f'sub-{sub:02d}' in sub_file else None
+        log[str(sub)] = build_subject(sub, a.montages, ch_names, data_dir, a.local, (tr_paths, te_paths), sub_file)
         json.dump(log, open(log_p, 'w'), indent=1)
     print('done. config ->', a.config)
 
