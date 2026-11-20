@@ -717,9 +717,12 @@ def report(stage):
             if p is not None:
                 prim[key] = p
         if prim:
-            from statsmodels.stats.multitest import multipletests
-            ks = sorted(prim)
-            print('HOLM:', dict(zip(ks, [round(float(v), 4) for v in multipletests([prim[k] for k in ks], method='holm')[1]])))
+            ks = sorted(prim, key=lambda k: prim[k])
+            adj, run = {}, 0.0
+            for i, k in enumerate(ks):                                   # Holm step-down
+                run = max(run, min(1.0, (len(ks) - i) * float(prim[k])))
+                adj[k] = round(run, 4)
+            print('HOLM:', adj)
         cells2 = ('zero-label pipeline', 'no warm-up, cosine, population responses', 'plain decoder (image gallery, cosine)', 'rigid k=500')
         print('\nA. VIRTUAL ELECTRODES (success = vl beats direct sparse training; vs tells whether lags help; R^2 is a diagnostic)')
         for cell in cells2:
