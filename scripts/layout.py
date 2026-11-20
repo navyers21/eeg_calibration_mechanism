@@ -87,6 +87,7 @@ def dev():
 # environment
 # ---------------------------------------------------------------------------------------------------------------
 BASE = {}
+PREP = {'p': 'z'}
 
 
 def setup(prep, drive_base):
@@ -406,7 +407,7 @@ def fit_map(subjects, S, L, n_tr, n_va):
         for i in range(0, len(x), 1024):
             xb = torch.as_tensor(np.asarray(x[i:i + 1024], np.float32), device=dev())
             y = (R8.lagged(xb, L) @ W).permute(0, 2, 1)
-            if N.ENV.get('_prep') == 'z':
+            if N.ENV.get('_prep') in ('z', 'nb'):
                 for di, si in obs:                                      # identical z-scored channels: copy through
                     y[:, di] = xb[:, si]
             out.append(y.cpu().numpy().astype(np.float16))
@@ -594,7 +595,7 @@ def stage2(S, targets, epochs, part):
         for arm in trains:
             train_student(arm, S, B, lam=0.0 if arm.startswith(('direct', 'chorus')) else lam, epochs=epochs)
         for arm in evals:
-            eval_arm('z', arm, S, B)
+            eval_arm(PREP['p'], arm, S, B)
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -667,7 +668,13 @@ def report(stage):
         print('\nSIGNAL (raw image identification %, chance 0.5; virtual electrodes: R^2 on the missing channels)')
         print(s.groupby(['prep', 'arm', 'montage'])[cols].mean().round(3).to_string())
 
+    P2 = 'z' if (m2.prep == 'z').any() and (m2[m2.prep == 'z'].arm != 'repaug').any() else 'nb'
+    print(f'\nstage 2/3 contrasts use prep "{P2}"' + ('  (PILOT on 63-channel-whitened data: sparse inputs carry signal from every '
+          'electrode; relative comparisons are fair, absolute sparse levels and virtual electrodes are inflated)' if P2 == 'nb' else ''))
+
     def g(prep, arm, S, cell='zero-label pipeline', q='s4R4'):
+        if prep == 'z':
+            prep = P2
         try:
             return per[cell].xs((prep, arm, S, q), level=('prep', 'arm', 'montage', 'query'))
         except KeyError:
@@ -678,7 +685,7 @@ def report(stage):
             return R4m.pstats(a, b, label, **kw)
         return None
     print('\n' + '=' * 100 + '\nSTAGE 1: leak-free baselines and the preprocessing effect\n' + '=' * 100)
-    for S in (DENSE, 'crown_po2', 'crown8', 'occipital8'):
+    for S in (DENSE, 'crown_po2', 'crown8', 'occipital8') if P2 == 'z' else ():
         for cell in ('zero-label pipeline', 'plain decoder (image gallery, cosine)', 'within (ceiling)'):
             for q in ('s4R4', 'bench'):
                 con(g('z', 'repaug', S, cell, q), g('nb', 'repaug', S, cell, q), f'[{S}] {cell}, {q}: leak-free - 63-ch whitened')
@@ -759,6 +766,8 @@ def main():
     p.add_argument('--drive_base', default=None)
     p.add_argument('--reps_dir', default='/content/nb_reps')
     p.add_argument('--montages', nargs='+', default=['crown8', 'occipital8'])
+    p.add_argument('--prep', default='z', choices=['z', 'nb'],
+                   help='z = leak-free (needs unwhitened data); nb = the 63-channel-whitened release (pilot, leaky)')
     a = p.parse_args()
     N.setup(a.config)
     N.ENV['reps_dir'] = a.reps_dir
@@ -769,13 +778,20 @@ def main():
         return report(a.stage)
     if a.cmd == 'legacy':
         return stage_legacy(drive_base, a.montages, a.targets, a.epochs)
-    setup('z', drive_base)
-    N.ENV['_prep'] = 'z'
+    setup(a.prep, drive_base)
+    N.ENV['_prep'] = a.prep
+    PREP['p'] = a.prep
     if a.cmd == 'audit':
         return audit()
     if a.cmd == 'stage1':
+        if a.prep == 'nb':
+            train_direct('nb', [DENSE, 'crown_po2'], a.targets, a.epochs)
+            for B in a.targets:
+                for S in (DENSE, 'crown_po2'):
+                    eval_arm('nb', 'repaug', S, B)
+            return
         return stage1(a.targets, a.epochs)
-    miss = R8.ensure_reps(PEOPLE)
+    miss = R8.ensure_reps(PEOPLE) if a.prep == 'z' else []
     if miss:
         print(f'per-repetition caches missing for {miss} (fresh runtime): rebuilding', flush=True)
         for s in miss:
@@ -787,14 +803,14 @@ def main():
     if a.cmd in ('stage2a', 'stage2b'):
         return stage2('crown_po2', a.targets, a.epochs, a.cmd[-1])
     if a.cmd == 'stage3':
-        train_direct('z', a.montages, a.targets, a.epochs)
+        train_direct(a.prep, a.montages, a.targets, a.epochs)
         for S in a.montages:
             for B in a.targets:
                 train_student('direct1', S, B, epochs=a.epochs)
                 for arm in ('dist_rep', 'dist_pop_dense', 'dist_pop_sparse'):
                     train_student(arm, S, B, lam=chosen_lambda() or 0.3, epochs=a.epochs)
                 for arm in ('repaug', 'direct1', 'dist_rep', 'dist_pop_dense', 'dist_pop_sparse', 'vs', 'vl'):
-                    eval_arm('z', arm, S, B)
+                    eval_arm(PREP['p'], arm, S, B)
 
 
 if __name__ == '__main__':
