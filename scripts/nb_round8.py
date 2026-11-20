@@ -315,11 +315,14 @@ def sample_pairs(subjects, S, n_tr=2500, n_va=500, seed=0):
     for s in subjects:
         rs, rd = R.load_reps(s, S), R.load_reps(s, 'posterior17')
         r = np.random.RandomState(seed + s)
-        ims = np.sort(r.choice(len(rs), n_tr + n_va, replace=False))
+        tot = min(n_tr + n_va, len(rs))
+        n_va_s = max(1, int(round(tot * n_va / (n_tr + n_va))))
+        ims = np.sort(r.choice(len(rs), tot, replace=False))
         rep = r.randint(0, 4, len(ims))
         a, b = np.asarray(rs[ims, rep], np.float32), np.asarray(rd[ims, rep], np.float32)
         p = r.permutation(len(ims))
-        xs_tr.append(a[p[:n_tr]]), xd_tr.append(b[p[:n_tr]]), xs_va.append(a[p[n_tr:]]), xd_va.append(b[p[n_tr:]])
+        cut = tot - n_va_s
+        xs_tr.append(a[p[:cut]]), xd_tr.append(b[p[:cut]]), xs_va.append(a[p[cut:]]), xd_va.append(b[p[cut:]])
     return (np.concatenate(xs_tr), np.concatenate(xd_tr), np.concatenate(xs_va), np.concatenate(xd_va))
 
 
