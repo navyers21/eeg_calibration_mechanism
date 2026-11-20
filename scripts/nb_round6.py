@@ -62,6 +62,8 @@ TEST = list(range(2, 11))
 KS = [25, 100, 200, 500, 1000, 2000, 4000]
 QK = ['s4R1', 's4R4', 's4R20', 'bench']
 DECODERS = ['loso', 'repaug']
+CAL_SESSIONS = (3, 4)
+FT_VARIANTS = (('ft', False), ('ft_head', True))
 PRIMARY = dict(montage='posterior17', decoder='repaug', query='s4R4', cal_session=3, k=200)
 
 
@@ -162,7 +164,7 @@ def run_target(B, mon):
                 v = [top1(smat(c0.w(torch.as_tensor(q, device=dev())), c0.Gw, rule)) for q in c0.Q[qk]]
                 rows.append(dict(cal_session=0, k=0, draw=0, method='within', readout='img', rule=rule, query=qk,
                                  decoder='within', top1=float(np.mean(v))))
-    for cs in (3, 4):
+    for cs in CAL_SESSIONS:
         cand = np.array([i for i in c0.pool if (tr[i] == cs).sum() == 2])
         for k in KS:
             if k > len(cand):
@@ -187,7 +189,7 @@ def run_target(B, mon):
                     Zq = c.zq(d1)
                     fts = {}
                     if k >= 25:
-                        for nm, ho in (('ft', False), ('ft_head', True)):
+                        for nm, ho in FT_VARIANTS:
                             fts[nm] = finetune(c.f0, x2, ims, ftr, head_only=ho, seed=draw)
                     fits[dec] = (fns, Zq, fts)
                 meths = list(fits[DECODERS[0]][0]) + list(fits[DECODERS[0]][2])
