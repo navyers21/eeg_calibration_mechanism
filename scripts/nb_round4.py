@@ -155,10 +155,13 @@ def sessions(subjects, local='/content/ubp_raw'):
                 if 'session' not in d:
                     print(f'  {hit[0]}: no session field')
                     continue
-                got[mode] = dict(eeg=np.asarray(d['eeg'][:, :, idx, :250], np.float32), ses=np.asarray(d['session']),
+                got[mode] = dict(eeg=np.asarray(d['eeg'][:, :, idx, :250], np.float32), ses=np.asarray(d['session']).astype(int),
                                  img=np.asarray(d['img']))
                 del d
         assert set(got) == {'test', 'train'}, f'sub-{s:02d}: UBP files with session ids not found'
+        if min(got['train']['ses'].min(), got['test']['ses'].min()) == 0:      # store sessions as 1-4
+            for k in got:
+                got[k]['ses'] = got[k]['ses'] + 1
         nbd = N.subject_data(s, 'posterior17', keys=['test_trials', 'train_paths', 'test_paths'])
         # image order
         ui = {_pkey(p): i for i, p in enumerate(got['train']['img'][:, 0])}
@@ -210,7 +213,10 @@ def load_ses(B):
     if not os.path.exists(p):
         return None
     d = np.load(p)
-    return {'train': d['train'], 'test': d['test']}
+    tr, te = d['train'].astype(int), d['test'].astype(int)
+    if min(tr.min(), te.min()) == 0:                                    # UBP session ids may be 0-based
+        tr, te = tr + 1, te + 1
+    return {'train': tr, 'test': te}
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -298,8 +304,9 @@ class R4(R.R3):
             tr = self.ses['train']
             ok = (tr[cand] == 4).any(1) & (tr[cand] < 4).any(1)
             m = np.random.RandomState(4).permutation(cand[ok])[:2000]
-            old_r = np.array([np.nonzero(tr[i] < 4)[0][0] for i in m])
-            new_r = np.array([np.nonzero(tr[i] == 4)[0][0] for i in m])
+            assert len(m) > 100, f'only {len(m)} images seen in session 4 and earlier: session values {np.unique(tr)}'
+            old_r = np.array([np.nonzero(tr[i] < 4)[0][0] for i in m], dtype=int)
+            new_r = np.array([np.nonzero(tr[i] == 4)[0][0] for i in m], dtype=int)
             self.m_imgs = m
             self.old_m = np.asarray(reps[m, old_r], np.float32)
             self.fresh_m = np.asarray(reps[m, new_r], np.float32)
@@ -307,7 +314,7 @@ class R4(R.R3):
             for s in (1, 2, 3, 4):
                 ok = (tr[cand] == s).any(1)
                 ims = np.random.RandomState(10 + s).permutation(cand[ok])[:800]
-                rr = np.array([np.nonzero(tr[i] == s)[0][0] for i in ims])
+                rr = np.array([np.nonzero(tr[i] == s)[0][0] for i in ims], dtype=int)
                 self.by_ses[s] = np.asarray(reps[ims, rr], np.float32)
         else:
             self.m_imgs, self.old_m, self.fresh_m, self.by_ses = None, self.unl, None, None
@@ -661,6 +668,12 @@ def report(mons):
     au = os.path.join(odir(), 'session_audit.json')
     if os.path.exists(au):
         a = pd.DataFrame(json.load(open(au))).T
+        for sub in a.index:                                              # label-based stats recomputed on 1-4 ids
+            st = load_ses(int(sub))
+            if st is not None:
+                a.loc[sub, 'test_reps_as_assumed'] = float((st['test'] == np.repeat(np.arange(4) + 1, 20)[None]).mean())
+                a.loc[sub, 'train_rep01_before_rep23'] = float((st['train'][:, :2].max(1) < st['train'][:, 2:].min(1)).mean())
+                a.loc[sub, 'train_imgs_with_session4'] = int((st['train'] == 4).any(1).sum())
         print('SESSION AUDIT (per person):')
         cols = ['test_match_corr', 'test_best_other', 'test_confident', 'test_reps_as_assumed', 'train_match_corr',
                 'train_best_other', 'train_confident', 'train_identity_perm', 'train_rep01_before_rep23',
