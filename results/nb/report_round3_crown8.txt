@@ -1,0 +1,46 @@
+device: cuda
+/content/ecm/scripts/nb_round3.py:752: RuntimeWarning: Mean of empty slice
+  boot = [rng.choice(d, len(d)).mean() for _ in range(10000)]
+/usr/local/lib/python3.13/dist-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/usr/local/lib/python3.13/dist-packages/scipy/_lib/_util.py:1006: SmallSampleWarning: One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+  return fun(*args, **kwargs)
+/content/ecm/scripts/nb_round3.py:760: RuntimeWarning: Mean of empty slice
+  print(f'  {label}: mean {d.mean():+.2f} (95% CI {np.percentile(boot, 2.5):+.2f} to {np.percentile(boot, 97.5):+.2f}), '
+/usr/local/lib/python3.13/dist-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+
+==============================================================================================================
+crown8: people [np.int64(1)]
+==============================================================================================================
+frozen f0 (top-1 by query): {'bench': nan, 's4R1': nan, 's4R2': nan, 's4R4': nan, 's4R8': nan, 's4R20': nan}
+
+X1 (Track B: k images x 1 presentation, earlier sessions; query = session 4, 4 presentations), top-1:
+Empty DataFrame
+Columns: []
+Index: []
+
+  readout: image gallery vs predicted population anchors (neural target, query s4R4):
+Empty DataFrame
+Columns: []
+Index: []
+
+  benchmark track (4-presentation calibration, 80-rep queries), top-1:
+Empty DataFrame
+Columns: []
+Index: []
+
+SELECTED ON SUBJECT 1 (k = 25, query s4R4): AM = rr1 (LF 0), simple = trans_k0 (LF 0)
+P1-equivalent (crown8):
+Traceback (most recent call last):
+  File "/content/ecm/scripts/nb_round3.py", line 930, in <module>
+    main()
+    ~~~~^^
+  File "/content/ecm/scripts/nb_round3.py", line 919, in main
+    return report(a.montages)
+  File "/content/ecm/scripts/nb_round3.py", line 811, in report
+    p = person_stats(a, b, f'{am[0]} minus {simple[0]}')
+  File "/content/ecm/scripts/nb_round3.py", line 762, in person_stats
+    f'leave-one-person-out {min(lopo):+.2f} to {max(lopo):+.2f}')
+                            ~~~^^^^^^
+ValueError: min() iterable argument is empty

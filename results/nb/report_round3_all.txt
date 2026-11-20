@@ -1,0 +1,366 @@
+device: cuda
+
+==============================================================================================================
+posterior17: people [np.int64(1), np.int64(2), np.int64(3), np.int64(4), np.int64(5), np.int64(6), np.int64(7), np.int64(8)]
+==============================================================================================================
+frozen f0 (top-1 by query): {'bench': 12.8, 's4R1': 1.7, 's4R2': 2.5, 's4R4': 4.7, 's4R8': 6.9, 's4R20': 9.4}
+
+X1 (Track B: k images x 1 presentation, earlier sessions; query = session 4, 4 presentations), top-1:
+k                             5     10    25    50    200   2000
+cal    lf map                                                   
+image  0  full                 4.1   4.4   4.2   3.8   2.5   7.3
+          rigid_l1.0           2.9   3.0   2.7   2.9   5.1   8.1
+          rr16                 4.1   4.4   4.4   4.4   3.7   5.4
+          rr2                  4.1   4.6   4.8   5.1   5.2   5.6
+          trans_k5             4.8   4.9   5.1   5.3   5.5   5.4
+       1  full                 4.0   4.4   4.2   3.8   2.5   7.9
+          rigid_l1.0           2.9   3.1   2.7   2.8   5.2   8.5
+          rr16                 4.0   4.4   4.2   4.4   3.9   5.6
+          rr2                  4.1   4.6   4.8   5.0   5.2   5.6
+          trans_k5             4.9   4.9   5.0   5.1   5.1   5.2
+neural 0  full                 3.9   4.3   4.1   3.9   2.8   9.2
+          rigid_l0.1           2.3   2.1   1.7   1.8   2.8   6.7
+          rigid_l1.0           2.4   2.2   1.9   2.1   4.1   6.8
+          rr1                  4.0   4.5   4.8   4.9   4.8   5.5
+          rr16                 3.9   4.3   4.3   4.3   3.7   6.0
+          rr2                  3.9   4.4   4.7   4.8   4.9   5.5
+          rr2_shuffled         3.7   4.1   3.9   3.7   2.9   3.4
+          rr4                  3.9   4.4   4.6   4.7   4.6   5.9
+          rr8                  3.9   4.3   4.5   4.6   4.2   6.5
+          trans_k0             4.0   4.6   4.8   4.9   5.0   4.8
+          trans_k25            4.8   4.8   4.9   4.9   5.0   4.9
+          trans_k5             4.7   4.8   4.9   4.9   5.0   4.8
+          trans_k5_otherimgs   4.6   4.7   4.9   4.9   4.9   4.8
+       1  full                 3.9   4.2   4.1   3.9   2.9  10.0
+          rigid_l0.1           2.4   2.1   1.6   1.7   3.1   7.3
+          rigid_l1.0           2.4   2.2   1.9   2.1   4.2   6.6
+          rr1                  4.0   4.5   4.7   4.8   4.7   5.2
+          rr16                 3.9   4.2   4.2   4.3   3.8   6.7
+          rr2                  4.0   4.4   4.6   4.7   4.7   5.4
+          rr2_shuffled         3.8   4.1   3.8   3.6   2.9   3.3
+          rr4                  3.9   4.3   4.5   4.6   4.7   5.8
+          rr8                  3.9   4.2   4.3   4.5   4.3   6.5
+          trans_k0             4.0   4.5   4.8   4.8   5.0   5.1
+          trans_k25            4.9   4.9   5.0   5.0   5.1   5.1
+          trans_k5             4.7   4.8   4.9   4.9   5.1   5.1
+          trans_k5_otherimgs   4.6   4.6   4.7   4.8   5.1   5.1
+
+  readout: image gallery vs predicted population anchors (neural target, query s4R4):
+k                        25          200     
+readout               anchor  img anchor  img
+lf map                                       
+0  full                  5.9  4.1    3.2  2.8
+   rigid_l0.1            1.9  1.7    3.3  2.8
+   rigid_l1.0            2.2  1.9    4.8  4.1
+   rr1                   6.6  4.8    6.7  4.8
+   rr16                  6.0  4.3    5.0  3.7
+   rr2                   6.5  4.7    6.5  4.9
+   rr2_shuffled          5.5  3.9    3.7  2.9
+   rr4                   6.3  4.6    6.3  4.6
+   rr8                   6.2  4.5    5.6  4.2
+   trans_k0              6.6  4.8    6.7  5.0
+   trans_k25             6.6  4.9    6.7  5.0
+   trans_k5              6.6  4.9    6.7  5.0
+   trans_k5_otherimgs    6.4  4.9    6.6  4.9
+1  full                  6.0  4.1    3.4  2.9
+   rigid_l0.1            1.9  1.6    3.5  3.1
+   rigid_l1.0            2.3  1.9    5.1  4.2
+   rr1                   6.5  4.7    6.7  4.7
+   rr16                  6.1  4.2    5.2  3.8
+   rr2                   6.4  4.6    6.6  4.7
+   rr2_shuffled          5.7  3.8    3.7  2.9
+   rr4                   6.4  4.5    6.4  4.7
+   rr8                   6.3  4.3    5.8  4.3
+   trans_k0              6.5  4.8    6.8  5.0
+   trans_k25             6.7  5.0    6.8  5.1
+   trans_k5              6.7  4.9    6.8  5.1
+   trans_k5_otherimgs    6.6  4.7    6.7  5.1
+
+  benchmark track (4-presentation calibration, 80-rep queries), top-1:
+k                              25    200
+cal    lf map                           
+image  0  full                14.5  10.6
+          rigid_l1.0          10.3  18.0
+          rr16                15.1  17.0
+          rr2                 17.0  18.6
+          trans_k5            17.3  18.7
+       1  full                15.2  11.1
+          rigid_l1.0          10.8  18.7
+          rr16                15.5  17.8
+          rr2                 17.5  20.0
+          trans_k5            17.4  18.1
+neural 0  full                15.8  14.6
+          rigid_l0.1           7.1  15.1
+          rigid_l1.0           8.4  21.1
+          rr1                 17.7  19.9
+          rr16                16.3  19.3
+          rr2                 17.6  20.2
+          rr2_shuffled        12.4   9.2
+          rr4                 17.6  20.4
+          rr8                 17.2  20.3
+          trans_k0            17.5  18.2
+          trans_k25           15.1  17.6
+          trans_k5            16.7  18.1
+          trans_k5_otherimgs  16.5  18.0
+       1  full                16.7  14.8
+          rigid_l0.1           7.5  15.7
+          rigid_l1.0           8.9  22.4
+          rr1                 18.1  20.8
+          rr16                17.2  20.9
+          rr2                 18.3  20.9
+          rr2_shuffled        13.3   9.9
+          rr4                 18.3  21.1
+          rr8                 18.0  21.5
+          trans_k0            17.7  18.3
+          trans_k25           17.6  18.2
+          trans_k5            17.7  18.3
+          trans_k5_otherimgs  17.4  18.2
+
+SELECTED ON SUBJECT 1 (k = 25, query s4R4): AM = rr1 (LF 0), simple = trans_k5 (LF 0)
+PRIMARY P1 (posterior17):
+  rr1 minus trans_k5: mean -0.10 (95% CI -0.23 to +0.04), median -0.18, 3/7 positive, sign p=1.0000, Wilcoxon p=0.2188, leave-one-person-out -0.14 to -0.06
+     per person: t2:-0.4, t3:+0.2, t4:+0.1, t5:-0.2, t6:+0.0, t7:-0.2, t8:-0.2
+  rr1 minus frozen f0: mean +0.05 (95% CI -0.41 to +0.50), median +0.19, 4/7 positive, sign p=1.0000, Wilcoxon p=0.9375, leave-one-person-out -0.12 to +0.19
+     per person: t2:-0.6, t3:+0.7, t4:-0.4, t5:+0.2, t6:+1.0, t7:+0.2, t8:-0.8
+  trans_k5 minus frozen f0: mean +0.14 (95% CI -0.28 to +0.55), median +0.37, 4/7 positive, sign p=1.0000, Wilcoxon p=0.8125, leave-one-person-out -0.00 to +0.27
+     per person: t2:-0.2, t3:+0.5, t4:-0.5, t5:+0.5, t6:+1.0, t7:+0.4, t8:-0.6
+  AM minus AM with shuffled anchors (pairing control): mean +0.90 (95% CI +0.63 to +1.15), median +0.94, 7/7 positive, sign p=0.0156, Wilcoxon p=0.0156, leave-one-person-out +0.82 to +1.01
+     per person: t2:+0.9, t3:+0.7, t4:+1.0, t5:+0.3, t6:+0.8, t7:+1.4, t8:+1.3
+  simple minus translation from other images (pairing control): mean +0.01 (95% CI -0.04 to +0.08), median +0.00, 4/7 positive, sign p=1.0000, Wilcoxon p=0.9375, leave-one-person-out -0.01 to +0.03
+     per person: t2:+0.0, t3:+0.1, t4:+0.1, t5:-0.0, t6:-0.1, t7:+0.2, t8:-0.1
+
+X1F LABEL-FREE COMPETITORS (top-1):
+                                bench  s4R1  s4R4  s4R20
+transductive method        U                            
+False        EA_sensor     25     9.7   2.3   5.0    7.2
+                           100    9.5   2.3   5.1    7.4
+                           400    9.4   2.3   5.2    7.5
+             LF_h1         25    13.0   1.9   4.6    8.5
+                           100   16.6   2.0   4.9   10.6
+                           400   18.6   1.8   4.9   12.1
+             f0            0     12.8   1.7   4.7    9.4
+             out_mean      25    15.0   2.1   5.0    9.9
+                           100   15.3   2.1   5.0   10.4
+                           400   15.2   2.1   5.0   10.3
+             out_meanscale 25    15.2   2.1   4.9    9.8
+                           100   15.4   2.1   5.1   10.5
+                           400   15.1   2.1   5.0   10.4
+True         CSLS          0     19.9   2.0   5.4   12.9
+             LF_h1_batch   0     19.9   1.9   5.4   14.5
+             SCORE_lite    0     15.6   1.9   4.7    9.6
+             batch_whiten  0     10.3   1.6   2.8    4.9
+
+X1L LAYER TEST + X1T TEAM BASELINE (track B, after LF for X1L):
+                             bench  s4R1  s4R4  s4R20
+method             rank k                            
+AM_h3              4    25    16.5   2.1   4.7   10.3
+                        200   18.5   2.1   5.2   11.6
+                   16   25    16.0   1.9   4.6   10.1
+                        200   18.0   2.0   5.1   10.8
+channelmap+outedit 64   25     8.8   1.6   3.7    6.8
+                        200   10.9   2.4   5.4    9.1
+imageloss_h3       4    25    14.3   1.7   4.5    9.1
+                        200   11.9   1.8   3.9    8.3
+                   16   25    13.4   1.8   4.3    9.0
+                        200   13.5   2.2   4.8    9.8
+imageloss_z        4    25    13.5   1.8   4.4    9.6
+                        200   11.2   1.6   4.1    7.9
+                   16   25    13.5   1.8   4.6    9.6
+                        200    9.1   1.7   3.8    6.7
+
+X2 GEOMETRY (rank 16): variance of source activations captured, overlap with the target's own difference basis (principal-angle cos^2, disjoint halves):
+                  var_src  overlap_targetdiff  chance
+basis                                                
+gallery_pc          0.215               0.454   0.031
+iso_rand            0.033               0.032   0.031
+mis_centered        0.303               0.665   0.031
+mis_uncentered      0.303               0.648   0.031
+src_pc              0.313               0.670   0.031
+var_matched_rand    0.130               0.200   0.031
+
+X2 DEPLOYABLE (offset + U A U^T fitted on k target images; query s4R4):
+k                      5.0   10.0  25.0  50.0
+basis            rank                        
+gallery_pc       2      3.6   4.2   4.3   4.4
+                 4      1.7   3.9   4.0   4.0
+                 8      2.5   3.0   3.5   3.5
+                 16     3.1   2.1   3.2   3.3
+                 32     3.5   3.0   1.4   3.0
+iso_rand         2      4.0   4.5   4.8   4.8
+                 4      4.0   4.5   4.7   4.8
+                 8      3.9   4.3   4.6   4.6
+                 16     4.1   4.4   4.7   4.8
+                 32     4.0   4.4   4.4   4.6
+mis_centered     2      3.8   4.3   4.5   4.5
+                 4      2.2   3.9   4.0   3.9
+                 8      2.7   3.1   3.6   3.4
+                 16     3.0   2.1   3.2   3.1
+                 32     3.5   3.2   1.4   3.1
+mis_uncentered   2      3.8   4.3   4.6   4.6
+                 4      2.2   4.0   4.0   4.0
+                 8      2.7   3.1   3.7   3.4
+                 16     3.0   2.1   3.2   3.2
+                 32     3.5   3.2   1.5   3.2
+offset_only      0      4.0   4.5   4.8   4.8
+src_pc           2      3.6   4.2   4.4   4.5
+                 4      1.8   3.8   4.0   4.0
+                 8      2.5   3.0   3.5   3.5
+                 16     2.9   2.0   3.1   3.1
+                 32     3.4   3.1   1.4   3.1
+var_matched_rand 2      3.8   4.2   4.5   4.5
+                 4      3.1   4.2   4.6   4.6
+                 8      3.6   3.7   4.3   4.2
+                 16     3.7   3.5   4.0   4.0
+                 32     3.7   3.7   2.7   4.1
+   diagonal A:
+k                      5.0   10.0  25.0  50.0
+basis            rank                        
+gallery_pc       2      3.4   3.9   4.2   4.3
+                 4      2.9   3.4   3.7   3.8
+                 8      2.3   2.7   2.9   3.0
+                 16     1.7   2.0   2.3   2.4
+                 32     1.5   1.8   2.0   2.0
+iso_rand         2      4.0   4.5   4.8   4.8
+                 4      4.1   4.5   4.7   4.8
+                 8      3.9   4.4   4.6   4.6
+                 16     4.0   4.4   4.8   4.8
+                 32     3.8   4.2   4.5   4.5
+mis_centered     2      3.7   4.2   4.5   4.5
+                 4      3.2   3.5   3.6   3.7
+                 8      2.4   2.8   3.0   3.1
+                 16     1.3   1.6   1.7   1.7
+                 32     1.2   1.4   1.4   1.4
+mis_uncentered   2      3.7   4.3   4.5   4.6
+                 4      3.2   3.6   3.8   3.8
+                 8      2.4   2.8   3.0   3.1
+                 16     1.4   1.7   1.7   1.8
+                 32     1.2   1.4   1.5   1.4
+src_pc           2      3.5   3.9   4.1   4.2
+                 4      2.8   3.2   3.4   3.5
+                 8      2.1   2.5   2.6   2.8
+                 16     1.4   1.7   1.8   1.9
+                 32     1.3   1.5   1.6   1.6
+var_matched_rand 2      3.7   4.1   4.4   4.4
+                 4      3.8   4.2   4.4   4.5
+                 8      3.4   3.6   3.8   3.9
+                 16     3.0   3.3   3.5   3.5
+                 32     2.5   2.8   3.0   3.1
+PRIMARY P2 (rank 2, k = 25): mismatch basis vs source-activation PCs
+  mis_centered minus src_pc: mean +0.07 (95% CI -0.20 to +0.34), median +0.06, 5/7 positive, sign p=0.4531, Wilcoxon p=0.4688, leave-one-person-out -0.04 to +0.18
+     per person: t2:-0.1, t3:+0.1, t4:+0.7, t5:+0.0, t6:+0.2, t7:+0.2, t8:-0.6
+
+X2 ORACLE PANEL (target = sessions 3-4; top-1):
+donor                  none  offset_only  remove_target_component  repeat_matched_mean  same_category_wrong_image  single_same_image  target_repeat  wrong_image_mean
+basis            rank                                                                                                                                                
+-                0     10.6          NaN                      NaN                  NaN                        NaN                NaN            NaN               NaN
+gallery_pc       4      NaN         12.5                      3.6                 15.6                        4.4               18.3           11.1               4.1
+                 16     NaN         15.2                      1.3                 34.7                        0.9               38.9           10.8               1.2
+iso_rand         4      NaN         11.3                     10.5                 11.1                       10.7               11.2           10.6              10.8
+                 16     NaN         10.9                     10.3                 11.4                       10.2               12.1           10.4              10.4
+mis_centered     4      NaN         11.7                      6.6                 14.1                        7.7               17.2           10.5               6.3
+                 16     NaN         15.0                      1.3                 29.8                        1.2               35.5           10.4               1.4
+mis_uncentered   4      NaN         11.8                      6.7                 13.9                        8.2               16.4           10.3               6.6
+                 16     NaN         14.9                      1.3                 30.1                        1.6               35.1           10.1               1.3
+src_pc           4      NaN         12.1                      3.7                 14.1                        5.9               17.6           10.2               3.9
+                 16     NaN         15.0                      1.2                 30.8                        1.1               35.9           10.6               1.1
+var_matched_rand 4      NaN         10.9                      9.1                 11.6                        9.0               12.4           10.9               9.4
+                 16     NaN         11.8                      5.4                 15.1                        7.3               19.5           10.8               6.4
+
+X3 ACQUISITION (query = session 4 with R presentations; bench = 80):
+                                            bench  s4R1  s4R2  s4R4  s4R8  s4R20
+cost design method                                                              
+0.0  -      LF_offset                        16.8   1.9   2.9   4.9   8.0   10.5
+            f0                               12.8   1.7   2.5   4.7   6.9    9.4
+            fresh_offset(transductive)       19.9   1.9   3.2   5.4   9.1   14.5
+            within                           60.6   6.6  11.5  18.6  29.4   43.5
+20.0 10x2   rigid_l1                          6.9   1.3   1.6   2.4   3.3    4.5
+            rr2                              15.7   1.8   2.7   4.5   7.2    9.9
+            rr2+fresh_offset(transductive)   17.2   1.9   2.9   4.7   7.7   11.8
+            rr4                              15.2   1.8   2.7   4.5   7.1    9.9
+            trans_k5                         16.4   1.9   2.8   4.8   7.7   10.7
+     20x1   rigid_l1                          4.8   1.1   1.4   2.0   2.7    3.6
+            rr2                              15.6   2.0   2.7   4.5   7.1    9.6
+            rr2+fresh_offset(transductive)   17.4   2.0   3.0   4.9   7.8   11.8
+            rr4                              14.8   2.0   2.7   4.5   7.0    9.5
+            trans_k5                         16.1   1.9   2.8   4.8   7.7   10.2
+     5x4    rigid_l1                          8.2   1.3   1.8   2.8   4.1    5.8
+            rr2                              14.7   1.8   2.6   4.4   6.7    9.5
+            rr2+fresh_offset(transductive)   16.6   1.8   2.7   4.6   7.1   10.9
+            rr4                              14.6   1.8   2.6   4.4   6.6    9.5
+            trans_k5                         16.9   1.9   2.8   4.8   7.9   11.0
+40.0 10x4   rigid_l1                          8.4   1.4   1.8   2.7   4.1    5.4
+            rr2                              16.7   1.9   3.0   4.7   7.5   10.9
+            rr2+fresh_offset(transductive)   18.0   1.9   2.9   4.8   7.9   12.4
+            rr4                              16.3   1.8   2.8   4.7   7.3   10.5
+            trans_k5                         17.4   2.0   2.9   4.9   8.0   11.2
+     20x2   rigid_l1                          6.4   1.2   1.6   2.3   3.3    4.4
+            rr2                              16.5   1.9   2.8   4.9   7.6   10.7
+            rr2+fresh_offset(transductive)   18.2   2.0   3.1   5.1   8.2   12.6
+            rr4                              16.2   1.9   2.8   4.8   7.6   10.4
+            trans_k5                         16.9   2.0   2.9   4.9   7.9   10.8
+     40x1   rigid_l1                          5.0   1.1   1.5   2.0   2.8    3.7
+            rr2                              15.6   1.9   2.8   4.7   7.4   10.2
+            rr2+fresh_offset(transductive)   17.8   2.0   3.0   5.0   8.2   12.6
+            rr4                              15.3   1.9   2.8   4.5   7.2    9.6
+            trans_k5                         16.3   2.0   2.8   4.8   7.7   10.6/content/ecm/scripts/nb_round3.py:752: RuntimeWarning: Mean of empty slice
+  boot = [rng.choice(d, len(d)).mean() for _ in range(10000)]
+/usr/local/lib/python3.13/dist-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/usr/local/lib/python3.13/dist-packages/scipy/_lib/_util.py:1006: SmallSampleWarning: One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+  return fun(*args, **kwargs)
+/content/ecm/scripts/nb_round3.py:760: RuntimeWarning: Mean of empty slice
+  print(f'  {label}: mean {d.mean():+.2f} (95% CI {np.percentile(boot, 2.5):+.2f} to {np.percentile(boot, 97.5):+.2f}), '
+/usr/local/lib/python3.13/dist-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+
+
+  signal (model-free raw-EEG image identification, %; chance 0.5):
+within_person_raw_ident          52.143
+from_source_anchors_raw_ident    25.429
+within_person_pattern_gap         0.291
+from_source_pattern_gap           0.246
+
+X4 ANCHOR PANELS (track B; query s4R4):
+panel        diversity  random  reliability  reliability+diversity
+map      k                                                        
+rr2      5         4.0     4.0          4.3                    4.2
+         10        4.9     4.3          4.6                    4.5
+         25        4.7     4.5          4.5                    4.8
+trans_k5 5         4.9     4.6          4.5                    4.8
+         10        4.7     4.7          4.8                    4.9
+         25        4.5     4.7          4.7                    4.8
+
+==============================================================================================================
+crown8: people [np.int64(1)]
+==============================================================================================================
+frozen f0 (top-1 by query): {'bench': nan, 's4R1': nan, 's4R2': nan, 's4R4': nan, 's4R8': nan, 's4R20': nan}
+
+X1 (Track B: k images x 1 presentation, earlier sessions; query = session 4, 4 presentations), top-1:
+Empty DataFrame
+Columns: []
+Index: []
+
+  readout: image gallery vs predicted population anchors (neural target, query s4R4):
+Empty DataFrame
+Columns: []
+Index: []
+
+  benchmark track (4-presentation calibration, 80-rep queries), top-1:
+Empty DataFrame
+Columns: []
+Index: []
+
+SELECTED ON SUBJECT 1 (k = 25, query s4R4): AM = rr1 (LF 0), simple = trans_k0 (LF 0)
+P1-equivalent (crown8):
+Traceback (most recent call last):
+  File "/content/ecm/scripts/nb_round3.py", line 930, in <module>
+    main()
+    ~~~~^^
+  File "/content/ecm/scripts/nb_round3.py", line 919, in main
+    return report(a.montages)
+  File "/content/ecm/scripts/nb_round3.py", line 811, in report
+    p = person_stats(a, b, f'{am[0]} minus {simple[0]}')
+  File "/content/ecm/scripts/nb_round3.py", line 762, in person_stats
+    f'leave-one-person-out {min(lopo):+.2f} to {max(lopo):+.2f}')
+                            ~~~^^^^^^
+ValueError: min() iterable argument is empty
