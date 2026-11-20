@@ -4,7 +4,8 @@ headset's electrodes, for a new person on a later day? Three stages with stop po
     python scripts/layout.py audit  --config C           # reference / session-pairing / channel-invariance checks
     python scripts/layout.py stage1 --config C           # leak-free data + direct baselines                -> STOP 1
     python scripts/layout.py legacy --config C --montages posterior17 crown_po2   # same on the old whitened data
-    python scripts/layout.py stage2 --config C           # PO3/PO4: virtual electrodes, distillation, controls -> STOP 2
+    python scripts/layout.py stage2a --config C          # PO3/PO4 core arms -> STOP 2
+    python scripts/layout.py stage2b --config C          # PO3/PO4 controls (sparse teacher, same-trial, permuted, CHORUS-direct, person-fitted map)
     python scripts/layout.py stage3 --config C           # Crown-8, occipital-8, montage-whitening sensitivity
     python scripts/layout.py report --config C --stage 1|2|3
 
@@ -28,6 +29,13 @@ Arms (sparse montage S; decoders trained on the 9 other people; person 1 = selec
                                                                                           independent-repeat (E)
   dist_sparse  same as dist_rep, teacher = the sparse repaug decoder (no extra electrodes)     sparse-teacher (F)
   dist_perm    same as dist_rep, teacher input = a different photograph of the same concept     negative control
+  direct1_init / dist_rep_init   direct1 / dist_rep initialized from the dense teacher (first layer = its PO3/PO4 columns;
+               Kazuma's best Crown student combined inheritance and distillation; this pair separates them)
+  dist_pop_dense   KL to a POPULATION target: the teacher's mean embedding of the photograph over one half of the other
+               source people, scored against the batch photographs' mean embeddings over the other half (NEAR / CHORUS)
+  dist_pop_sparse  the same with the sparse teacher on the donors' sparse EEG (decisive control for the dense electrodes)
+  chorus_direct    direct sparse training where half the samples are averages of 2 or 4 other donors' EEG for the same
+               photograph (no dense data; the cheapest alternative explanation)
 Distillation loss: L = L_image + lambda T^2 KL(p_teacher,T || p_student,T), both scored against the teacher-space
 population responses of the batch's photographs (mean teacher output over the 9 source people); T = 2; lambda from
 {0.1, 0.3, 1.0} chosen on person 1 (dist_rep, zero-label pipeline, s4R4) and locked for D/E/F/perm.
@@ -170,7 +178,41 @@ def population_anchors(teacher, mon, B):
     return acc, pool
 
 
+DIST_REP = ('dist_rep', 'dist_rep_init', 'dist_sparse')
+POP = ('dist_pop_dense', 'dist_pop_sparse')
+DONOR_BATCHES = POP + ('chorus_direct',)
+
+
+def inherit(student, teacher, S):
+    """weight inheritance: copy every compatible tensor from the dense teacher; the first layer gets the teacher's
+    columns for the student's channels (input flattened channel-major: column c * T + t)."""
+    from eegalign import ubp as U
+    dense, sparse = U.MONTAGES[DENSE], U.MONTAGES[S]
+    idx = [dense.index(c) for c in sparse]
+    ts, ss = teacher.state_dict(), student.state_dict()
+    for k, v in ts.items():
+        if k == 'encoder.model.0.weight':
+            h = v.shape[0]
+            ss[k] = v.reshape(h, len(dense), -1)[:, idx].reshape(h, -1).clone()
+        elif k in ss and ss[k].shape == v.shape:
+            ss[k] = v.clone()
+    student.load_state_dict(ss)
+
+
 def train_student(arm, S, B, lam=0.0, epochs=50, batch=1024, lr=1e-4, wd=1e-4, tag=None):
+    """Sparse students. All arms: one presentation per sample (except chorus_direct mixes in cross-donor averages),
+    random temporal smoothing, the dense teacher's image projector copied and frozen.
+      direct1 / direct1_init        image loss only (random init / init from the dense teacher)
+      dist_rep / dist_rep_init      + KL to the dense teacher on the OTHER same-session presentation of the photograph
+      dist_same                     + KL, teacher sees the same presentation
+      dist_sparse                   + KL, teacher = sparse repaug decoder, other presentation
+      dist_perm                     + KL, teacher sees another photograph of the same concept (negative control)
+      dist_pop_dense                + KL to a POPULATION target: the teacher's mean embedding of the photograph over
+                                    donor group A, scored against the batch photographs' mean embeddings over donor
+                                    group B (A, B = disjoint halves of the other source people, redrawn every batch)
+      dist_pop_sparse               same with the sparse teacher on the donors' sparse EEG (decisive control)
+      chorus_direct                 image loss only; half the samples are replaced by the average of 2 or 4 other
+                                    donors' EEG for the same photograph (CHORUS-style; no dense data)"""
     kind = tag or arm
     path = N.ckpt_path(kind, S, B, SEED, 'last')
     if os.path.exists(path):
@@ -179,67 +221,98 @@ def train_student(arm, S, B, lam=0.0, epochs=50, batch=1024, lr=1e-4, wd=1e-4, t
     t0 = time.time()
     torch.manual_seed(SEED)
     np.random.seed(SEED)
-    tmon = S if arm == 'dist_sparse' else DENSE
-    tkind = 'repaug'
-    tp = N.ckpt_path(tkind, tmon, B, SEED, 'last')
+    sparse_t = arm in ('dist_sparse', 'dist_pop_sparse')
+    tmon = S if sparse_t else DENSE
+    tp = N.ckpt_path('repaug', tmon, B, SEED, 'last')
     assert os.path.exists(tp), f'teacher {tp} missing (stage 1 trains it)'
     teacher = N.load_model(tp)[0].to(dev()).eval().requires_grad_(False)
-    use_t = arm != 'direct1' and lam > 0
-    A_all, pool0 = population_anchors(teacher, tmon, B) if use_t else (None, None)
+    dense_t = N.load_model(N.ckpt_path('repaug', DENSE, B, SEED, 'last'))[0].to(dev()).eval().requires_grad_(False)
+    use_t = arm.startswith('dist') and lam > 0
     srcs = [s for s in PEOPLE if s != B]
-    IM, PR, CON, val = [], [], [], []
+    IM, PR, CON, val, pair_ok = [], [], [], [], []
     for s in srcs:
         d = N.subject_data(s, S, keys=('train', 'train_labels'))
         pool, draws = N.split(d['train_labels'])
-        st = R4m.load_ses(s)
-        PR.append(torch.from_numpy(partner_reps(st['train'][pool])))
+        st = R4m.load_ses(s)['train'][pool]
+        pr = partner_reps(st)
+        pair_ok.append(float((np.take_along_axis(st, pr, 1) == st).mean()))
+        PR.append(torch.from_numpy(pr))
         IM.append(torch.from_numpy(pool))
         CON.append(d['train_labels'][pool].astype(np.int64))
         val += [(d['train'][ix], ix) for ix in draws[:3]]
-    npp = len(IM[0])
+    npp, nd = len(IM[0]), len(srcs)
 
     def fill(mon):                                                       # one person at a time: no second copy
         r0 = R.load_reps(srcs[0], mon)
-        X = torch.empty((npp * len(srcs), 4, r0.shape[2], r0.shape[3]), dtype=torch.float16, device=dev())
+        X = torch.empty((npp * nd, 4, r0.shape[2], r0.shape[3]), dtype=torch.float16, device=dev())
         for j, s in enumerate(srcs):
             X[j * npp:(j + 1) * npp] = torch.from_numpy(np.asarray(R.load_reps(s, mon)[IM[j].numpy()], np.float16))
         return X
     XS = fill(S)
-    XT = fill(tmon) if use_t else None
-    IMG, P, CON_np = torch.cat(IM).to(dev()), torch.cat(PR).to(dev()), CON
     n, _, C, T = XS.shape
-    if use_t:
+    IMG, P = torch.cat(IM).to(dev()), torch.cat(PR).to(dev())
+    XT, E, An, apos, perm_src = None, None, None, None, None
+    if use_t and arm in POP:
+        Xsrc = XS if sparse_t else fill(DENSE)
+        E = torch.empty((nd, npp, 512), device=dev())
+        with torch.no_grad():
+            for j in range(nd):
+                for i in range(0, npp, 2048):
+                    e = min(i + 2048, npp)
+                    E[j, i:e] = teacher(Xsrc[j * npp + i:j * npp + e].float().mean(1))
+        if Xsrc is not XS:
+            del Xsrc
+    elif use_t:
+        XT = XS if sparse_t else fill(DENSE)
+        A_all, pool0 = population_anchors(teacher, tmon, B)
         pos = {int(i): j for j, i in enumerate(pool0)}
         apos = torch.as_tensor([pos[int(i)] for i in IMG.cpu().numpy()], device=dev())
         An = F.normalize(A_all, dim=-1)
-        # dist_perm: the teacher sees ANOTHER photograph of the same concept from the same source person
-        perm_np = np.empty(n, np.int64)
-        off = 0
-        for blk in CON_np:
-            o = np.lexsort((np.arange(len(blk)), blk))
-            g = blk[o]
-            start = np.r_[0, np.nonzero(np.diff(g))[0] + 1]
-            end = np.r_[start[1:], len(g)]
-            nxt = np.arange(len(g)) + 1
-            nxt[end - 1] = start
-            perm_np[off + o] = off + o[nxt]
-            off += len(blk)
-        perm_src = torch.as_tensor(perm_np, device=dev())
+        if arm == 'dist_perm':                                           # another photograph, same concept, same donor
+            perm_np, off = np.empty(n, np.int64), 0
+            for blk in CON:
+                o = np.lexsort((np.arange(len(blk)), blk))
+                g = blk[o]
+                start = np.r_[0, np.nonzero(np.diff(g))[0] + 1]
+                end = np.r_[start[1:], len(g)]
+                nxt = np.arange(len(g)) + 1
+                nxt[end - 1] = start
+                perm_np[off + o] = off + o[nxt]
+                off += len(blk)
+            perm_src = torch.as_tensor(perm_np, device=dev())
+    XSavg = XS.float().mean(1).half().reshape(nd, npp, C, T) if arm == 'chorus_direct' else None
     ftr = N.features('train', 'aug').to(dev())
     m = N.NBModel(C).to(dev())
-    m.img_projector.load_state_dict(teacher.img_projector.state_dict())
+    if arm.endswith('_init'):
+        inherit(m, dense_t, S)
+    src_proj = teacher if sparse_t else dense_t
+    m.img_projector.load_state_dict(src_proj.img_projector.state_dict())
     m.img_projector.requires_grad_(False)
     opt = torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=lr, betas=(0.9, 0.999), weight_decay=wd)
     hist = []
     for ep in range(1, epochs + 1):
         m.train()
-        perm = torch.randperm(n, device=dev())
-        tot, totkl, nb = 0.0, 0.0, 0
-        for i in range(0, n - batch + 1, batch):
-            idx = perm[i:i + batch]
+        if arm in DONOR_BATCHES:                                         # every batch from ONE source person
+            chunks = []
+            for j in range(nd):
+                pj = torch.randperm(npp, device=dev()) + j * npp
+                chunks += [pj[i:i + batch] for i in range(0, npp - batch + 1, batch)]
+            batches = [chunks[i] for i in torch.randperm(len(chunks)).tolist()]
+        else:
+            perm = torch.randperm(n, device=dev())
+            batches = [perm[i:i + batch] for i in range(0, n - batch + 1, batch)]
+        tot, totkl, tacc, tent, nb = 0.0, 0.0, 0.0, 0.0, 0
+        for idx in batches:
             b = len(idx)
             r = torch.randint(0, 4, (b,), device=dev())
             xs = XS[idx, r].float()
+            if arm == 'chorus_direct':
+                donor = int(idx[0]) // npp
+                others = [j for j in range(nd) if j != donor]
+                k = int(np.random.choice([2, 4]))
+                pick = np.random.choice(others, k, replace=False).tolist()
+                avg = XSavg[pick][:, (idx - donor * npp)].float().mean(0)
+                xs = torch.where((torch.rand(b, device=dev()) < 0.5)[:, None, None], avg, xs)
             sm = F.avg_pool1d(xs.reshape(-1, 1, T), 5, 1, 2, count_include_pad=False).reshape(b, C, T)
             xs = torch.where(torch.rand(b, C, 1, device=dev()) < 0.3, sm, xs)
             z = m(xs)
@@ -247,19 +320,30 @@ def train_student(arm, S, B, lam=0.0, epochs=50, batch=1024, lr=1e-4, wd=1e-4, t
                 g = m.gallery(ftr[IMG[idx]])
             loss = N.nb_loss(z, g, m.scale())
             if use_t:
-                if arm == 'dist_same':
-                    ti, tr_ = idx, r
-                elif arm == 'dist_perm':
-                    ti = perm_src[idx]
-                    tr_ = P[ti, r]
-                else:                                                   # dist_rep, dist_sparse
-                    ti, tr_ = idx, P[idx, r]
                 with torch.no_grad():
-                    zt = teacher(XT[ti, tr_].float())
-                    Ab = An[apos[idx]]
-                    lt = m.scale() * F.normalize(zt, dim=-1) @ Ab.T
+                    if arm in POP:
+                        donor = int(idx[0]) // npp
+                        others = np.random.permutation([j for j in range(nd) if j != donor]).tolist()
+                        ga, gb = others[:len(others) // 2], others[len(others) // 2:]
+                        loc = idx - donor * npp
+                        q = E[ga][:, loc].mean(0)
+                        Ab = F.normalize(E[gb][:, loc].mean(0), dim=-1)
+                    else:
+                        if arm == 'dist_same':
+                            ti, tr_ = idx, r
+                        elif arm == 'dist_perm':
+                            ti = perm_src[idx]
+                            tr_ = P[ti, r]
+                        else:
+                            ti, tr_ = idx, P[idx, r]
+                        q = teacher(XT[ti, tr_].float())
+                        Ab = An[apos[idx]]
+                    lt = m.scale() * F.normalize(q, dim=-1) @ Ab.T
+                    pt = F.softmax(lt / TEMP, 1)
+                    tacc += float((lt.argmax(1) == torch.arange(b, device=dev())).float().mean())
+                    tent += float(-(pt * pt.clamp_min(1e-12).log()).sum(1).mean() / np.log(b))
                 ls = m.scale() * F.normalize(z, dim=-1) @ Ab.T
-                kl = F.kl_div(F.log_softmax(ls / TEMP, 1), F.softmax(lt / TEMP, 1), reduction='batchmean')
+                kl = F.kl_div(F.log_softmax(ls / TEMP, 1), pt, reduction='batchmean')
                 loss = loss + lam * TEMP ** 2 * kl
                 totkl += kl.item()
             opt.zero_grad(set_to_none=True)
@@ -267,21 +351,25 @@ def train_student(arm, S, B, lam=0.0, epochs=50, batch=1024, lr=1e-4, wd=1e-4, t
             opt.step()
             tot += loss.item()
             nb += 1
-        rec = dict(arm=kind, montage=S, target=B, epoch=ep, loss=tot / max(nb, 1), kl=totkl / max(nb, 1))
+        rec = dict(arm=kind, montage=S, target=B, epoch=ep, loss=tot / max(nb, 1), kl=totkl / max(nb, 1),
+                   teacher_top1_in_batch=tacc / max(nb, 1), teacher_entropy=tent / max(nb, 1),
+                   pairing_same_session=float(np.mean(pair_ok)))
         if ep % 10 == 0 or ep == epochs:
             m.eval()
             with torch.no_grad():
                 rec['val_top1'] = float(np.mean([N.retrieval(m, x, ftr[ix])[0] for x, ix in val]))
-            print(f'    ep {ep:3d} loss {rec["loss"]:.3f} kl {rec["kl"]:.3f} | val {rec["val_top1"]:5.1f}', flush=True)
+            print(f'    ep {ep:3d} loss {rec["loss"]:.3f} kl {rec["kl"]:.3f} teacher acc {rec["teacher_top1_in_batch"]:.3f} '
+                  f'ent {rec["teacher_entropy"]:.3f} | val {rec["val_top1"]:5.1f}', flush=True)
         hist.append(rec)
     m.eval()
-    cfg = dict(arm=arm, montage=S, target=B, lam=lam, temp=TEMP, teacher=tp, seed=SEED)
+    cfg = dict(arm=arm, montage=S, target=B, lam=lam, temp=TEMP, teacher=tp, seed=SEED,
+               pairing_same_session=float(np.mean(pair_ok)))
     for which in ('last', 'best'):
         N.save_model(m, N.ckpt_path(kind, S, B, SEED, which), cfg, hist, epochs)
     pd.DataFrame(hist).to_csv(os.path.join(N.ENV['results_dir'], 'student_curves.csv'), mode='a', index=False,
                               header=not os.path.exists(os.path.join(N.ENV['results_dir'], 'student_curves.csv')))
-    print(f'  => [{kind}] {S} t{B} lam {lam} [{(time.time() - t0) / 60:.1f} min]', flush=True)
-    del XS, XT
+    print(f'  => [{kind}] {S} t{B} lam {lam} pairing {np.mean(pair_ok):.3f} [{(time.time() - t0) / 60:.1f} min]', flush=True)
+    del XS, XT, E
     torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
 
@@ -492,14 +580,20 @@ def stage_legacy(drive_base, mons, targets, epochs):
             eval_arm('nb', 'repaug', S, B)
 
 
-def stage2(S, targets, epochs):
+CORE_TRAIN = ('direct1', 'dist_rep', 'dist_pop_dense', 'dist_pop_sparse', 'direct1_init', 'dist_rep_init')
+CORE_EVAL = CORE_TRAIN + ('vl', 'vs')
+CTRL_TRAIN = ('dist_sparse', 'dist_same', 'dist_perm', 'chorus_direct')
+CTRL_EVAL = CTRL_TRAIN + ('vo',)
+
+
+def stage2(S, targets, epochs, part):
     lam = select_lambda(S, epochs)
+    trains, evals = (CORE_TRAIN, CORE_EVAL) if part == 'a' else (CTRL_TRAIN, CTRL_EVAL)
     for B in targets:
-        print(f'[stage 2] {S} t{B}', flush=True)
-        train_student('direct1', S, B, epochs=epochs)
-        for arm in ('dist_rep', 'dist_same', 'dist_sparse', 'dist_perm'):
-            train_student(arm, S, B, lam=lam, epochs=epochs)
-        for arm in ('direct1', 'dist_rep', 'dist_same', 'dist_sparse', 'dist_perm', 'vs', 'vl', 'vo'):
+        print(f'[stage 2{part}] {S} t{B}', flush=True)
+        for arm in trains:
+            train_student(arm, S, B, lam=0.0 if arm.startswith(('direct', 'chorus')) else lam, epochs=epochs)
+        for arm in evals:
             eval_arm('z', arm, S, B)
 
 
@@ -597,39 +691,58 @@ def report(stage):
         w, d = g('z', 'repaug', S, 'within (ceiling)'), g('z', 'repaug', S, 'plain decoder (image gallery, cosine)')
         if w is not None and d is not None:
             con(w, d, f'[{S}] ROOM FOR TRANSFER: within-person decoder - cross-subject decoder (plain, s4R4)')
-    print('\nSTOP-1 RULE: continue to stage 2 only if (a) the audit shows no average reference (or we accept it '
-          'and say so), (b) leak-free posterior-17 stays a usable teacher (zero-label s4R4 >= 6), and (c) leak-free '
-          'PO3/PO4 is above chance for most people (zero-label s4R4 >= 1.0 mean, >= 6/9 above 0.5), and (d) there is room: '
-          'the leak-free PO3/PO4 within-person decoder beats the cross-subject one by >= 1 point (a teacher can only help '
-          'close a cross-subject gap; it cannot add information the two electrodes do not carry).')
+    print('\nSTOP-1 RULE (validity only): stop if the audit fails (average reference, channel dependence, presentations '
+          'not paired within sessions) or a checkpoint is broken. Diagnostic flags, NOT stop rules (gating on the test '
+          'people would condition the final analysis on them): posterior-17 teacher zero-label s4R4 >= 6; PO3/PO4 >= 1.0 '
+          'and above chance for >= 6/9; the within - cross-subject PO3/PO4 gap.')
     if stage >= 2:
-        print('\n' + '=' * 100 + '\nSTAGE 2: PO3/PO4 layout transfer\n' + '=' * 100)
+        print('\n' + '=' * 100 + '\nSTAGE 2: PO3/PO4 layout transfer (prep z, s4R4)\n' + '=' * 100)
         prim = {}
         for key, arm in (('Q1', 'vl'), ('Q2', 'dist_rep')):
-            p = con(g('z', arm, 'crown_po2'), g('z', 'direct1', 'crown_po2'), f'{key} {arm} - direct1 (matched)', primary=True,
-                    margin=1.0)
+            p = con(g('z', arm, 'crown_po2'), g('z', 'direct1', 'crown_po2'), f'{key} {arm} - direct1 (matched), zero-label',
+                    primary=True, margin=1.0)
             if p is not None:
                 prim[key] = p
         if prim:
             from statsmodels.stats.multitest import multipletests
             ks = sorted(prim)
             print('HOLM:', dict(zip(ks, [round(float(v), 4) for v in multipletests([prim[k] for k in ks], method='holm')[1]])))
-        for arm in ('vs', 'vl', 'vo', 'dist_rep', 'dist_same', 'dist_sparse', 'dist_perm', 'repaug'):
-            for cell in ('zero-label pipeline', 'no warm-up, cosine, population responses', 'plain decoder (image gallery, cosine)', 'rigid k=500'):
-                con(g('z', arm, 'crown_po2', cell), g('z', 'direct1', 'crown_po2', cell), f'  {arm} - direct1: {cell}')
-        con(g('z', 'dist_rep', 'crown_po2'), g('z', 'dist_sparse', 'crown_po2'), 'KEY CONTROL dist_rep - dist_sparse (value of the extra electrodes)')
-        con(g('z', 'dist_rep', 'crown_po2'), g('z', 'dist_same', 'crown_po2'), 'dist_rep - dist_same (independent vs same presentation)')
-        con(g('z', 'dist_rep', 'crown_po2'), g('z', 'dist_perm', 'crown_po2'), 'dist_rep - dist_perm (image-level teacher signal)')
-        con(g('z', 'dist_rep', 'crown_po2'), g('z', 'repaug', 'crown_po2'), 'dist_rep - repaug (vs the strongest direct recipe)')
-        con(g('z', 'vl', 'crown_po2'), g('z', 'vs', 'crown_po2'), 'vl - vs (value of lags)')
-        print('\nSTOP-2 RULE (prespecified): the stream stands if a primary (vl or dist_rep vs direct1) is >= +1 point with '
-              'Holm p < .05, AND dist_rep beats dist_sparse (otherwise the gain is repeat consistency, not the dense '
-              'electrodes), AND the gain survives at k = 500 (rigid). Otherwise: report the leak-free baselines and the '
-              'preprocessing effect, and close the stream.')
+        cells2 = ('zero-label pipeline', 'no warm-up, cosine, population responses', 'plain decoder (image gallery, cosine)', 'rigid k=500')
+        print('\nA. VIRTUAL ELECTRODES (success = vl beats direct sparse training; vs tells whether lags help; R^2 is a diagnostic)')
+        for cell in cells2:
+            con(g('z', 'vl', 'crown_po2', cell), g('z', 'direct1', 'crown_po2', cell), f'  vl - direct1: {cell}')
+            con(g('z', 'vl', 'crown_po2', cell), g('z', 'repaug', 'crown_po2', cell), f'  vl - repaug: {cell}')
+        con(g('z', 'vl', 'crown_po2'), g('z', 'vs', 'crown_po2'), '  vl - vs (lags)')
+        con(g('z', 'vo', 'crown_po2'), g('z', 'vl', 'crown_po2'), '  vo - vl (person-fitted map, diagnostic)')
+        print('\nB. DISTILLATION (helps the recipe: beats its matched direct baseline; privileged dense supervision: also '
+              'beats the sparse-teacher version; a better deployable decoder: also beats repaug)')
+        for arm, base_m, base_s in (('dist_rep', 'direct1', 'dist_sparse'), ('dist_pop_dense', 'direct1', 'dist_pop_sparse'),
+                                    ('dist_rep_init', 'direct1_init', None)):
+            for cell in cells2:
+                con(g('z', arm, 'crown_po2', cell), g('z', base_m, 'crown_po2', cell), f'  {arm} - {base_m}: {cell}')
+            if base_s:
+                con(g('z', arm, 'crown_po2'), g('z', base_s, 'crown_po2'), f'  {arm} - {base_s} (extra electrodes in training)')
+            con(g('z', arm, 'crown_po2'), g('z', 'repaug', 'crown_po2'), f'  {arm} - repaug (deployable improvement)')
+        con(g('z', 'dist_pop_dense', 'crown_po2'), g('z', 'dist_rep', 'crown_po2'), '  dist_pop_dense - dist_rep (population target vs one repeat)')
+        con(g('z', 'dist_pop_dense', 'crown_po2'), g('z', 'chorus_direct', 'crown_po2'), '  dist_pop_dense - chorus_direct (dense teacher vs averaged sparse inputs)')
+        con(g('z', 'chorus_direct', 'crown_po2'), g('z', 'direct1', 'crown_po2'), '  chorus_direct - direct1 (cross-donor averaging alone)')
+        con(g('z', 'direct1_init', 'crown_po2'), g('z', 'direct1', 'crown_po2'), '  direct1_init - direct1 (weight inheritance alone)')
+        con(g('z', 'dist_rep_init', 'crown_po2'), g('z', 'dist_rep', 'crown_po2'), '  dist_rep_init - dist_rep (inheritance on top of distillation)')
+        con(g('z', 'dist_rep', 'crown_po2'), g('z', 'dist_same', 'crown_po2'), '  dist_rep - dist_same (independent vs same presentation)')
+        con(g('z', 'dist_rep', 'crown_po2'), g('z', 'dist_perm', 'crown_po2'), '  dist_rep - dist_perm (photograph-level teacher signal)')
+        print('\nC. CALIBRATION (does an advantage survive 500 labeled images? if not, it is a zero-label result only)')
+        for arm in ('vl', 'dist_rep', 'dist_pop_dense', 'dist_rep_init', 'chorus_direct'):
+            con(g('z', arm, 'crown_po2', 'rigid k=500'), g('z', 'direct1', 'crown_po2', 'rigid k=500'), f'  {arm} - direct1 at k=500 (rigid)')
+            con(g('z', arm, 'crown_po2', 'rigid k=500'), g('z', 'repaug', 'crown_po2', 'rigid k=500'), f'  {arm} - repaug at k=500 (rigid)')
+        print('\nSTOP-2 RULES (separate conclusions): virtual electrodes stand if vl - direct1 >= +1 with Holm p < .05. '
+              'Distillation stands if dist_rep (or the planned secondary dist_pop_dense) beats its matched baseline by >= +1; '
+              'claim privileged dense supervision only if it also beats its sparse-teacher control, and a deployable gain only '
+              'if it beats repaug. Report which budget (0 or 500 labels) benefits. If nothing clears these, close the stream '
+              'and report the leak-free baselines and the preprocessing effect.')
     if stage >= 3:
         print('\n' + '=' * 100 + '\nSTAGE 3: other sparse layouts\n' + '=' * 100)
         for S in ('crown8', 'occipital8'):
-            for arm in ('vl', 'vs', 'dist_rep', 'dist_sparse', 'repaug'):
+            for arm in ('vl', 'vs', 'dist_rep', 'dist_pop_dense', 'dist_pop_sparse', 'repaug'):
                 for cell in ('zero-label pipeline', 'rigid k=500'):
                     con(g('z', arm, S, cell), g('z', 'direct1', S, cell), f'[{S}] {arm} - direct1: {cell}')
         con(g('z', 'repaug', 'crown_po2'), g('z', 'repaug', 'crown8'), 'placement: PO3/PO4 alone - all 8 Crown sites (repaug)')
@@ -638,7 +751,7 @@ def report(stage):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('cmd', choices=['audit', 'stage1', 'legacy', 'stage2', 'stage3', 'report'])
+    p.add_argument('cmd', choices=['audit', 'stage1', 'legacy', 'stage2a', 'stage2b', 'stage3', 'report'])
     p.add_argument('--config', required=True)
     p.add_argument('--stage', type=int, default=1)
     p.add_argument('--targets', type=int, nargs='+', default=PEOPLE)
@@ -671,16 +784,16 @@ def main():
                 if os.path.exists(f):
                     os.remove(f)
         R8.prep_data(miss, 'z')
-    if a.cmd == 'stage2':
-        return stage2('crown_po2', a.targets, a.epochs)
+    if a.cmd in ('stage2a', 'stage2b'):
+        return stage2('crown_po2', a.targets, a.epochs, a.cmd[-1])
     if a.cmd == 'stage3':
         train_direct('z', a.montages, a.targets, a.epochs)
         for S in a.montages:
             for B in a.targets:
                 train_student('direct1', S, B, epochs=a.epochs)
-                for arm in ('dist_rep', 'dist_sparse'):
+                for arm in ('dist_rep', 'dist_pop_dense', 'dist_pop_sparse'):
                     train_student(arm, S, B, lam=chosen_lambda() or 0.3, epochs=a.epochs)
-                for arm in ('repaug', 'direct1', 'dist_rep', 'dist_sparse', 'vs', 'vl'):
+                for arm in ('repaug', 'direct1', 'dist_rep', 'dist_pop_dense', 'dist_pop_sparse', 'vs', 'vl'):
                     eval_arm('z', arm, S, B)
 
 

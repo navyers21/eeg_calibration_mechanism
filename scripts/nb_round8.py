@@ -12,7 +12,8 @@ Why. Every subset result so far was cut from a release whitened across all 63 ch
 of all 63, so "Crown-8" inputs carry signal from electrodes the Crown does not have, and reconstructing posterior
 channels from them would be circular. This round rebuilds every montage from the UNWHITENED release
 (Haitao999/things-eeg, Preprocessed_data_250Hz_no_whiten, which carries session ids) in NeuroBridge image order:
-  prep z     per-channel z-scoring per session, statistics from that session's training trials (PRIMARY)
+  prep z     per-channel z-scoring: sessions 1-3 with their own training-trial statistics, session 4 (the query
+             session) with statistics pooled over sessions 1-3 (PRIMARY; no query-day data in the normalization)
   prep mvnn  noise normalization fitted per session on each montage's OWN channels (optional, secondary)
   prep nb    the original 63-channel-whitened caches (reference, to measure the leak)
 Each prep has its own data, per-repetition cache, session table, checkpoints and results.
@@ -110,15 +111,20 @@ def _pkey(p):
     return '/'.join(str(p).replace('\\', '/').split('/')[-2:])
 
 
-def zscore_by_session(x_tr, ses_tr, x_te, ses_te):
+def zscore_by_session(x_tr, ses_tr, x_te, ses_te, query_session=4):
+    """Per-channel z-scoring. Sessions before the query session use their own training-trial statistics; the query
+    session (4) uses statistics pooled over the EARLIER sessions' training trials, so no session-4 data ever enters
+    the normalization (a model evaluated on session-4 queries sees nothing from that day it was not given)."""
     out_tr, out_te = np.empty(x_tr.shape, np.float16), np.empty(x_te.shape, np.float16)
-    for s in np.unique(ses_tr):
-        m = ses_tr == s
-        sel = x_tr[m]                                                    # (n, C, T)
-        mu = sel.mean((0, 2), keepdims=True)
-        sd = sel.std((0, 2), keepdims=True) + 1e-12
-        out_tr[m] = ((sel - mu) / sd).astype(np.float16)
-        mt = ses_te == s
+    stats = {}
+    for s in np.unique(np.concatenate([np.unique(ses_tr), np.unique(ses_te)])):
+        m = (ses_tr < query_session) if s == query_session else (ses_tr == s)
+        sel = x_tr[m]
+        stats[s] = (sel.mean((0, 2), keepdims=True), sel.std((0, 2), keepdims=True) + 1e-12)
+    for s, (mu, sd) in stats.items():
+        m, mt = ses_tr == s, ses_te == s
+        if m.any():
+            out_tr[m] = ((x_tr[m] - mu) / sd).astype(np.float16)
         if mt.any():
             out_te[mt] = ((x_te[mt] - mu) / sd).astype(np.float16)
     return out_tr, out_te
