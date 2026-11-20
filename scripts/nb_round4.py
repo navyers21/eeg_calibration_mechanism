@@ -670,6 +670,46 @@ def exp_m(c):
     return rows
 
 
+
+# ---------------------------------------------------------------------------------------------------------------
+# M2: honest anchor targets. The round-3 predictor regresses onto f0's outputs for the SOURCE people's POOL images,
+# which f0 was trained on (anchor cos 0.86 on those images vs 0.76 on held-out concepts), while the oracle gallery
+# (+5.7 over anchors) uses outputs on images f0 never trained on. Here the predictor is fitted on the 200 held-out
+# concepts (2,000 images, never in f0's training set, disjoint from the test concepts), alone or with the pool.
+# ---------------------------------------------------------------------------------------------------------------
+def exp_m2(c):
+    rows = []
+    f = c.ftr
+    held_t = torch.as_tensor(c.held, device=dev())
+    pool_t = torch.as_tensor(c.pool, device=dev())
+    Yh = c.Zsrc_held.mean(0)
+    with torch.no_grad():
+        # how much worse is the pool predictor on held-out concepts than in-sample? (split held concepts in half)
+        lab = c.labels[c.held]
+        cs = np.unique(lab)
+        hA = torch.as_tensor(np.isin(lab, cs[::2]), device=dev())
+        pr_pool = fit_ridge(f[pool_t], c.pool_z)
+        pr_hA = fit_ridge(f[held_t[hA]], Yh[hA])
+        cos = lambda pr, m: float(F.cosine_similarity(pr(f[held_t[m]]), Yh[m], dim=1).mean())  # noqa: E731
+        rows.append(dict(exp='M2fit', pool_pred_on_heldB=cos(pr_pool, ~hA), heldA_pred_on_heldB=cos(pr_hA, ~hA)))
+        gals = {'anchor': c.gal['anchor'][0],
+                'anchor_held': nrm(fit_ridge(f[held_t], Yh)(c.fte)),
+                'anchor_pool+held': nrm(fit_ridge(torch.cat([f[pool_t], f[held_t]]), torch.cat([c.pool_z, Yh]))(c.fte)),
+                'anchor_avg': nrm(nrm(pr_pool(c.fte)) + nrm(fit_ridge(f[held_t], Yh)(c.fte))),
+                'img': c.gal['img'][0], 'oracle': c.gal['oracle'][0]}
+    offs = {'none': None, 'old_100': c.delta(c.old_m[np.random.RandomState(3000).choice(len(c.old_m), 100, replace=False)])}
+    for oname, d1 in offs.items():
+        Z = c.zq(d1)
+        for qk in QK:
+            for di, z in enumerate(Z[qk]):
+                for g, G in gals.items():
+                    for rule in ('cos', 'csls_batch'):
+                        r = evaluate(z, np.arange(200), G, rule, z)
+                        rows.append(dict(exp='M2', offset=oname, query=qk, draw=di, gallery=g, rule=rule,
+                                         top1=r['top1'], mrr=r['mrr']))
+    return rows
+
+
 def run_target(B, mon, which):
     t0 = time.time()
     c = R4(B, mon, which)
@@ -679,6 +719,7 @@ def run_target(B, mon, which):
     print(f'   O done ({time.time() - t0:.0f}s)', flush=True)
     out['d'] = exp_d(c)
     out['m'] = exp_m(c)
+    out['m2'] = exp_m2(c)
     for name, rows in out.items():
         df = pd.DataFrame(rows)
         df['target'], df['montage'] = B, mon
@@ -918,6 +959,21 @@ def report(mons):
             pstats(pm.loc[('none', meth, 's4R4')], base, f'{meth} - anchor (s4R4, no offset)')
         pstats(pm.loc[('none', 'head+center', 's4R20')], pm.loc[('none', 'anchor', 's4R20')], 'head+center - anchor (s4R20)')
         pstats(pm.loc[('none', 'head+center', 's4R4')], pm.loc[('none', 'img', 's4R4')], 'head+center - f0 image gallery (s4R4)')
+    for mon in mons:
+        m = load('m2', mon)
+        if m is None:
+            continue
+        print(f'\nM2 ({mon}): anchor predictor fitted on held-out concepts (outputs f0 never trained on)')
+        print(m[(m.exp == 'M2fit') & m.target.isin(TEST)][['pool_pred_on_heldB', 'heldA_pred_on_heldB']].mean().round(4).to_string())
+        mm = m[m.exp == 'M2']
+        pm = mm.groupby(['offset', 'rule', 'gallery', 'query', 'target']).top1.mean()
+        tm = pm[pm.index.get_level_values('target').isin(TEST)].groupby(level=[0, 1, 2, 3]).mean().unstack('query')
+        print(tm[[q for q in QK if q in tm]].round(2).to_string())
+        for g in ('anchor_held', 'anchor_pool+held', 'anchor_avg'):
+            pstats(pm.loc[('none', 'cos', g, 's4R4')], pm.loc[('none', 'cos', 'anchor', 's4R4')], f'{g} - anchor (s4R4, cos, no offset)')
+        pstats(pm.loc[('none', 'cos', 'anchor_held', 's4R20')], pm.loc[('none', 'cos', 'anchor', 's4R20')], 'anchor_held - anchor (s4R20)')
+        best = pm.loc[('old_100', 'csls_batch', 'anchor_held', 's4R4')]
+        pstats(best, pm.loc[('none', 'cos', 'img', 's4R4')], 'anchor_held + old_100 + batch CSLS - f0 (s4R4)')
     pl = os.path.join(odir(), 'placement.csv')
     if os.path.exists(pl):
         p_ = pd.read_csv(pl)
@@ -972,16 +1028,19 @@ def main():
         return report(a.montages)
     for mon in a.montages:
         for B in a.targets:
-            mf = os.path.join(odir(), f'm_t{B:02d}_{mon}.csv')
             if os.path.exists(os.path.join(odir(), f'd_t{B:02d}_{mon}.csv')):
-                if os.path.exists(mf):
+                todo = [(n, fn) for n, fn in (('m', exp_m), ('m2', exp_m2))
+                        if not os.path.exists(os.path.join(odir(), f'{n}_t{B:02d}_{mon}.csv'))]
+                if not todo:
                     print(f'[run] {B} {mon}: done')
                     continue
-                print(f'[run] target {B} {mon}: methods only', flush=True)
+                print(f'[run] target {B} {mon}: {", ".join(n for n, _ in todo)} only', flush=True)
                 c = R4(B, mon, a.which)
-                df = pd.DataFrame(exp_m(c))
-                df['target'], df['montage'] = B, mon
-                df.to_csv(mf, index=False)
+                for n, fn in todo:
+                    df = pd.DataFrame(fn(c))
+                    df['target'], df['montage'] = B, mon
+                    df.to_csv(os.path.join(odir(), f'{n}_t{B:02d}_{mon}.csv'), index=False)
+                print(f'   {B} {mon} done', flush=True)
                 continue
             print(f'[run] target {B} {mon}', flush=True)
             run_target(B, mon, a.which)
