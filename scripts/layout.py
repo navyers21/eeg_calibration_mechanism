@@ -590,9 +590,15 @@ def report(stage):
         if a is not None:
             print(f'  [{S}] leak-free zero-label pipeline s4R4: {a.reindex(TEST).mean():.2f} (chance 0.5); '
                   f'per person {np.round(a.reindex(TEST).values, 2).tolist()}')
+    for S in ('crown_po2',):
+        w, d = g('z', 'repaug', S, 'within (ceiling)'), g('z', 'repaug', S, 'plain decoder (image gallery, cosine)')
+        if w is not None and d is not None:
+            con(w, d, f'[{S}] ROOM FOR TRANSFER: within-person decoder - cross-subject decoder (plain, s4R4)')
     print('\nSTOP-1 RULE: continue to stage 2 only if (a) the audit shows no average reference (or we accept it '
           'and say so), (b) leak-free posterior-17 stays a usable teacher (zero-label s4R4 >= 6), and (c) leak-free '
-          'PO3/PO4 is above chance for most people (zero-label s4R4 >= 1.0 mean, >= 6/9 above 0.5).')
+          'PO3/PO4 is above chance for most people (zero-label s4R4 >= 1.0 mean, >= 6/9 above 0.5), and (d) there is room: '
+          'the leak-free PO3/PO4 within-person decoder beats the cross-subject one by >= 1 point (a teacher can only help '
+          'close a cross-subject gap; it cannot add information the two electrodes do not carry).')
     if stage >= 2:
         print('\n' + '=' * 100 + '\nSTAGE 2: PO3/PO4 layout transfer\n' + '=' * 100)
         prim = {}
