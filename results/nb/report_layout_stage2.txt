@@ -1,0 +1,54 @@
+device: cuda
+
+TOP-1 %, query s4R4 (people 2-10)
+                         zero-label pipeline  no warm-up, cosine, population responses  plain decoder (image gallery, cosine)  rigid k=500  fine-tune k=500  within (ceiling)
+prep arm    montage                                                                                                                                                          
+nb   repaug crown_po2                   1.65                                      1.85                                   1.54         2.34             2.32              4.30
+            posterior17                10.17                                      7.70                                   6.30        14.08            11.34             18.69
+
+TOP-1 %, query s4R1 (people 2-10)
+                         zero-label pipeline  no warm-up, cosine, population responses  plain decoder (image gallery, cosine)  rigid k=500  fine-tune k=500  within (ceiling)
+prep arm    montage                                                                                                                                                          
+nb   repaug crown_po2                   1.00                                      1.19                                   0.96         1.22             1.14              1.63
+            posterior17                 4.13                                      3.70                                   3.15         4.79             4.10              6.31
+
+TOP-1 %, query s4R20 (people 2-10)
+                         zero-label pipeline  no warm-up, cosine, population responses  plain decoder (image gallery, cosine)  rigid k=500  fine-tune k=500  within (ceiling)
+prep arm    montage                                                                                                                                                          
+nb   repaug crown_po2                   2.33                                      2.44                                   2.28         3.89             4.83             10.61
+            posterior17                19.22                                     12.44                                  10.94        28.15            23.80             42.67
+
+TOP-1 %, query bench (people 2-10)
+                         zero-label pipeline  no warm-up, cosine, population responses  plain decoder (image gallery, cosine)  rigid k=500  fine-tune k=500  within (ceiling)
+prep arm    montage                                                                                                                                                          
+nb   repaug crown_po2                   3.33                                      2.83                                   2.83         6.19             7.65             18.11
+            posterior17                23.22                                     14.28                                  12.50        36.70            33.81             61.89
+
+SIGNAL (raw image identification %, chance 0.5; virtual electrodes: R^2 on the missing channels)
+                         raw_ident_s34  raw_ident_s4R20  raw_ident_s4R4
+prep arm    montage                                                    
+nb   repaug crown_po2           39.444           24.889           9.222
+            posterior17         53.167           34.278          13.833
+
+stage 2/3 contrasts use prep "nb"  (PILOT on 63-channel-whitened data: sparse inputs carry signal from every electrode; relative comparisons are fair, absolute sparse levels and virtual electrodes are inflated)
+
+====================================================================================================
+STAGE 1: leak-free baselines and the preprocessing effect
+====================================================================================================
+  [crown_po2] leak-free zero-label pipeline s4R4: 1.65 (chance 0.5); per person [1.33, 2.17, 2.17, 1.5, 0.5, 1.5, 2.33, 0.33, 3.0]
+  [crown_po2] ROOM FOR TRANSFER: within-person decoder - cross-subject decoder (plain, s4R4): mean +2.76 (95% CI +2.04 to +3.26), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.67 to +3.08
+     per person: t2:+2.167, t3:+3.000, t4:+3.333, t5:+3.333, t6:+3.000, t7:+3.000, t8:+3.333, t9:+0.167, t10:+3.500
+
+STOP-1 RULE (validity only): stop if the audit fails (average reference, channel dependence, presentations not paired within sessions) or a checkpoint is broken. Diagnostic flags, NOT stop rules (gating on the test people would condition the final analysis on them): posterior-17 teacher zero-label s4R4 >= 6; PO3/PO4 >= 1.0 and above chance for >= 6/9; the within - cross-subject PO3/PO4 gap.
+
+====================================================================================================
+STAGE 2: PO3/PO4 layout transfer (prep z, s4R4)
+====================================================================================================
+
+A. VIRTUAL ELECTRODES (success = vl beats direct sparse training; vs tells whether lags help; R^2 is a diagnostic)
+
+B. DISTILLATION (helps the recipe: beats its matched direct baseline; privileged dense supervision: also beats the sparse-teacher version; a better deployable decoder: also beats repaug)
+
+C. CALIBRATION (does an advantage survive 500 labeled images? if not, it is a zero-label result only)
+
+STOP-2 RULES (separate conclusions): virtual electrodes stand if vl - direct1 >= +1 with Holm p < .05. Distillation stands if dist_rep (or the planned secondary dist_pop_dense) beats its matched baseline by >= +1; claim privileged dense supervision only if it also beats its sparse-teacher control, and a deployable gain only if it beats repaug. Report which budget (0 or 500 labels) benefits. If nothing clears these, close the stream and report the leak-free baselines and the preprocessing effect.
