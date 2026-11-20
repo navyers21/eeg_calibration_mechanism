@@ -430,7 +430,8 @@ def virtual_data(sub, mon):
     tt = d['test_trials']
     out['test_trials'] = apply(tt.reshape(-1, *tt.shape[2:])).reshape(*tt.shape[:2], 17, tt.shape[-1])
     out['channels'] = np.array(['virtual'] * 17)
-    VSTATE.setdefault('cache', {})[key] = out
+    if sub == VSTATE['B']:                                               # cache the target only (memory)
+        VSTATE.setdefault('cache', {})[key] = out
     return out
 
 
@@ -514,9 +515,14 @@ def eval_arm(prep, arm, S, B):
     R6m.odir = lambda: out_dir
     R6m.DECODERS = [kind]
     R6m.run_target(B, mon)
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache() if torch.cuda.is_available() else None
     R5m.use_kind(kind)
     c = R4m.R4(B, mon, 'last')
     m2 = pd.DataFrame(R4m.exp_m2(c))
+    del c
+    gc.collect()
     sig = dict(R8.signal_rows(B, mon), **info, prep=prep, arm=arm, montage=S, target=B)
     pd.DataFrame([sig]).to_csv(os.path.join(out_dir, f'signal_t{B:02d}_{mon}.csv'), index=False)
     m2['arm'], m2['target'], m2['montage'] = arm, B, S
