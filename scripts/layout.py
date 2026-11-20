@@ -698,7 +698,7 @@ def report(stage):
     for S in ('crown_po2', 'crown8', 'occipital8'):
         a = g('z', 'repaug', S)
         if a is not None:
-            print(f'  [{S}] leak-free zero-label pipeline s4R4: {a.reindex(TEST).mean():.2f} (chance 0.5); '
+            print(f'  [{S}] {'leak-free' if P2 == 'z' else 'PILOT (whitened)'} zero-label pipeline s4R4: {a.reindex(TEST).mean():.2f} (chance 0.5); '
                   f'per person {np.round(a.reindex(TEST).values, 2).tolist()}')
     for S in ('crown_po2',):
         w, d = g('z', 'repaug', S, 'within (ceiling)'), g('z', 'repaug', S, 'plain decoder (image gallery, cosine)')
