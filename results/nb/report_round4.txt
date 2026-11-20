@@ -1,0 +1,56 @@
+device: cuda
+SESSION AUDIT (per person):
+   test_match_corr test_best_other test_confident test_reps_as_assumed train_match_corr train_best_other train_confident train_identity_perm train_rep01_before_rep23 train_imgs_with_session4
+1              1.0        0.317011       0.999875                  0.0              1.0         0.164299             1.0                 1.0                      1.0                        0
+2              1.0        0.352282            1.0                  0.0              1.0         0.160959             1.0                 1.0                      1.0                        0
+3              1.0        0.305584            1.0                  0.0              1.0         0.157217             1.0                 1.0                      1.0                        0
+4              1.0        0.355507            1.0                  0.0              1.0         0.171283             1.0                 1.0                      1.0                        0
+5              1.0        0.377246            1.0                  0.0              1.0          0.16995             1.0                 1.0                      1.0                        0
+6              1.0        0.301286            1.0                  0.0              1.0         0.179054             1.0                 1.0                      1.0                        0
+7              1.0        0.368025            1.0                  0.0              1.0         0.189571             1.0                 1.0                      1.0                        0
+8              1.0        0.277618            1.0                  0.0              1.0         0.156087             1.0                 1.0                      1.0                        0
+9              1.0        0.220527            1.0                  0.0              1.0         0.099644             1.0                 1.0                      1.0                        0
+10             1.0        0.334534            1.0                  0.0              1.0         0.176586             1.0                 1.0                      1.0                        0
+
+PLACEMENT (model-free raw-EEG image identification, %; chance 0.5):
+q            s34_40  s4R20  s4R4
+montage                         
+best8_src     46.78    0.5   0.5
+crown8         3.83    0.5   0.5
+crown_po2     25.78    0.5   0.5
+crown_swap1    6.72    0.5   0.5
+crown_swap2   12.83    0.5   0.5
+crown_swap4   29.22    0.5   0.5
+crown_swap6   46.78    0.5   0.5
+occipital8    46.78    0.5   0.5
+posterior17   36.94    0.5   0.5
+             null_mean  null_95    snr
+montage                               
+best8_src        0.530    1.500  0.139
+crown8           0.504    1.500  0.023
+crown_po2        0.516    1.500  0.110
+crown_swap1      0.515    1.447  0.047
+crown_swap2      0.510    1.500  0.071
+crown_swap4      0.528    1.500  0.121
+crown_swap6      0.530    1.500  0.139
+occipital8       0.531    1.500  0.140
+posterior17      0.526    1.444  0.083
+  crown_swap1 - crown8 (s34_40): mean +2.89 (95% CI +1.61 to +4.28), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.44 to +3.19
+     per person: t2:+1.000, t3:+3.500, t4:+2.500, t5:+1.000, t6:+1.500, t7:+6.500, t8:+6.000, t9:+0.500, t10:+3.500
+  crown_swap2 - crown8 (s34_40): mean +9.00 (95% CI +5.50 to +12.61), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.75 to +10.00
+     per person: t2:+4.500, t3:+11.000, t4:+10.000, t5:+1.000, t6:+14.500, t7:+11.000, t8:+19.000, t9:+3.000, t10:+7.000
+  crown_swap4 - crown8 (s34_40): mean +25.39 (95% CI +16.28 to +33.94), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +22.62 to +28.38
+     per person: t2:+10.000, t3:+37.500, t4:+26.500, t5:+1.500, t6:+31.000, t7:+21.000, t8:+47.500, t9:+18.000, t10:+35.500
+  best8_src - crown8 (s34_40): mean +42.94 (95% CI +30.11 to +54.89), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +39.75 to +46.88
+     per person: t2:+18.000, t3:+68.500, t4:+35.500, t5:+11.500, t6:+55.000, t7:+35.000, t8:+66.000, t9:+39.500, t10:+57.500
+  crown_swap1: closes 7% of the occipital-8 gap (mean over people)
+  crown_swap2: closes 20% of the occipital-8 gap (mean over people)
+  crown_swap4: closes 55% of the occipital-8 gap (mean over people)
+
+DECISION RULES (prespecified):
+  Q1 > 0: the neural anchor gallery is a contribution beyond hubness correction -> lead with it, freeze the predictor.
+  Q1 ~ 0 but anchor > img/cos: the gain is gallery geometry; the paper compares two cheap calibration-free readouts.
+  anchor ~ img_spec: neural pairing is not needed for the gain; narrow the claim to gallery spectrum.
+  Q2 > 0 at s4R4 by a worthwhile amount: recommend a same-day warm-up. Only at s4R20: high-repeat use only.
+  old_100 - none equivalent within +-1 at s4R4: drop the earlier-session warm-up from the default pipeline.
+  Crown swap closes most of the occipital gap with 1-2 sites: placement trade-off, test that montage on hardware.
