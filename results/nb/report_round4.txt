@@ -870,6 +870,159 @@ offset_session
 3.0              1.29  0.77   2.32  1.89
 4.0              1.21  0.81   2.43  1.68
 
+M (posterior17): methods to raise zero-label accuracy (exploratory; settings chosen on source people only)
+head_val_top1         0.0715
+ridge_val_top1        0.0712
+head_step            16.6667
+shrink_tau_anchor     0.0001
+shrink_tau_head       0.0000
+query                   s4R1  s4R4  s4R20  bench
+offset  method                                  
+none    anchor          2.35  7.00  12.50  15.11
+        anchor+center   3.13  7.56  14.00  18.94
+        anchor+shrink   2.41  7.00  12.44  15.06
+        anchor+shrinkR  0.91  3.59  11.00  14.61
+        head            2.35  7.04  12.67  15.00
+        head+center     3.11  7.78  14.50  20.06
+        head+shrink     2.37  6.98  12.72  14.89
+        head+shrinkR    0.91  3.57  10.78  14.33
+        img             1.80  5.06  10.72  13.94
+        img+shrink      2.20  5.46  11.28  14.00
+        mix_lse         2.22  5.00   9.33  11.22
+        mix_sel         2.11  4.87   8.72  11.00
+old_100 anchor          2.65  7.37  15.17  19.22
+        anchor+center   3.24  7.83  14.11  18.28
+        anchor+shrink   2.69  7.28  14.33  19.06
+        anchor+shrinkR  1.06  4.69  12.22  18.17
+        head            2.70  7.26  14.89  18.94
+        head+center     3.26  8.02  14.83  18.72
+        head+shrink     2.74  7.26  14.78  18.94
+        head+shrinkR    1.06  4.54  12.17  18.00
+        img             2.00  4.94  11.78  18.39
+        img+shrink      2.19  5.76  12.89  19.44
+        mix_lse         2.22  6.07  10.28  13.67
+        mix_sel         2.26  6.02  10.17  13.28
+  head - anchor (s4R4, no offset): mean +0.04 (95% CI -0.09 to +0.19), +2/0:6/-1, sign p=1.0000 (non-ties), Wilcoxon p=0.7500, LOPO -0.02 to +0.08
+     per person: t2:+0.000, t3:+0.000, t4:+0.000, t5:+0.167, t6:+0.500, t7:+0.000, t8:+0.000, t9:+0.000, t10:-0.333
+  anchor+shrink - anchor (s4R4, no offset): mean +0.00 (95% CI -0.17 to +0.17), +2/0:4/-3, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.06 to +0.06
+     per person: t2:+0.167, t3:+0.000, t4:+0.000, t5:+0.000, t6:+0.500, t7:-0.000, t8:-0.167, t9:+0.000, t10:-0.500
+  anchor+shrinkR - anchor (s4R4, no offset): mean -3.41 (95% CI -4.46 to -2.37), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -3.75 to -3.08
+     per person: t2:-6.000, t3:-4.333, t4:-0.667, t5:-2.333, t6:-3.167, t7:-3.000, t8:-2.833, t9:-2.667, t10:-5.667
+  anchor+center - anchor (s4R4, no offset): mean +0.56 (95% CI -0.31 to +1.44), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.3008, LOPO +0.29 to +0.79
+     per person: t2:-0.833, t3:+2.667, t4:+1.667, t5:+1.333, t6:+1.833, t7:+0.833, t8:-1.000, t9:-0.167, t10:-1.333
+  head+center - anchor (s4R4, no offset): mean +0.78 (95% CI -0.06 to +1.65), +5/0:1/-3, sign p=0.7266 (non-ties), Wilcoxon p=0.1953, LOPO +0.54 to +1.00
+     per person: t2:-0.833, t3:+2.667, t4:+1.667, t5:+1.167, t6:+2.667, t7:+0.833, t8:-1.000, t9:-0.167, t10:+0.000
+  mix_lse - anchor (s4R4, no offset): mean -2.00 (95% CI -3.02 to -1.07), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO -2.27 to -1.63
+     per person: t2:-3.500, t3:-1.167, t4:-0.500, t5:-1.500, t6:-1.667, t7:-2.833, t8:-2.000, t9:+0.167, t10:-5.000
+  mix_sel - anchor (s4R4, no offset): mean -2.13 (95% CI -3.31 to -1.15), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -2.38 to -1.65
+     per person: t2:-3.167, t3:-0.667, t4:-0.667, t5:-1.667, t6:-1.833, t7:-3.000, t8:-2.000, t9:-0.167, t10:-6.000
+  head+center - anchor (s4R20): mean +2.00 (95% CI -0.89 to +4.44), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.2031, LOPO +1.31 to +3.19
+     per person: t2:-7.500, t3:+5.000, t4:+0.500, t5:+7.500, t6:+4.500, t7:+2.000, t8:-1.500, t9:+3.500, t10:+4.000
+  head+center - f0 image gallery (s4R4): mean +2.72 (95% CI +1.41 to +3.98), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0117, LOPO +2.35 to +3.19
+     per person: t2:+4.500, t3:+4.333, t4:+1.500, t5:+2.500, t6:+5.667, t7:+2.000, t8:-1.000, t9:+0.833, t10:+4.167
+
+M (occipital8): methods to raise zero-label accuracy (exploratory; settings chosen on source people only)
+head_val_top1         0.0775
+ridge_val_top1        0.0771
+head_step            27.7778
+shrink_tau_anchor     0.0000
+shrink_tau_head       0.0000
+query                   s4R1  s4R4  s4R20  bench
+offset  method                                  
+none    anchor          2.96  6.78  10.94  13.33
+        anchor+center   3.26  7.15  11.28  15.39
+        anchor+shrink   2.83  6.72  11.00  13.00
+        anchor+shrinkR  1.31  4.17   9.11  12.22
+        head            2.72  6.54  10.78  12.78
+        head+center     3.30  7.30  11.61  15.89
+        head+shrink     2.72  6.57  10.72  12.83
+        head+shrinkR    1.30  4.00   8.94  12.11
+        img             2.30  4.87   8.89  11.89
+        img+shrink      2.41  5.30   9.50  12.22
+        mix_lse         2.39  5.28   7.78   9.39
+        mix_sel         2.20  5.24   7.56   9.22
+old_100 anchor          3.00  7.61  15.06  17.78
+        anchor+center   3.20  6.57  10.78  13.44
+        anchor+shrink   2.96  7.67  14.89  17.72
+        anchor+shrinkR  1.33  4.96  12.89  17.33
+        head            2.91  7.57  14.78  17.89
+        head+center     3.28  6.69  11.22  14.33
+        head+shrink     2.89  7.74  14.61  17.67
+        head+shrinkR    1.33  4.59  12.89  17.50
+        img             1.91  5.44  10.94  15.89
+        img+shrink      2.17  6.09  12.06  16.11
+        mix_lse         2.24  6.28  10.06  12.83
+        mix_sel         2.24  6.41  10.50  13.00
+  head - anchor (s4R4, no offset): mean -0.24 (95% CI -0.46 to -0.04), +1/0:4/-4, sign p=0.3750 (non-ties), Wilcoxon p=0.1250, LOPO -0.29 to -0.17
+     per person: t2:-0.500, t3:+0.167, t4:+0.000, t5:+0.000, t6:+0.000, t7:-0.500, t8:+0.000, t9:-0.500, t10:-0.833
+  anchor+shrink - anchor (s4R4, no offset): mean -0.06 (95% CI -0.22 to +0.07), +2/0:5/-2, sign p=1.0000 (non-ties), Wilcoxon p=0.6250, LOPO -0.08 to +0.02
+     per person: t2:+0.167, t3:-0.167, t4:+0.000, t5:+0.000, t6:+0.000, t7:-0.667, t8:+0.000, t9:+0.000, t10:+0.167
+  anchor+shrinkR - anchor (s4R4, no offset): mean -2.61 (95% CI -3.28 to -1.91), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -2.81 to -2.42
+     per person: t2:-4.167, t3:-1.000, t4:-1.333, t5:-3.000, t6:-1.833, t7:-3.333, t8:-3.500, t9:-3.500, t10:-1.833
+  anchor+center - anchor (s4R4, no offset): mean +0.37 (95% CI -0.57 to +1.37), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.7344, LOPO +0.06 to +0.62
+     per person: t2:-0.833, t3:+2.833, t4:+0.833, t5:+1.500, t6:+2.333, t7:-0.500, t8:-0.333, t9:-1.667, t10:-0.833
+  head+center - anchor (s4R4, no offset): mean +0.52 (95% CI -0.37 to +1.48), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.5703, LOPO +0.21 to +0.75
+     per person: t2:-0.500, t3:+3.000, t4:+0.833, t5:+1.500, t6:+2.333, t7:-0.000, t8:-0.333, t9:-1.333, t10:-0.833
+  mix_lse - anchor (s4R4, no offset): mean -1.50 (95% CI -2.52 to -0.37), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.0547, LOPO -1.87 to -1.27
+     per person: t2:-2.833, t3:+1.500, t4:+0.167, t5:-0.333, t6:-1.167, t7:-3.333, t8:-3.000, t9:-1.167, t10:-3.333
+  mix_sel - anchor (s4R4, no offset): mean -1.54 (95% CI -2.59 to -0.39), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0391, LOPO -1.94 to -1.27
+     per person: t2:-3.167, t3:+1.667, t4:-0.167, t5:-1.500, t6:-0.167, t7:-3.667, t8:-2.500, t9:-1.000, t10:-3.333
+  head+center - anchor (s4R20): mean +0.67 (95% CI -1.83 to +2.94), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.4492, LOPO -0.06 to +1.56
+     per person: t2:-6.500, t3:+6.500, t4:+2.000, t5:+1.000, t6:+2.500, t7:+2.500, t8:+1.000, t9:+1.500, t10:-4.500
+  head+center - f0 image gallery (s4R4): mean +2.43 (95% CI +1.69 to +3.13), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.25 to +2.69
+     per person: t2:+2.667, t3:+2.333, t4:+1.333, t5:+3.833, t6:+2.833, t7:+3.833, t8:+1.500, t9:+0.333, t10:+3.167
+
+M (crown8): methods to raise zero-label accuracy (exploratory; settings chosen on source people only)
+head_val_top1         0.0049
+ridge_val_top1        0.0048
+head_step            94.4444
+shrink_tau_anchor     0.0037
+shrink_tau_head       0.0063
+query                   s4R1  s4R4  s4R20  bench
+offset  method                                  
+none    anchor          0.83  1.22   2.61   3.50
+        anchor+center   0.96  1.37   2.50   4.17
+        anchor+shrink   0.96  1.20   2.56   3.00
+        anchor+shrinkR  0.50  1.11   1.94   3.06
+        head            0.81  1.31   2.33   3.00
+        head+center     0.94  1.30   2.50   4.11
+        head+shrink     1.00  1.22   2.22   2.78
+        head+shrinkR    0.50  1.11   1.94   2.94
+        img             0.63  0.81   1.61   2.72
+        img+shrink      0.72  1.11   1.89   3.50
+        mix_lse         0.98  1.20   1.61   2.39
+        mix_sel         1.04  1.20   1.78   1.89
+old_100 anchor          0.69  1.20   2.67   3.33
+        anchor+center   0.83  1.54   2.94   4.33
+        anchor+shrink   0.74  1.59   2.56   3.17
+        anchor+shrinkR  0.48  0.96   2.44   2.89
+        head            0.65  1.22   2.61   3.00
+        head+center     0.80  1.43   2.83   4.33
+        head+shrink     0.70  1.41   2.33   3.06
+        head+shrinkR    0.50  1.02   2.39   2.94
+        img             0.63  0.63   1.61   2.33
+        img+shrink      0.67  1.13   1.56   3.28
+        mix_lse         0.96  1.24   2.33   2.50
+        mix_sel         0.91  1.26   2.22   2.44
+  head - anchor (s4R4, no offset): mean +0.09 (95% CI +0.00 to +0.22), +2/0:7/-0, sign p=0.5000 (non-ties), Wilcoxon p=0.5000, LOPO +0.04 to +0.10
+     per person: t2:+0.500, t3:+0.000, t4:+0.000, t5:+0.000, t6:+0.333, t7:+0.000, t8:+0.000, t9:+0.000, t10:+0.000
+  anchor+shrink - anchor (s4R4, no offset): mean -0.02 (95% CI -0.26 to +0.19), +3/0:4/-2, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.08 to +0.08
+     per person: t2:-0.167, t3:-0.833, t4:+0.500, t5:+0.167, t6:+0.000, t7:+0.167, t8:+0.000, t9:+0.000, t10:+0.000
+  anchor+shrinkR - anchor (s4R4, no offset): mean -0.11 (95% CI -0.43 to +0.20), +3/0:2/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.6250, LOPO -0.23 to +0.00
+     per person: t2:+0.000, t3:-1.000, t4:+0.000, t5:+0.167, t6:-0.167, t7:+0.833, t8:+0.000, t9:-0.667, t10:-0.167
+  anchor+center - anchor (s4R4, no offset): mean +0.15 (95% CI -0.06 to +0.35), +6/0:1/-2, sign p=0.2891 (non-ties), Wilcoxon p=0.2969, LOPO +0.08 to +0.21
+     per person: t2:-0.333, t3:+0.667, t4:+0.333, t5:+0.333, t6:+0.167, t7:+0.167, t8:-0.333, t9:+0.333, t10:+0.000
+  head+center - anchor (s4R4, no offset): mean +0.07 (95% CI -0.15 to +0.30), +5/0:1/-3, sign p=0.7266 (non-ties), Wilcoxon p=0.5234, LOPO +0.00 to +0.15
+     per person: t2:-0.500, t3:+0.667, t4:+0.333, t5:+0.167, t6:-0.167, t7:+0.167, t8:-0.333, t9:+0.333, t10:+0.000
+  mix_lse - anchor (s4R4, no offset): mean -0.02 (95% CI -0.31 to +0.28), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.12 to +0.08
+     per person: t2:+0.000, t3:-0.833, t4:+0.167, t5:-0.333, t6:+0.833, t7:-0.167, t8:+0.167, t9:-0.333, t10:+0.333
+  mix_sel - anchor (s4R4, no offset): mean -0.02 (95% CI -0.39 to +0.37), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.8867, LOPO -0.17 to +0.10
+     per person: t2:+1.167, t3:-1.000, t4:+0.167, t5:+0.333, t6:+0.333, t7:-0.167, t8:-0.500, t9:-0.167, t10:-0.333
+  head+center - anchor (s4R20): mean -0.11 (95% CI -0.83 to +0.61), +4/0:2/-3, sign p=1.0000 (non-ties), Wilcoxon p=0.7188, LOPO -0.31 to +0.12
+     per person: t2:-2.000, t3:+1.500, t4:+0.500, t5:+0.000, t6:+1.000, t7:-1.500, t8:-1.000, t9:+0.000, t10:+0.500
+  head+center - f0 image gallery (s4R4): mean +0.48 (95% CI +0.24 to +0.69), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +0.44 to +0.56
+     per person: t2:+0.500, t3:+0.833, t4:+0.833, t5:+0.167, t6:-0.167, t7:+0.500, t8:+0.667, t9:+0.833, t10:+0.167
+
 PLACEMENT (model-free raw-EEG image identification, %; chance 0.5):
 q            s34_40  s4R20   s4R4
 montage                          
