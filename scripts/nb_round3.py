@@ -273,6 +273,7 @@ class R3:
         self.sS = {k: As[k].std(0) + 1e-6 for k in As}
         self.znorm = float(self.anchor['z'].norm(dim=1).mean())
         # CHORUS-style anchor predictor: image features -> population anchor (ridge on pool images)
+        self.pool_z = pool_z
         Bm, xm, ym = X.ridge_svd(self.ftr[self.pool], pool_z)
         self.P = F.normalize((self.fte - xm) @ Bm + ym, dim=-1)
         self.P_cal_check = float(F.cosine_similarity((self.ftr[self.cal] - xm) @ Bm + ym, self.anchor['z'], dim=1).mean())
