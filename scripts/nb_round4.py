@@ -539,6 +539,137 @@ def exp_d(c):
     return rows
 
 
+
+# ---------------------------------------------------------------------------------------------------------------
+# M: methods that try to RAISE zero-label accuracy, built on the round-3 findings (selection on source people only)
+#   head   contrastive gallery head: the ridge anchor predictor fine-tuned with InfoNCE against individual source
+#          people's outputs (ridge fits the population MEAN; retrieval needs the right ranking under person noise)
+#   shrink query shrinkage onto the anchor subspace (Wiener weights on the predicted-anchor PCs): the useful signal
+#          lives in the high-variance subspace and low-repeat queries are noise-dominated
+#   mix    per-source galleries (ridge per source person) scored as a mixture: lse = soft max over sources;
+#          sel = sources weighted by how well each explains the query batch (transductive, no labels)
+# ---------------------------------------------------------------------------------------------------------------
+def fit_head(c, steps=600, tau=0.05, seed=0):
+    torch.manual_seed(seed)
+    f, cal, held = c.ftr, c.cal, c.held
+    Bm, xm, ym = X.ridge_svd(f[c.pool], c.pool_z)
+    lin = torch.nn.Linear(f.shape[1], 512).to(dev())
+    with torch.no_grad():
+        lin.weight.copy_(Bm.T)
+        lin.bias.copy_(ym - xm @ Bm)
+    opt = torch.optim.AdamW(lin.parameters(), 1e-4, weight_decay=1e-4)
+    Zc = nrm(c.Zsrc_cal)                                                # (9, 2000, 512) individual source outputs
+    Zh = c.Zsrc_held
+
+    @torch.no_grad()
+    def val():
+        G = nrm(lin(f[held]))
+        return float(np.mean([(nrm(Zh[i]) @ G.T).argmax(1).eq(torch.arange(len(G), device=dev())).float().mean().item()
+                              for i in range(len(Zh))]))
+    best = (val(), {k: v.clone() for k, v in lin.state_dict().items()}, 0)
+    for st in range(1, steps + 1):
+        ii = torch.randperm(len(cal), device=dev())[:512]
+        ss = torch.randint(0, len(Zc), (len(ii),), device=dev())
+        q = Zc[ss, ii]
+        k = nrm(lin(f[torch.as_tensor(cal, device=dev())[ii]]))
+        lg = q @ k.T / tau
+        t = torch.arange(len(ii), device=dev())
+        pb = torch.as_tensor(np.random.RandomState(st).choice(len(c.pool), 512, replace=False), device=dev())
+        loss = (F.cross_entropy(lg, t) + F.cross_entropy(lg.T, t)) / 2 + \
+            (1 - F.cosine_similarity(lin(f[torch.as_tensor(c.pool, device=dev())[pb]]), c.pool_z[pb], dim=1).mean())
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        if st % 50 == 0:
+            v = val()
+            if v > best[0]:
+                best = (v, {kk: vv.clone() for kk, vv in lin.state_dict().items()}, st)
+    lin.load_state_dict(best[1])
+    lin.requires_grad_(False)
+    return lambda fe: nrm(lin(fe)), best[0], best[2]
+
+
+@torch.no_grad()
+def fit_shrink(c, galfn):
+    """Wiener shrinkage of (query - source query mean) on the predicted-anchor PCs; tau chosen on source held queries."""
+    Pp = c.galfn['anchor'](c.ftr[c.pool])
+    mu = Pp.mean(0)
+    a, V = torch.linalg.eigh((Pp - mu).T @ (Pp - mu) / len(Pp))
+    mq = c.Zsrc_held.reshape(-1, 512).mean(0)
+    Gh = galfn(c.ftr[c.held])
+    best = (-1, None)
+    for tau in [0.0] + [float(x) for x in (a.max() * torch.logspace(-4, 0, 9))]:
+        w = a / (a + tau) if tau > 0 else torch.ones_like(a)
+        fn = (lambda z, w=w: (z - mq) @ V @ torch.diag(w) @ V.T + mq)
+        acc = float(np.mean([(nrm(fn(c.Zsrc_held[i])) @ Gh.T).argmax(1).eq(torch.arange(len(Gh), device=dev())).float().mean().item()
+                             for i in range(len(c.Zsrc_held))]))
+        if acc > best[0]:
+            best = (acc, fn, tau)
+    return best[1], best[2]
+
+
+def exp_m(c):
+    rows = []
+    head, head_val, head_step = fit_head(c)
+    with torch.no_grad():
+        ridge_val = float(np.mean([(nrm(c.Zsrc_held[i]) @ c.galfn['anchor'](c.ftr[c.held]).T).argmax(1)
+                                   .eq(torch.arange(len(c.held), device=dev())).float().mean().item() for i in range(len(c.Zsrc_held))]))
+        Ghead = head(c.fte)
+        cal_t = torch.as_tensor(c.cal, device=dev())
+        Gs = []
+        for i in range(len(c.Zsrc_cal)):
+            pr = fit_ridge(c.ftr[cal_t], c.Zsrc_cal[i])
+            Gs.append(nrm(pr(c.fte)))
+        Gs = torch.stack(Gs)                                            # (9, 200, 512)
+    sh_a, tau_a = fit_shrink(c, c.galfn['anchor'])
+    sh_h, tau_h = fit_shrink(c, head)
+    with torch.no_grad():                                               # anchor PCs for the label-free Wiener rule
+        Pp = c.galfn['anchor'](c.ftr[c.pool])
+        a_sig, Vp = torch.linalg.eigh((Pp - Pp.mean(0)).T @ (Pp - Pp.mean(0)) / len(Pp))
+    nrep = {'s4R1': 1, 's4R4': 4, 's4R20': 20, 'bench': 80}
+    rows.append(dict(exp='Mfit', head_val_top1=head_val, ridge_val_top1=ridge_val, head_step=head_step,
+                     shrink_tau_anchor=tau_a, shrink_tau_head=tau_h))
+    offs = {'none': None, 'old_100': c.delta(c.old_m[np.random.RandomState(3000).choice(len(c.old_m), 100, replace=False)])}
+    t200 = np.arange(200)
+
+    @torch.no_grad()
+    def mix_scores(z, mode):
+        S = torch.einsum('qd,sjd->sqj', nrm(z), Gs)                     # (9, q, 200)
+        if mode == 'lse':
+            return torch.logsumexp(20 * S, 0)
+        fit = S.max(2).values.mean(1)                                   # how well each source explains the batch
+        w = torch.softmax(fit / 0.01, 0)
+        return (w[:, None, None] * S).sum(0)
+    for oname, d1 in offs.items():
+        Z = c.zq(d1)
+        with torch.no_grad():                                           # signal / noise per anchor PC from the
+            n4 = c.tt4.shape[1]                                         # person's own repeats (label-free, uses
+            zt = X.acts2(c.f0, c.tt4.reshape(-1, *c.tt4.shape[2:]), d1)['z'].reshape(200, n4, -1)  # repeat grouping)
+            pt = zt @ Vp
+            noise1 = pt.var(1).mean(0)
+            a_s = (pt.mean(1).var(0) - noise1 / n4).clamp_min(1e-9)
+            mu_u = zt.mean((0, 1))
+        for qk in QK:
+            wR = a_s / (a_s + noise1 / nrep[qk])                       # Wiener weight for an R-repeat query
+            shR = (lambda z, wR=wR: (z - mu_u) @ Vp @ torch.diag(wR) @ Vp.T + mu_u)
+            for di, z in enumerate(Z[qk]):
+                with torch.no_grad():
+                    cands = {'anchor+shrinkR': (shR(z), c.gal['anchor'][0]), 'head+shrinkR': (shR(z), Ghead),
+                             'anchor+center': (z - z.mean(0), c.gal['anchor'][0]), 'head+center': (z - z.mean(0), Ghead),'anchor': (z, c.gal['anchor'][0]), 'img': (z, c.gal['img'][0]), 'head': (z, Ghead),
+                             'anchor+shrink': (sh_a(z), c.gal['anchor'][0]), 'head+shrink': (sh_h(z), Ghead),
+                             'img+shrink': (sh_a(z), c.gal['img'][0])}
+                    for name, (zz, G) in cands.items():
+                        r = evaluate(zz, t200, G, 'cos')
+                        rows.append(dict(exp='M', offset=oname, query=qk, draw=di, method=name, top1=r['top1'], mrr=r['mrr']))
+                    for mode in ('lse', 'sel'):
+                        S = mix_scores(z, mode)
+                        st = S[t200, t200]
+                        rk = (S > st[:, None]).sum(1).float()
+                        rows.append(dict(exp='M', offset=oname, query=qk, draw=di, method=f'mix_{mode}',
+                                         top1=100 * float((rk == 0).float().mean()), mrr=float((1 / (rk + 1)).mean())))
+    return rows
+
+
 def run_target(B, mon, which):
     t0 = time.time()
     c = R4(B, mon, which)
@@ -547,6 +678,7 @@ def run_target(B, mon, which):
     out['o'] = exp_o(c)
     print(f'   O done ({time.time() - t0:.0f}s)', flush=True)
     out['d'] = exp_d(c)
+    out['m'] = exp_m(c)
     for name, rows in out.items():
         df = pd.DataFrame(rows)
         df['target'], df['montage'] = B, mon
@@ -770,6 +902,22 @@ def report(mons):
             dr = d[(d.exp == 'Dret') & d.target.isin(TEST)]
             print('\nD: session-4 retrieval with an offset estimated in session s (top-1 %):')
             print(dr.groupby(['gallery', 'offset_session'])[['s4R4', 's4R20']].mean().unstack('gallery').round(2).to_string())
+    for mon in mons:
+        m = load('m', mon)
+        if m is None:
+            continue
+        print(f'\nM ({mon}): methods to raise zero-label accuracy (exploratory; settings chosen on source people only)')
+        mf = m[(m.exp == 'Mfit') & m.target.isin(TEST)]
+        print(mf[['head_val_top1', 'ridge_val_top1', 'head_step', 'shrink_tau_anchor', 'shrink_tau_head']].mean().round(4).to_string())
+        mm = m[m.exp == 'M']
+        pm = mm.groupby(['offset', 'method', 'query', 'target']).top1.mean()
+        tm = pm[pm.index.get_level_values('target').isin(TEST)].groupby(level=[0, 1, 2]).mean().unstack('query')
+        print(tm[[q for q in QK if q in tm]].round(2).to_string())
+        base = pm.loc[('none', 'anchor', 's4R4')]
+        for meth in ('head', 'anchor+shrink', 'anchor+shrinkR', 'anchor+center', 'head+center', 'mix_lse', 'mix_sel'):
+            pstats(pm.loc[('none', meth, 's4R4')], base, f'{meth} - anchor (s4R4, no offset)')
+        pstats(pm.loc[('none', 'head+center', 's4R20')], pm.loc[('none', 'anchor', 's4R20')], 'head+center - anchor (s4R20)')
+        pstats(pm.loc[('none', 'head+center', 's4R4')], pm.loc[('none', 'img', 's4R4')], 'head+center - f0 image gallery (s4R4)')
     pl = os.path.join(odir(), 'placement.csv')
     if os.path.exists(pl):
         p_ = pd.read_csv(pl)
@@ -824,8 +972,16 @@ def main():
         return report(a.montages)
     for mon in a.montages:
         for B in a.targets:
+            mf = os.path.join(odir(), f'm_t{B:02d}_{mon}.csv')
             if os.path.exists(os.path.join(odir(), f'd_t{B:02d}_{mon}.csv')):
-                print(f'[run] {B} {mon}: done')
+                if os.path.exists(mf):
+                    print(f'[run] {B} {mon}: done')
+                    continue
+                print(f'[run] target {B} {mon}: methods only', flush=True)
+                c = R4(B, mon, a.which)
+                df = pd.DataFrame(exp_m(c))
+                df['target'], df['montage'] = B, mon
+                df.to_csv(mf, index=False)
                 continue
             print(f'[run] target {B} {mon}', flush=True)
             run_target(B, mon, a.which)
