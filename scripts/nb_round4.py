@@ -598,7 +598,7 @@ def fit_shrink(c, galfn):
     mq = c.Zsrc_held.reshape(-1, 512).mean(0)
     Gh = galfn(c.ftr[c.held])
     best = (-1, None)
-    for tau in [0.0] + [float(x) for x in (a.max() * torch.logspace(-4, 0, 9))]:
+    for tau in [0.0] + [float(x) for x in (a.max().item() * torch.logspace(-4, 0, 9))]:
         w = a / (a + tau) if tau > 0 else torch.ones_like(a)
         fn = (lambda z, w=w: (z - mq) @ V @ torch.diag(w) @ V.T + mq)
         acc = float(np.mean([(nrm(fn(c.Zsrc_held[i])) @ Gh.T).argmax(1).eq(torch.arange(len(Gh), device=dev())).float().mean().item()
