@@ -148,8 +148,15 @@ def prep_data(subjects, prep, local='/content/ubp_raw_nw'):
         t0 = time.time()
         got = {}
         for mode in ('train', 'test'):
-            hit = [f for f in files if f.endswith(f'Preprocessed_data_250Hz_no_whiten/sub-{s:02d}/{mode}.pt')]
-            assert hit, f'no unwhitened {mode} file for sub-{s:02d} on {UBP_REPO}'
+            subf = [f for f in files if f'sub-{s:02d}' in f]
+            hit = [f for f in subf if ('no_whiten' in f.lower() or 'nowhiten' in f.lower() or 'unwhiten' in f.lower()
+                                       or 'raw' in f.lower()) and f.endswith(f'{mode}.pt')]
+            if not hit:
+                folders = sorted({f.rsplit('/', 2)[0] for f in files})
+                print(f'!! no unwhitened {mode} file for sub-{s:02d} on {UBP_REPO}.')
+                print('   files for this subject:', subf[:40])
+                print('   top-level folders in the repo:', folders[:60])
+                raise SystemExit('unwhitened data not found: send me the lines above')
             d = _tload(hf_hub_download(UBP_REPO, hit[0], repo_type='dataset', local_dir=local))
             got[mode] = dict(eeg=np.asarray(d['eeg'][:, :, idx, :250], np.float32), ses=np.asarray(d['session']).astype(int),
                              img=np.asarray(d['img']))
