@@ -186,24 +186,27 @@ def train_student(arm, S, B, lam=0.0, epochs=50, batch=1024, lr=1e-4, wd=1e-4, t
     teacher = N.load_model(tp)[0].to(dev()).eval().requires_grad_(False)
     use_t = arm != 'direct1' and lam > 0
     A_all, pool0 = population_anchors(teacher, tmon, B) if use_t else (None, None)
-    Xs, Xt, IM, PR, CON, val = [], [], [], [], [], []
-    for s in PEOPLE:
-        if s == B:
-            continue
+    srcs = [s for s in PEOPLE if s != B]
+    IM, PR, CON, val = [], [], [], []
+    for s in srcs:
         d = N.subject_data(s, S, keys=('train', 'train_labels'))
         pool, draws = N.split(d['train_labels'])
-        Xs.append(torch.from_numpy(np.asarray(R.load_reps(s, S)[pool], np.float16)))
-        if use_t:
-            Xt.append(torch.from_numpy(np.asarray(R.load_reps(s, tmon)[pool], np.float16)))
         st = R4m.load_ses(s)
         PR.append(torch.from_numpy(partner_reps(st['train'][pool])))
         IM.append(torch.from_numpy(pool))
         CON.append(d['train_labels'][pool].astype(np.int64))
         val += [(d['train'][ix], ix) for ix in draws[:3]]
-    XS = torch.cat(Xs).to(dev())
-    XT = torch.cat(Xt).to(dev()) if use_t else None
+    npp = len(IM[0])
+
+    def fill(mon):                                                       # one person at a time: no second copy
+        r0 = R.load_reps(srcs[0], mon)
+        X = torch.empty((npp * len(srcs), 4, r0.shape[2], r0.shape[3]), dtype=torch.float16, device=dev())
+        for j, s in enumerate(srcs):
+            X[j * npp:(j + 1) * npp] = torch.from_numpy(np.asarray(R.load_reps(s, mon)[IM[j].numpy()], np.float16))
+        return X
+    XS = fill(S)
+    XT = fill(tmon) if use_t else None
     IMG, P, CON_np = torch.cat(IM).to(dev()), torch.cat(PR).to(dev()), CON
-    del Xs, Xt
     n, _, C, T = XS.shape
     if use_t:
         pos = {int(i): j for j, i in enumerate(pool0)}
