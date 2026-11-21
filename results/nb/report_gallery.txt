@@ -6,3 +6,281 @@ AUDIT (person 1): 1654 training concepts, 200 test concepts; example paths: trai
   pool and held concepts disjoint: True
   ridge GCV runs on pool images only (fit_ridge(f[pool], pool_z)); calibration images are pool images
   AUDIT PASSED
+
+==============================================================================================================
+A. GALLERY TEST (posterior17, repaug, k = 500 earlier-day draws; people 2-10; top-1 %)
+==============================================================================================================
+predictor effective rank (img_rank uses it): s2025: 8.5, s2026: 8.6
+
+seed 2026, rule cos
+query               s4R1         s4R4         s4R20         bench       
+method             rigid  zero  rigid   zero  rigid   zero  rigid   zero
+gallery                                                                 
+anchor              4.99  3.77  10.02   9.20  13.50  15.67  17.02  18.28
+anchor_meas         3.69   NaN  11.64    NaN  22.19    NaN  28.70    NaN
+anchor_permconcept  3.78  3.33   6.29   6.21   8.93   9.39  10.22  11.48
+anchor_ret          4.94  3.94  10.41   9.35  14.07  15.91  18.11  18.85
+img                 3.96  3.16   9.06   7.58  14.67  13.69  18.93  17.78
+img_rank            3.54  2.66   6.84   4.39  11.13   7.06  13.83   8.70
+img_spec            4.40  3.25  10.86   7.56  18.63  14.30  22.41  17.61
+img_white           1.58  1.37   4.12   3.09   6.30   5.46   9.56   7.43
+oracle              6.42  6.59  22.94  19.14  45.96  33.91  62.22  42.63
+
+seed 2026, rule csls_batch
+query               s4R1         s4R4         s4R20         bench       
+method             rigid  zero  rigid   zero  rigid   zero  rigid   zero
+gallery                                                                 
+anchor              5.07  4.04  11.86  10.12  19.52  18.89  25.81  23.07
+anchor_meas         4.56   NaN  13.91    NaN  28.19    NaN  36.93    NaN
+anchor_permconcept  3.93  3.53   7.25   7.14  12.04  10.83  14.11  13.39
+anchor_ret          5.07  4.13  12.41  10.37  20.44  18.96  26.89  23.57
+img                 3.91  3.29  10.72   8.21  21.20  16.59  29.33  23.46
+img_rank            3.36  2.57   7.38   4.86  14.13   8.74  18.17  11.72
+img_spec            4.21  3.40  11.70   7.94  23.87  17.26  30.91  21.96
+img_white           1.65  1.64   4.34   3.54   7.89   6.50  13.65  11.72
+oracle              8.11  7.38  28.07  21.02  57.69  41.65  75.11  53.06
+
+seed 2025, rule cos
+query               s4R1         s4R4         s4R20         bench       
+method             rigid  zero  rigid   zero  rigid   zero  rigid   zero
+gallery                                                                 
+anchor              4.73  3.72   9.27   9.08  13.24  15.65  16.09  17.81
+anchor_meas         3.80   NaN  11.72    NaN  22.31    NaN  29.04    NaN
+anchor_permconcept  3.83  3.03   6.34   7.04   8.78   9.52   9.67  11.54
+anchor_ret          4.91  3.64   9.91   9.23  14.74  15.83  17.81  18.39
+img                 3.86  3.18   8.33   7.03  14.70  13.63  19.63  17.98
+img_rank            3.31  2.39   6.81   4.45  10.28   6.48  13.19   8.02
+img_spec            4.52  3.03  10.13   6.78  18.15  13.26  22.43  16.28
+img_white           1.86  1.36   3.58   2.77   6.20   5.35   8.39   7.37
+oracle              6.43  6.67  22.82  18.51  45.06  33.78  60.72  41.89
+
+seed 2025, rule csls_batch
+query               s4R1         s4R4         s4R20         bench       
+method             rigid  zero  rigid   zero  rigid   zero  rigid   zero
+gallery                                                                 
+anchor              4.93  3.90  11.44   9.85  19.39  18.30  25.59  23.24
+anchor_meas         4.79   NaN  14.08    NaN  28.15    NaN  36.70    NaN
+anchor_permconcept  3.87  3.25   7.68   7.46  12.28  11.26  14.20  13.31
+anchor_ret          5.10  3.84  11.76   9.85  20.67  18.46  26.85  23.43
+img                 4.02  3.23  10.02   7.64  21.72  17.87  29.22  24.20
+img_rank            3.30  2.48   7.56   4.57  13.37   8.35  17.30  11.83
+img_spec            4.19  3.24  11.60   7.51  24.15  16.91  31.04  22.39
+img_white           1.94  1.51   3.61   2.98   8.15   7.15  12.35  10.54
+oracle              8.14  7.15  27.81  20.93  56.69  41.91  74.11  53.28
+
+PRIMARY (seed 2026, zero labels, s4R4, each query scored on its own)
+  [PRIMARY] anchor - img_spec (predicted population vs spectrum-matched image-only gallery): mean +1.65 (95% CI +0.29 to +3.18), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.1289, LOPO +1.06 to +1.94
+     per person: t2:+6.333, t3:+0.111, t4:-0.111, t5:+3.389, t6:+0.222, t7:+2.944, t8:-0.722, t9:-0.056, t10:+2.722
+  anchor - img_rank (rank-matched): mean +4.81 (95% CI +3.20 to +6.67), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +4.15 to +5.20
+     per person: t2:+8.333, t3:+2.000, t4:+1.722, t5:+4.833, t6:+5.222, t7:+3.944, t8:+3.389, t9:+3.722, t10:+10.167
+  anchor - best image-only gallery per person (conservative): mean +1.20 (95% CI +0.04 to +2.70), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.2500, LOPO +0.57 to +1.46
+     per person: t2:+6.222, t3:-0.278, t4:-0.111, t5:+1.833, t6:+0.222, t7:+2.278, t8:-0.889, t9:-0.056, t10:+1.556
+  anchor - anchor_permconcept (image-level correspondence): mean +2.99 (95% CI +1.74 to +4.41), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.54 to +3.31
+     per person: t2:+6.167, t3:+0.500, t4:+1.556, t5:+1.944, t6:+4.167, t7:+2.500, t8:+2.222, t9:+1.278, t10:+6.611
+  oracle - anchor (measured vs predicted; PRIVILEGED): mean +9.94 (95% CI +7.54 to +12.50), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +8.95 to +10.68
+     per person: t2:+8.000, t3:+10.000, t4:+9.056, t5:+4.000, t6:+11.611, t7:+9.167, t8:+13.667, t9:+6.111, t10:+17.833
+  HOLM over the secondaries: {'anchor - img_rank': np.float64(0.0156), 'anchor - permconcept': np.float64(0.0156), 'oracle - anchor': np.float64(0.0156), 'anchor - best image-only': np.float64(0.25)}
+
+BATCH RULE (csls_batch) and other queries
+  anchor - img_spec, csls_batch, s4R4: mean +2.18 (95% CI +0.98 to +3.51), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.76 to +2.45
+     per person: t2:+5.556, t3:+0.444, t4:+0.556, t5:+3.389, t6:+0.889, t7:+4.722, t8:+0.000, t9:+1.056, t10:+3.000
+  anchor - img_spec, cos, s4R1: mean +0.52 (95% CI +0.29 to +0.75), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +0.44 to +0.59
+     per person: t2:+1.111, t3:-0.056, t4:+0.500, t5:+0.611, t6:+0.667, t7:+0.944, t8:+0.111, t9:+0.500, t10:+0.278
+  anchor - img_spec, cos, s4R20: mean +1.37 (95% CI -0.63 to +3.52), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.2617, LOPO +0.65 to +1.92
+     per person: t2:+1.667, t3:-3.000, t4:+3.000, t5:+7.167, t6:-0.167, t7:+4.000, t8:-2.833, t9:+3.167, t10:-0.667
+  anchor - img_spec, cos, bench: mean +0.67 (95% CI -2.09 to +2.94), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.4258, LOPO +0.17 to +1.75
+     per person: t2:+4.167, t3:-0.500, t4:+2.833, t5:+3.333, t6:-8.000, t7:+4.667, t8:-2.333, t9:-1.500, t10:+3.333
+
+WITH 500 LABELS (rigid to each gallery's own representation of the calibration images)
+  anchor - img_spec, rigid k = 500, cos, s4R4: mean -0.84 (95% CI -2.15 to +0.43), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.3008, LOPO -1.18 to -0.44
+     per person: t2:+1.278, t3:-3.056, t4:+1.167, t5:+1.889, t6:-4.000, t7:+0.222, t8:-2.278, t9:-1.167, t10:-1.611
+  anchor - best image-only, rigid k = 500, cos, s4R4: mean -0.84 (95% CI -2.15 to +0.43), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.3008, LOPO -1.18 to -0.44
+     per person: t2:+1.278, t3:-3.056, t4:+1.167, t5:+1.889, t6:-4.000, t7:+0.222, t8:-2.278, t9:-1.167, t10:-1.611
+  anchor (rigid to measured responses, rounds 6-7) - img_spec, rigid k = 500, cos, s4R4: mean +0.77 (95% CI -0.36 to +1.79), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.2031, LOPO +0.44 to +1.19
+     per person: t2:+1.111, t3:+2.389, t4:+0.944, t5:-2.556, t6:+1.333, t7:-0.000, t8:+3.444, t9:-0.778, t10:+1.056
+  anchor - img_spec, rigid k = 500, csls_batch, s4R4: mean +0.17 (95% CI -0.90 to +1.27), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.14 to +0.47
+     per person: t2:+2.167, t3:-2.278, t4:+0.611, t5:+2.611, t6:-0.444, t7:+2.000, t8:-1.778, t9:-0.889, t10:-0.500
+
+CALIBRATION WITH EACH QUERY SCORED ON ITS OWN (rigid - zero, same gallery, s4R4)
+  anchor: rigid k = 500 - zero labels, cos: mean +0.82 (95% CI -0.20 to +1.90), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.2500, LOPO +0.48 to +1.13
+     per person: t2:-1.667, t3:+0.944, t4:+1.944, t5:+3.556, t6:-0.278, t7:+2.389, t8:+1.333, t9:-0.167, t10:-0.667
+  img_spec: rigid k = 500 - zero labels, cos: mean +3.31 (95% CI +2.29 to +4.24), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.08 to +3.64
+     per person: t2:+3.389, t3:+4.111, t4:+0.667, t5:+5.056, t6:+3.944, t7:+5.111, t8:+2.889, t9:+0.944, t10:+3.667
+  img: rigid k = 500 - zero labels, cos: mean +1.48 (95% CI +0.65 to +2.30), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0195, LOPO +1.26 to +1.75
+     per person: t2:+2.500, t3:+1.333, t4:-0.056, t5:+3.056, t6:+0.889, t7:+3.222, t8:+1.167, t9:+1.889, t10:-0.667
+  anchor_meas (round 7 method): rigid - zero, cos: mean +2.43 (95% CI +0.56 to +4.40), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0547, LOPO +1.85 to +2.97
+     per person: t2:-1.833, t3:+6.389, t4:+1.722, t5:-0.889, t6:+5.056, t7:+2.167, t8:+7.056, t9:+0.222, t10:+2.000
+  anchor_meas (round 7 method): rigid - zero, csls_batch (should reproduce round 7, +3.89): mean +3.79 (95% CI +2.16 to +5.43), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.26 to +4.23
+     per person: t2:+1.111, t3:+8.000, t4:+1.944, t5:+0.278, t6:+6.278, t7:+4.667, t8:+6.333, t9:+1.889, t10:+3.611
+  anchor_meas: rigid - zero, cos, s4R1 (single presentation): mean -0.07 (95% CI -0.67 to +0.53), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.24 to +0.08
+     per person: t2:-0.611, t3:+1.000, t4:-1.333, t5:-1.167, t6:+1.222, t7:+0.111, t8:+1.000, t9:-0.111, t10:-0.778
+
+REPLICATION ON THE SEED-2025 DECODER
+  anchor - img_spec, zero, cos, s4R4: mean +2.30 (95% CI +1.38 to +3.20), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.98 to +2.58
+     per person: t2:+3.167, t3:+0.000, t4:+2.667, t5:+2.056, t6:+1.778, t7:+2.778, t8:+0.278, t9:+3.111, t10:+4.833
+  anchor - best image-only, zero, cos, s4R4: mean +1.62 (95% CI +0.88 to +2.39), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0117, LOPO +1.43 to +1.83
+     per person: t2:+3.167, t3:+0.000, t4:+1.556, t5:+0.944, t6:+1.778, t7:+1.278, t8:-0.056, t9:+3.111, t10:+2.833
+  anchor - img_spec, rigid k = 500, cos, s4R4: mean -0.86 (95% CI -1.78 to +0.10), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.2031, LOPO -1.18 to -0.55
+     per person: t2:-0.389, t3:-0.722, t4:-0.667, t5:+1.722, t6:-2.111, t7:+0.833, t8:-3.333, t9:-1.500, t10:-1.556
+
+TEMPLATE PREDICTOR (headroom, then the retrieval-trained predictor)
+  headroom: oracle - anchor (rounds 6-7 method), rigid k = 500, cos, s4R4 (PRIVILEGED): mean +11.31 (95% CI +8.51 to +14.06), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +10.50 to +12.11
+     per person: t2:+12.444, t3:+10.500, t4:+7.222, t5:+4.889, t6:+12.444, t7:+12.778, t8:+17.389, t9:+6.333, t10:+17.778
+  source-only selection: val top-1 ridge 11.07 -> 11.30; ridge kept for 3/10 folds; chosen lambdas {'10.0': 4, 'ridge': 3, '1.0': 2, '0.1': 1}
+  anchor_ret - anchor (rounds 6-7 method), rigid k = 500, cos, s4R4 (prespecified; threshold +2): mean -1.23 (95% CI -3.28 to +0.96), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.2500, LOPO -2.03 to -0.70
+     per person: t2:+0.167, t3:-5.444, t4:-0.333, t5:+5.222, t6:-4.167, t7:+0.833, t8:-5.444, t9:-0.389, t10:-1.500
+  anchor_ret - anchor, both rigid to their own templates, cos, s4R4: mean +0.38 (95% CI +0.03 to +0.74), +5/0:3/-1, sign p=0.2188 (non-ties), Wilcoxon p=0.0938, LOPO +0.28 to +0.50
+     per person: t2:+0.000, t3:+0.000, t4:-0.556, t5:+0.778, t6:+1.167, t7:+0.611, t8:+0.278, t9:+0.000, t10:+1.167
+  anchor_ret - anchor, zero labels, cos, s4R4: mean +0.14 (95% CI +0.05 to +0.24), +5/0:3/-1, sign p=0.2188 (non-ties), Wilcoxon p=0.0625, LOPO +0.11 to +0.16
+     per person: t2:+0.000, t3:+0.000, t4:+0.333, t5:-0.000, t6:+0.167, t7:+0.389, t8:+0.111, t9:+0.000, t10:+0.278
+  anchor_ret - anchor, zero labels, csls_batch, s4R4: mean +0.25 (95% CI +0.01 to +0.60), +5/0:3/-1, sign p=0.2188 (non-ties), Wilcoxon p=0.1562, LOPO +0.09 to +0.31
+     per person: t2:+0.000, t3:+0.000, t4:+0.167, t5:-0.167, t6:+0.333, t7:+0.111, t8:+0.278, t9:+0.000, t10:+1.556
+  anchor_ret - anchor (rounds 6-7 method), rigid k = 500, csls_batch, s4R4: mean -1.49 (95% CI -3.10 to +0.24), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0742, LOPO -2.15 to -0.99
+     per person: t2:-0.667, t3:-5.556, t4:-0.833, t5:+3.778, t6:-3.167, t7:-0.278, t8:-4.111, t9:-1.667, t10:-0.944
+  anchor_ret - img_rank, zero labels, cos, s4R4: mean +4.96 (95% CI +3.36 to +6.83), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +4.27 to +5.33
+     per person: t2:+8.333, t3:+2.000, t4:+2.056, t5:+4.833, t6:+5.389, t7:+4.333, t8:+3.500, t9:+3.722, t10:+10.444
+  -> anchor_ret does not clear the +2-point threshold (mean -1.23)
+
+DECISION RULE
+  anchor beats image-only only under batch CSLS -> the gallery claim is limited to batch retrieval.
+  with 500 labels: anchor - img_spec Wilcoxon p = 0.3008 (does the gallery advantage survive calibration?)
+
+==============================================================================================================
+B. FROM-SCRATCH CONTROL (posterior17, same calibration images as rounds 6-7, earlier day; top-1 %)
+==============================================================================================================
+epochs chosen on person 1 (s4R4, cos): 50   person-1 by epoch: 25:3.54, 50:3.78, 100:3.68, 200:3.68, 400:3.58
+people 2-10, all epochs (descriptive):
+query                   s4R1   s4R4  s4R20  bench
+k    epochs rule                                 
+500  25     cos         1.39   2.60   5.26   6.22
+            csls_batch  1.51   2.65   6.57   9.65
+     50     cos         1.51   2.69   5.57   7.22
+            csls_batch  1.53   2.86   7.31  11.00
+     100    cos         1.44   2.75   5.67   7.26
+            csls_batch  1.52   3.01   7.22  11.31
+     200    cos         1.55   2.82   5.76   7.59
+            csls_batch  1.56   2.98   7.61  11.52
+     400    cos         1.60   2.85   5.63   7.48
+            csls_batch  1.56   2.93   7.65  11.81
+1000 25     cos         2.11   4.39   8.30  11.13
+            csls_batch  2.21   4.73  10.81  17.24
+     50     cos         2.08   4.43   8.59  11.69
+            csls_batch  2.12   4.87  11.48  18.00
+     100    cos         2.02   4.52   8.89  12.30
+            csls_batch  2.05   4.96  12.06  18.33
+     200    cos         2.12   4.58   8.89  12.13
+            csls_batch  2.04   4.88  11.70  18.15
+     400    cos         2.06   4.45   8.91  12.11
+            csls_batch  1.98   4.81  11.41  18.02
+2000 25     cos         2.70   6.46  12.22  17.83
+            csls_batch  2.63   7.00  16.00  26.44
+     50     cos         2.59   6.59  12.06  18.11
+            csls_batch  2.61   6.98  16.83  27.67
+     100    cos         2.67   6.17  10.94  17.06
+            csls_batch  2.65   6.96  15.89  26.00
+     200    cos         2.52   5.72  10.83  15.22
+            csls_batch  2.46   6.39  16.11  23.89
+     400    cos         2.37   5.76   9.22  13.61
+            csls_batch  2.52   6.52  14.28  22.11
+4000 25     cos         3.44   9.19  18.50  26.11
+            csls_batch  3.69  10.11  25.11  37.11
+     50     cos         3.59   9.20  18.11  25.44
+            csls_batch  3.80  10.39  24.89  36.72
+     100    cos         3.50   8.72  17.22  23.39
+            csls_batch  3.65   9.57  23.33  35.50
+     200    cos         3.41   7.50  14.33  19.33
+            csls_batch  3.43   8.48  20.22  31.28
+     400    cos         3.44   7.11  13.22  18.22
+            csls_batch  3.46   8.72  19.00  28.67
+
+cross-subject calibrated vs scratch on the same images (s4R4):
+  rigid (cross-subject) - scratch, k = 500, cos: mean +9.02 (95% CI +6.58 to +11.46), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +8.28 to +9.66
+     per person: t2:+11.444, t3:+6.778, t4:+4.167, t5:+3.944, t6:+13.222, t7:+8.222, t8:+11.833, t9:+6.667, t10:+14.944
+  fine-tune (cross-subject) - scratch, k = 500, cos: mean +7.09 (95% CI +5.80 to +8.46), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +6.61 to +7.47
+     per person: t2:+9.333, t3:+6.444, t4:+4.056, t5:+5.278, t6:+7.667, t7:+6.556, t8:+8.222, t9:+5.333, t10:+10.944
+  rigid (cross-subject) - scratch, k = 500, csls_batch: mean +11.22 (95% CI +8.62 to +13.77), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +10.42 to +12.07
+     per person: t2:+13.167, t3:+9.778, t4:+4.444, t5:+6.833, t6:+15.444, t7:+10.056, t8:+14.111, t9:+9.500, t10:+17.667
+  fine-tune (cross-subject) - scratch, k = 500, csls_batch: mean +8.48 (95% CI +6.88 to +10.23), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.78 to +9.00
+     per person: t2:+10.444, t3:+7.667, t4:+4.333, t5:+7.000, t6:+9.389, t7:+7.389, t8:+9.444, t9:+6.611, t10:+14.056
+  rigid (cross-subject) - scratch, k = 1000, cos: mean +7.52 (95% CI +5.17 to +9.92), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +6.86 to +8.08
+     per person: t2:+11.000, t3:+3.111, t4:+3.556, t5:+3.111, t6:+12.833, t7:+6.167, t8:+9.611, t9:+6.889, t10:+11.444
+  fine-tune (cross-subject) - scratch, k = 1000, cos: mean +7.10 (95% CI +6.08 to +8.15), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +6.71 to +7.44
+     per person: t2:+7.444, t3:+5.500, t4:+4.333, t5:+6.556, t6:+7.944, t7:+6.833, t8:+8.444, t9:+6.611, t10:+10.222
+  rigid (cross-subject) - scratch, k = 1000, csls_batch: mean +9.90 (95% CI +7.47 to +12.30), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +9.31 to +10.58
+     per person: t2:+13.444, t3:+6.556, t4:+4.389, t5:+5.611, t6:+14.611, t7:+10.167, t8:+11.167, t9:+8.556, t10:+14.556
+  fine-tune (cross-subject) - scratch, k = 1000, csls_batch: mean +8.31 (95% CI +6.98 to +9.69), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.81 to +8.78
+     per person: t2:+9.167, t3:+6.667, t4:+4.556, t5:+7.500, t6:+9.722, t7:+8.556, t8:+9.333, t9:+6.944, t10:+12.389
+  rigid (cross-subject) - scratch, k = 2000, cos: mean +6.09 (95% CI +4.20 to +8.11), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +5.52 to +6.56
+     per person: t2:+9.833, t3:+5.167, t4:+2.333, t5:+2.500, t6:+10.667, t7:+6.167, t8:+4.667, t9:+4.167, t10:+9.333
+  fine-tune (cross-subject) - scratch, k = 2000, cos: mean +7.02 (95% CI +5.43 to +8.52), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +6.52 to +7.50
+     per person: t2:+8.333, t3:+6.500, t4:+3.167, t5:+6.167, t6:+7.833, t7:+9.333, t8:+7.333, t9:+3.500, t10:+11.000
+  rigid (cross-subject) - scratch, k = 2000, csls_batch: mean +8.31 (95% CI +6.37 to +10.22), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.83 to +8.96
+     per person: t2:+10.833, t3:+7.833, t4:+3.167, t5:+5.333, t6:+12.167, t7:+10.667, t8:+6.667, t9:+6.667, t10:+11.500
+  fine-tune (cross-subject) - scratch, k = 2000, csls_batch: mean +8.52 (95% CI +6.74 to +10.15), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +8.10 to +9.10
+     per person: t2:+9.500, t3:+6.833, t4:+3.833, t5:+7.500, t6:+10.167, t7:+11.833, t8:+9.833, t9:+5.333, t10:+11.833
+  rigid (cross-subject) - scratch, k = 4000, cos: mean +3.37 (95% CI +1.74 to +5.19), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +2.69 to +3.85
+     per person: t2:+8.833, t3:+2.500, t4:+1.667, t5:-0.500, t6:+6.333, t7:+1.833, t8:+2.667, t9:+4.333, t10:+2.667
+  fine-tune (cross-subject) - scratch, k = 4000, cos: mean +7.02 (95% CI +6.30 to +7.76), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +6.77 to +7.21
+     per person: t2:+8.167, t3:+7.167, t4:+5.500, t5:+6.167, t6:+6.167, t7:+5.833, t8:+9.000, t9:+7.500, t10:+7.667
+  rigid (cross-subject) - scratch, k = 4000, csls_batch: mean +5.13 (95% CI +3.56 to +6.78), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +4.56 to +5.54
+     per person: t2:+9.667, t3:+4.833, t4:+1.833, t5:+2.333, t6:+7.167, t7:+6.000, t8:+2.500, t9:+5.667, t10:+6.167
+  fine-tune (cross-subject) - scratch, k = 4000, csls_batch: mean +7.91 (95% CI +6.93 to +8.87), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.62 to +8.17
+     per person: t2:+10.000, t3:+8.333, t4:+5.833, t5:+5.833, t6:+6.833, t7:+8.500, t8:+7.667, t9:+8.000, t10:+10.167
+  scratch k = 500 - within-person decoder on all data (cos): mean -15.99 (95% CI -18.69 to -13.25), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -16.67 to -15.27
+     per person: t2:-15.611, t3:-18.000, t4:-11.722, t5:-10.611, t6:-20.111, t7:-13.611, t8:-21.333, t9:-11.167, t10:-21.778
+  scratch k = 1000 - within-person decoder on all data (cos): mean -14.25 (95% CI -16.49 to -12.01), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -14.83 to -13.66
+     per person: t2:-14.278, t3:-15.056, t4:-10.889, t5:-9.611, t6:-18.056, t7:-12.111, t8:-18.667, t9:-10.611, t10:-19.000
+  scratch k = 2000 - within-person decoder on all data (cos): mean -12.09 (95% CI -13.98 to -10.06), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -12.65 to -11.65
+     per person: t2:-12.333, t3:-15.000, t4:-9.333, t5:-7.667, t6:-15.667, t7:-12.167, t8:-13.333, t9:-7.667, t10:-15.667
+  scratch k = 4000 - within-person decoder on all data (cos): mean -9.48 (95% CI -10.91 to -7.94), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -10.02 to -9.08
+     per person: t2:-11.667, t3:-12.667, t4:-9.000, t5:-5.167, t6:-11.167, t7:-7.667, t8:-11.000, t9:-7.667, t10:-9.333
+
+levels (s4R4, cos): within-person (all data) 18.69; rigid at 500 11.72; scratch 500: 2.69, 1000: 4.43, 2000: 6.59, 4000: 9.20
+  smallest scratch k that reaches rigid at 500: none up to 4000
+  ft+rigid (cross-subject) - scratch, k = 500, cos: mean +9.10 (95% CI +6.54 to +11.93), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +8.00 to +9.68
+     per person: t2:+11.778, t3:+6.417, t4:+4.472, t5:+5.194, t6:+11.944, t7:+6.611, t8:+11.583, t9:+6.000, t10:+17.944
+  ft+rigid (cross-subject) - scratch, k = 500, csls_batch: mean +11.48 (95% CI +9.06 to +14.16), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +10.46 to +12.15
+     per person: t2:+14.389, t3:+9.444, t4:+6.111, t5:+8.750, t6:+14.167, t7:+9.139, t8:+13.361, t9:+8.306, t10:+19.611
+  ft+rigid (cross-subject) - scratch, k = 2000, cos: mean +9.56 (95% CI +6.68 to +12.52), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +8.71 to +10.33
+     per person: t2:+12.333, t3:+8.167, t4:+3.333, t5:+5.000, t6:+15.833, t7:+9.833, t8:+10.500, t9:+4.667, t10:+16.333
+  ft+rigid (cross-subject) - scratch, k = 2000, csls_batch: mean +12.39 (95% CI +9.65 to +15.11), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +11.52 to +13.29
+     per person: t2:+12.500, t3:+12.500, t4:+5.167, t5:+9.333, t6:+17.500, t7:+14.500, t8:+13.000, t9:+7.667, t10:+19.333
+  ft+rigid (cross-subject) - scratch, k = 4000, cos: mean +8.17 (95% CI +6.07 to +10.33), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.44 to +8.75
+     per person: t2:+14.000, t3:+8.167, t4:+3.500, t5:+4.500, t6:+10.667, t7:+6.000, t8:+9.833, t9:+6.000, t10:+10.833
+  ft+rigid (cross-subject) - scratch, k = 4000, csls_batch: mean +10.30 (95% CI +8.67 to +11.83), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +9.83 to +10.90
+     per person: t2:+14.000, t3:+10.500, t4:+5.500, t5:+9.667, t6:+12.167, t7:+10.667, t8:+10.000, t9:+7.667, t10:+12.500
+
+==============================================================================================================
+C. CALIBRATION SCHEDULE (posterior17, seed 2026, 1,000 presentations each; top-1 %, people 2-10)
+==============================================================================================================
+query               s4R1               s4R4                s4R20                bench              
+schedule          1000x1 250x4 500x2 1000x1  250x4  500x2 1000x1  250x4  500x2 1000x1  250x4  500x2
+method rule                                                                                        
+rigid  cos          3.71  3.38  3.69  11.61  11.38  11.64  21.46  23.69  22.19  28.13  32.07  28.70
+       csls_batch   4.80  4.44  4.56  13.90  14.43  13.91  27.19  29.48  28.19  36.93  39.04  36.93
+zero   cos          3.81  3.83  3.77   9.26   9.32   9.20  15.37  16.17  15.67  18.00  18.78  18.28
+       csls_batch   4.00  4.19  4.04   9.95  10.28  10.12  19.11  19.61  18.89  23.28  23.78  23.07
+  more images: 1000x1 - 500x2, rigid, s4R1, cos: mean +0.02 (95% CI -0.19 to +0.19), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.6523, LOPO -0.03 to +0.10
+     per person: t2:+0.056, t3:+0.389, t4:+0.111, t5:+0.333, t6:-0.667, t7:+0.167, t8:-0.111, t9:-0.056, t10:-0.056
+  more repeats: 250x4 - 500x2, rigid, s4R1, cos (spans days): mean -0.31 (95% CI -0.60 to -0.03), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0547, LOPO -0.42 to -0.23
+     per person: t2:-0.944, t3:+0.500, t4:-0.000, t5:-0.278, t6:-1.000, t7:-0.556, t8:-0.111, t9:-0.333, t10:-0.111
+  more images: 1000x1 - 500x2, rigid, s4R1, csls_batch: mean +0.23 (95% CI -0.07 to +0.47), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.1641, LOPO +0.19 to +0.37
+     per person: t2:+0.278, t3:+0.556, t4:+0.556, t5:-0.111, t6:-0.833, t7:+0.333, t8:+0.389, t9:+0.333, t10:+0.611
+  more repeats: 250x4 - 500x2, rigid, s4R1, csls_batch (spans days): mean -0.12 (95% CI -0.59 to +0.38), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.29 to +0.01
+     per person: t2:-0.889, t3:+1.278, t4:+0.500, t5:-0.500, t6:-0.833, t7:-1.167, t8:+0.389, t9:+0.056, t10:+0.111
+  more images: 1000x1 - 500x2, rigid, s4R4, cos: mean -0.02 (95% CI -0.63 to +0.45), +4/0:2/-3, sign p=1.0000 (non-ties), Wilcoxon p=0.8125, LOPO -0.14 to +0.24
+     per person: t2:+0.000, t3:-2.111, t4:+0.000, t5:-0.056, t6:+0.389, t7:+0.444, t8:-0.500, t9:+0.722, t10:+0.889
+  more repeats: 250x4 - 500x2, rigid, s4R4, cos (spans days): mean -0.25 (95% CI -0.95 to +0.44), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.5703, LOPO -0.46 to -0.05
+     per person: t2:+1.056, t3:+1.389, t4:+0.167, t5:-1.056, t6:-1.722, t7:+0.278, t8:-0.500, t9:-0.000, t10:-1.889
+  more images: 1000x1 - 500x2, rigid, s4R4, csls_batch: mean -0.01 (95% CI -0.65 to +0.55), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.8438, LOPO -0.13 to +0.19
+     per person: t2:+0.444, t3:-1.611, t4:+0.722, t5:+0.944, t6:+0.667, t7:-1.611, t8:-0.444, t9:+0.389, t10:+0.389
+  more repeats: 250x4 - 500x2, rigid, s4R4, csls_batch (spans days): mean +0.52 (95% CI -0.31 to +1.57), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.6523, LOPO +0.10 to +0.69
+     per person: t2:+2.056, t3:+3.889, t4:+0.111, t5:+0.389, t6:-0.667, t7:-0.889, t8:+0.333, t9:+0.278, t10:-0.833
+  1000x1: rigid - zero, s4R1, cos: mean -0.10 (95% CI -0.62 to +0.45), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.7344, LOPO -0.28 to +0.01
+     per person: t2:-0.556, t3:+1.333, t4:-1.056, t5:-0.889, t6:+0.944, t7:+0.111, t8:+0.500, t9:-0.333, t10:-1.000
+  500x2: rigid - zero, s4R1, cos: mean -0.07 (95% CI -0.67 to +0.53), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.24 to +0.08
+     per person: t2:-0.611, t3:+1.000, t4:-1.333, t5:-1.167, t6:+1.222, t7:+0.111, t8:+1.000, t9:-0.111, t10:-0.778
+  250x4: rigid - zero, s4R1, cos: mean -0.45 (95% CI -1.04 to +0.18), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.2500, LOPO -0.63 to -0.30
+     per person: t2:-1.333, t3:+0.944, t4:-1.667, t5:-1.389, t6:+0.778, t7:-0.722, t8:+0.667, t9:-0.500, t10:-0.833
+  query repetition: s4R4 - s4R1, 500x2 rigid, cos (for scale): mean +7.94 (95% CI +6.10 to +9.86), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.33 to +8.36
+     per person: t2:+8.889, t3:+6.556, t4:+4.944, t5:+4.611, t6:+11.056, t7:+7.333, t8:+10.611, t9:+4.611, t10:+12.889
