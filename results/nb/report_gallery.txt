@@ -1,0 +1,8 @@
+device: cuda
+AUDIT (person 1): 1654 training concepts, 200 test concepts; example paths: train_images/00001_aardvark/aardvark_01b.jpg | test_images/00001_aircraft_carrier/aircraft_carrier_06s.jpg
+  test concepts in ridge fit (pool): 0
+  test concepts in predictor selection / beta (held): 0
+  test concepts in all training: 0
+  pool and held concepts disjoint: True
+  ridge GCV runs on pool images only (fit_ridge(f[pool], pool_z)); calibration images are pool images
+  AUDIT PASSED
