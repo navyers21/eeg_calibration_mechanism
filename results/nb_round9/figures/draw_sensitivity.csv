@@ -1,0 +1,3 @@
+rule,cells,positive,share_positive,mean,sd_across_draws_mean,worst_draw_mean,people_all_draws_positive
+cos,45,36,0.8,2.42,0.92,1.28,6
+csls_batch,45,43,0.956,3.89,0.82,2.98,8

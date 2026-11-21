@@ -1,0 +1,346 @@
+device: cuda
+==============================================================================================================
+1. CLAIMS TABLE (recomputed from saved per-person results; figures in results/nb_round9/figures)
+==============================================================================================================
+| Kind | Claim | Mean (points) | 95% CI | Improved | Wilcoxon p | Evidence | Limitation |
+|---|---|---|---|---|---|---|---|
+| calibration | 500-image calibration (rigid) beats the zero-label pipeline, s4R4, batch CSLS (locked, seed 2026) | +3.89 | +2.40 to +5.40 | 9/9 | 0.0039 | round 7 confirm, 5 draws | same 9 people as development; one dataset |
+| calibration | same, each query scored alone | +2.42 | +0.71 to +4.27 | 7/9 | 0.0391 | round 7 confirm | as above |
+| calibration | same, single-presentation queries (s4R1) | +0.58 | -0.22 to +1.33 | 6/9 | 0.25 | round 7 confirm | small or no gain: the consumer-like single-view case is not solved |
+| calibration | same-day calibration | +4.08 | +2.63 to +5.58 | 9/9 | 0.0039 | round 7 confirm | as above |
+| calibration | fine-tuning + rigid beats fine-tuning alone at 4000 images | +2.39 | +1.26 to +3.54 | 7/9 | 0.0156 | round 7 combo | 8,000 labeled presentations; 1 draw |
+| calibration | fine-tuning + rigid vs rigid alone at 500 images | +0.04 | -0.76 to +0.83 | 4/9 | 0.8438 | round 7 combo | no gain: fine-tuning does not help at small budgets |
+| gallery | predicted population gallery beats the spectrum-matched image-only gallery (zero labels, scored alone) | +1.65 | +0.29 to +3.18 | 6/9 | 0.1289 | round 8 gallery test | image-only controls cover whitening, spectrum and rank, not every possible metric |
+| gallery | predicted population gallery beats the same ridge with pairs shuffled within concept | +2.99 | +1.74 to +4.41 | 9/9 | 0.0039 | round 8 gallery test | as above |
+| gallery | measured source templates beat predicted ones (headroom; privileged) | +9.94 | +7.54 to +12.50 | 9/9 | 0.0039 | round 8 gallery test | requires earlier people to have seen every candidate |
+| gallery | retrieval-trained template predictor vs ridge, rigid k = 500 | -1.23 | -3.28 to +0.96 | 3/9 | 0.25 | round 8 gallery test | trained on source people and held concepts only |
+| calibration | calibrated cross-subject decoder beats a decoder trained from scratch on the same 500 images | +9.02 | +6.58 to +11.46 | 9/9 | 0.0039 | round 8 scratch control | scratch recipe tuned only by epochs (person 1) |
+
+calibration-draw sensitivity (round 7, rigid - zero at k = 500, s4R4, 5 draws x 9 people):
+      rule  cells  positive  share_positive  mean  sd_across_draws_mean  worst_draw_mean  people_all_draws_positive
+       cos     45        36           0.800  2.42                  0.92             1.28                          6
+csls_batch     45        43           0.956  3.89                  0.82             2.98                          8
+
+==============================================================================================================
+3. OUTPUT EDIT (seed-2026 decoder, population gallery, s4R4; rand / randvar averaged over 3 bases)
+==============================================================================================================
+
+rule cos, s4R4 (rows = method, columns = calibration images)
+k            100    200    500    2000
+method                                
+full         4.17   4.98   5.88  12.28
+pca_16       9.49   9.57   9.77   9.76
+pca_4        9.34   9.13   9.31   9.50
+pca_64       9.60   8.00   9.73  11.13
+rand_16      9.23   9.17   9.35   9.48
+rand_4       9.20   9.16   9.36   9.42
+rand_64      9.31   9.26   9.48   9.48
+randvar_16   9.06   8.96   9.07   9.12
+randvar_4    9.15   9.18   9.36   9.38
+rigid        9.13   9.36  11.69  12.93
+rot         10.77  10.93  12.83  13.91
+scale        7.90   7.64   7.88   7.85
+shift        9.22   9.18   9.38   9.35
+zero         8.98   9.16   9.20   9.35
+
+rule csls_batch, s4R4 (rows = method, columns = calibration images)
+k            100    200    500    2000
+method                                
+full         5.79   6.97   8.54  15.41
+pca_16      10.65  10.82  10.85  10.93
+pca_4       10.34  10.21  10.18  10.30
+pca_64      10.96   9.24  11.51  13.17
+rand_16     10.23  10.28  10.38  10.40
+rand_4      10.17  10.27  10.34  10.32
+rand_64     10.42  10.45  10.56  10.59
+randvar_16  10.19  10.16  10.32  10.27
+randvar_4   10.14  10.19  10.26  10.30
+rigid       11.33  11.29  13.80  14.72
+rot         12.00  12.19  14.73  15.44
+scale        9.54   9.45   9.56   9.70
+shift       10.17  10.22  10.23  10.30
+zero         9.93   9.98  10.12  10.15
+
+share of source population-response variance inside each basis: pca_16 0.72, pca_4 0.42, pca_64 0.86, rand_16 0.03, rand_4 0.01, rand_64 0.12, randvar_16 0.23, randvar_4 0.06
+chosen strength (most common, by method): full 10.0, pca_16 100.0, pca_4 100.0, pca_64 0.1, rand_16 0.1, rand_4 1.0, rand_64 0.1, randvar_16 1.0, randvar_4 100.0, rigid 10.0, rot 10.0
+
+component contributions at k = 200 (each query scored alone; batch CSLS in the table above)
+  shift - zero, k = 200: mean +0.02 (95% CI -0.38 to +0.35), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.5703, LOPO -0.07 to +0.17
+     per person: t2:+0.167, t3:-1.233, t4:-0.533, t5:+0.600, t6:-0.100, t7:+0.333, t8:+0.700, t9:+0.067, t10:+0.167
+  scale (+ global scale) - shift, k = 200: mean -1.54 (95% CI -2.49 to -0.62), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0195, LOPO -1.84 to -1.26
+     per person: t2:-3.833, t3:+0.800, t4:-0.633, t5:-3.233, t6:-1.667, t7:-2.367, t8:-0.033, t9:-0.900, t10:-2.033
+  rotation - shift, k = 200: mean +1.75 (95% CI +1.02 to +2.40), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.60 to +2.01
+     per person: t2:-0.333, t3:+2.867, t4:+2.200, t5:+2.300, t6:+2.633, t7:+1.467, t8:+2.900, t9:+0.567, t10:+1.133
+  rigid - rotation (adds the scale), k = 200: mean -1.57 (95% CI -2.39 to -0.87), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -1.76 to -1.25
+     per person: t2:-2.367, t3:-0.000, t4:-1.600, t5:-4.100, t6:-1.467, t7:-2.167, t8:-0.400, t9:-1.133, t10:-0.867
+  full linear - rigid, k = 200: mean -4.39 (95% CI -6.04 to -2.86), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -4.75 to -3.88
+     per person: t2:-7.467, t3:-2.167, t4:-1.500, t5:-3.333, t6:-6.600, t7:-2.067, t8:-5.267, t9:-2.633, t10:-8.433
+  pca_4 - rand_4 (rank-matched), k = 200: mean -0.03 (95% CI -0.12 to +0.05), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.7344, LOPO -0.05 to +0.01
+     per person: t2:-0.067, t3:+0.056, t4:-0.067, t5:-0.322, t6:+0.089, t7:+0.033, t8:-0.100, t9:-0.022, t10:+0.144
+  pca_4 - randvar_4 (inside the top-64 PCs), k = 200: mean -0.05 (95% CI -0.16 to +0.05), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.5703, LOPO -0.07 to -0.01
+     per person: t2:-0.144, t3:-0.344, t4:+0.111, t5:-0.278, t6:+0.100, t7:-0.044, t8:-0.011, t9:+0.022, t10:+0.133
+  pca_4 - rigid, k = 200: mean -0.23 (95% CI -1.30 to +0.84), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.7344, LOPO -0.57 to +0.09
+     per person: t2:+2.500, t3:-2.767, t4:-0.633, t5:+1.367, t6:-1.167, t7:+0.733, t8:-2.500, t9:+0.567, t10:-0.167
+  pca_16 - rand_16 (rank-matched), k = 200: mean +0.40 (95% CI -0.00 to +1.00), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.2031, LOPO +0.13 to +0.48
+     per person: t2:-0.167, t3:+2.556, t4:-0.233, t5:+0.367, t6:+0.700, t7:-0.033, t8:+0.167, t9:-0.067, t10:+0.322
+  pca_16 - randvar_16 (inside the top-64 PCs), k = 200: mean +0.61 (95% CI +0.22 to +1.11), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0195, LOPO +0.40 to +0.71
+     per person: t2:+0.211, t3:+2.300, t4:-0.078, t5:+0.933, t6:+0.733, t7:+0.678, t8:+0.389, t9:-0.178, t10:+0.489
+  pca_16 - rigid, k = 200: mean +0.21 (95% CI -0.74 to +1.15), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.08 to +0.54
+     per person: t2:+2.533, t3:-0.033, t4:-0.633, t5:+2.133, t6:-0.667, t7:+0.833, t8:-2.467, t9:+0.467, t10:-0.300
+  pca_64 - rand_64 (rank-matched), k = 200: mean -1.26 (95% CI -3.11 to +0.48), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.3008, LOPO -1.86 to -0.59
+     per person: t2:-6.611, t3:+3.567, t4:+0.567, t5:-1.867, t6:-2.511, t7:-0.367, t8:+0.856, t9:-1.833, t10:-3.144
+  pca_64 - rigid, k = 200: mean -1.36 (95% CI -2.70 to -0.15), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.1289, LOPO -1.68 to -0.95
+     per person: t2:-4.700, t3:+1.167, t4:+0.400, t5:-0.167, t6:-3.300, t7:+0.467, t8:-1.233, t9:-1.233, t10:-3.667
+
+component contributions at k = 500 (each query scored alone; batch CSLS in the table above)
+  shift - zero, k = 500: mean +0.18 (95% CI -0.23 to +0.60), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.4961, LOPO +0.06 to +0.27
+     per person: t2:-0.500, t3:-0.556, t4:-0.556, t5:+1.000, t6:+0.000, t7:+1.111, t8:+0.667, t9:+0.500, t10:-0.056
+  scale (+ global scale) - shift, k = 500: mean -1.50 (95% CI -2.40 to -0.62), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0195, LOPO -1.77 to -1.23
+     per person: t2:-3.111, t3:+0.667, t4:-0.611, t5:-3.667, t6:-0.833, t7:-2.833, t8:-0.389, t9:-1.056, t10:-1.667
+  rotation - shift, k = 500: mean +3.44 (95% CI +1.93 to +4.99), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +2.96 to +3.92
+     per person: t2:-0.389, t3:+7.333, t4:+2.722, t5:+2.667, t6:+5.333, t7:+3.667, t8:+6.056, t9:+0.444, t10:+3.167
+  rigid - rotation (adds the scale), k = 500: mean -1.14 (95% CI -2.13 to -0.37), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0117, LOPO -1.32 to -0.75
+     per person: t2:-0.500, t3:-0.389, t4:-0.444, t5:-4.222, t6:-0.278, t7:-2.611, t8:+0.333, t9:-1.000, t10:-1.111
+  full linear - rigid, k = 500: mean -5.81 (95% CI -7.43 to -4.17), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -6.20 to -5.37
+     per person: t2:-8.111, t3:-5.556, t4:-2.722, t5:-4.278, t6:-7.722, t7:-3.222, t8:-8.611, t9:-2.778, t10:-9.333
+  pca_4 - rand_4 (rank-matched), k = 500: mean -0.05 (95% CI -0.24 to +0.10), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.08 to +0.04
+     per person: t2:+0.093, t3:+0.222, t4:-0.056, t5:-0.722, t6:-0.019, t7:+0.093, t8:-0.111, t9:+0.185, t10:-0.093
+  pca_4 - randvar_4 (inside the top-64 PCs), k = 500: mean -0.04 (95% CI -0.17 to +0.06), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.06 to +0.01
+     per person: t2:-0.204, t3:+0.019, t4:+0.130, t5:-0.426, t6:+0.074, t7:+0.056, t8:-0.056, t9:+0.148, t10:-0.111
+  pca_4 - rigid, k = 500: mean -2.38 (95% CI -4.29 to -0.56), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.0547, LOPO -2.79 to -1.82
+     per person: t2:+0.944, t3:-6.833, t4:-2.333, t5:+0.778, t6:-5.056, t7:-1.000, t8:-6.389, t9:+0.556, t10:-2.056
+  pca_16 - rand_16 (rank-matched), k = 500: mean +0.42 (95% CI -0.00 to +1.10), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.2031, LOPO +0.10 to +0.50
+     per person: t2:-0.037, t3:+2.963, t4:-0.111, t5:-0.185, t6:+0.167, t7:+0.019, t8:+0.111, t9:+0.315, t10:+0.537
+  pca_16 - randvar_16 (inside the top-64 PCs), k = 500: mean +0.70 (95% CI +0.31 to +1.27), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +0.44 to +0.78
+     per person: t2:+0.278, t3:+2.759, t4:+0.037, t5:+0.759, t6:+0.185, t7:+0.852, t8:+0.278, t9:+0.574, t10:+0.556
+  pca_16 - rigid, k = 500: mean -1.92 (95% CI -3.64 to -0.28), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.0742, LOPO -2.34 to -1.37
+     per person: t2:+1.056, t3:-3.944, t4:-2.278, t5:+1.444, t6:-4.889, t7:-1.111, t8:-6.278, t9:+0.611, t10:-1.889
+  pca_64 - rand_64 (rank-matched), k = 500: mean +0.25 (95% CI -1.54 to +1.98), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.28 to +0.87
+     per person: t2:-4.704, t3:+4.481, t4:+1.926, t5:-1.796, t6:+1.648, t7:+0.611, t8:+3.019, t9:-1.926, t10:-1.019
+  pca_64 - rigid, k = 500: mean -1.96 (95% CI -2.82 to -1.07), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -2.20 to -1.71
+     per person: t2:-4.000, t3:-2.222, t4:-0.111, t5:-0.056, t6:-2.833, t7:-0.889, t8:-2.778, t9:-1.444, t10:-3.333
+
+consistency of the fitted edit (people 2-10)
+  k = 200: shift-vector cosine within person (across draws) 0.91, across people 0.75; top-8 rotation-direction overlap within person 0.419, across people 0.302 (random 0.016)
+  k = 500: shift-vector cosine within person (across draws) 0.96, across people 0.79; top-8 rotation-direction overlap within person 0.346, across people 0.168 (random 0.016)
+
+==============================================================================================================
+4a. EQUAL PRESENTATION BUDGETS (seed-2026 decoder, population gallery; x 4 spans days)
+==============================================================================================================
+query                   s4R1  s4R4  s4R20  bench
+budget schedule method                          
+100    100x1    rigid   2.33  5.69  10.19  12.98
+                shift   3.75  8.91  13.84  16.71
+                zero    3.77  9.00  14.47  17.28
+       25x4     rigid   1.96  5.44  10.02  14.31
+                shift   3.81  9.22  15.38  18.39
+                zero    3.82  8.87  14.48  16.73
+       50x2     rigid   1.95  4.98   9.46  12.53
+                shift   3.84  9.01  14.39  17.87
+                zero    3.74  8.83  14.41  17.44
+400    100x4    rigid   2.96  8.88  18.35  24.52
+                shift   3.83  9.64  16.24  19.41
+                zero    3.72  9.14  15.52  17.63
+       200x2    rigid   3.10  9.73  18.39  24.33
+                shift   3.83  9.31  15.11  17.72
+                zero    3.77  9.20  15.19  17.89
+       400x1    rigid   3.44  9.95  18.57  24.70
+                shift   4.00  8.86  14.70  16.98
+                zero    3.83  9.02  15.43  18.09
+  more images: 100x1 - 50x2, rigid, s4R1: mean +0.38 (95% CI +0.16 to +0.57), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0195, LOPO +0.33 to +0.46
+     per person: t2:+0.567, t3:+0.767, t4:+0.767, t5:+0.467, t6:+0.033, t7:-0.267, t8:+0.267, t9:+0.500, t10:+0.300
+  more repeats: 25x4 - 50x2, rigid, s4R1: mean +0.01 (95% CI -0.25 to +0.23), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.4258, LOPO -0.03 to +0.13
+     per person: t2:-0.133, t3:+0.267, t4:+0.367, t5:+0.233, t6:-0.133, t7:-0.900, t8:+0.267, t9:-0.100, t10:+0.267
+  more images: 100x1 - 50x2, shift, s4R1: mean -0.10 (95% CI -0.23 to +0.04), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.2500, LOPO -0.14 to -0.07
+     per person: t2:-0.067, t3:-0.333, t4:-0.067, t5:-0.333, t6:+0.133, t7:+0.233, t8:-0.300, t9:-0.233, t10:+0.100
+  more repeats: 25x4 - 50x2, shift, s4R1: mean -0.03 (95% CI -0.21 to +0.16), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.8203, LOPO -0.10 to +0.02
+     per person: t2:+0.167, t3:-0.067, t4:-0.067, t5:+0.233, t6:-0.133, t7:+0.500, t8:-0.467, t9:-0.333, t10:-0.133
+  more images: 100x1 - 50x2, rigid, s4R4: mean +0.71 (95% CI +0.29 to +1.20), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +0.55 to +0.80
+     per person: t2:+1.033, t3:+0.167, t4:+0.700, t5:+0.100, t6:+1.833, t7:-0.033, t8:+1.933, t9:+0.233, t10:+0.400
+  more repeats: 25x4 - 50x2, rigid, s4R4: mean +0.46 (95% CI +0.24 to +0.69), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +0.38 to +0.51
+     per person: t2:+0.500, t3:+0.400, t4:+0.900, t5:+0.033, t6:+0.633, t7:+0.333, t8:+1.067, t9:+0.000, t10:+0.233
+  more images: 100x1 - 50x2, shift, s4R4: mean -0.10 (95% CI -0.44 to +0.26), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.4961, LOPO -0.22 to -0.01
+     per person: t2:-0.433, t3:+0.067, t4:+0.800, t5:+0.667, t6:-0.200, t7:-0.033, t8:-0.133, t9:-0.800, t10:-0.867
+  more repeats: 25x4 - 50x2, shift, s4R4: mean +0.20 (95% CI -0.28 to +0.66), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.3008, LOPO +0.08 to +0.35
+     per person: t2:+1.067, t3:+1.167, t4:+0.800, t5:+0.100, t6:+0.033, t7:+0.300, t8:-1.000, t9:-0.900, t10:+0.267
+  more images: 400x1 - 200x2, rigid, s4R1: mean +0.34 (95% CI +0.05 to +0.58), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0664, LOPO +0.28 to +0.45
+     per person: t2:+0.722, t3:+0.389, t4:+0.389, t5:+0.389, t6:+0.333, t7:+0.833, t8:-0.111, t9:+0.667, t10:-0.556
+  more repeats: 100x4 - 200x2, rigid, s4R1: mean -0.15 (95% CI -0.48 to +0.20), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.3438, LOPO -0.28 to -0.07
+     per person: t2:-0.500, t3:+0.889, t4:+0.278, t5:-0.278, t6:-0.778, t7:+0.278, t8:-0.167, t9:-0.278, t10:-0.778
+  more images: 400x1 - 200x2, shift, s4R1: mean +0.17 (95% CI +0.05 to +0.27), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0391, LOPO +0.15 to +0.22
+     per person: t2:+0.222, t3:+0.056, t4:+0.389, t5:-0.222, t6:+0.333, t7:+0.167, t8:+0.167, t9:+0.278, t10:+0.167
+  more repeats: 100x4 - 200x2, shift, s4R1: mean -0.00 (95% CI -0.18 to +0.17), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.05 to +0.05
+     per person: t2:+0.278, t3:+0.278, t4:+0.167, t5:+0.389, t6:-0.389, t7:-0.111, t8:-0.278, t9:-0.056, t10:-0.278
+  more images: 400x1 - 200x2, rigid, s4R4: mean +0.22 (95% CI -0.52 to +0.97), +6/0:1/-2, sign p=0.2891 (non-ties), Wilcoxon p=0.5469, LOPO -0.01 to +0.44
+     per person: t2:+0.611, t3:+0.056, t4:+0.000, t5:+0.556, t6:+2.111, t7:-1.556, t8:+0.389, t9:-1.556, t10:+1.389
+  more repeats: 100x4 - 200x2, rigid, s4R4: mean -0.85 (95% CI -1.51 to -0.10), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.0977, LOPO -1.13 to -0.67
+     per person: t2:-0.389, t3:+1.444, t4:-0.778, t5:-2.111, t6:-1.278, t7:-0.944, t8:-1.333, t9:-2.278, t10:+0.056
+  more images: 400x1 - 200x2, shift, s4R4: mean -0.46 (95% CI -0.73 to -0.14), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0391, LOPO -0.58 to -0.39
+     per person: t2:-0.500, t3:-0.056, t4:+0.556, t5:-0.556, t6:-1.000, t7:-0.556, t8:-0.889, t9:-0.222, t10:-0.889
+  more repeats: 100x4 - 200x2, shift, s4R4: mean +0.33 (95% CI -0.16 to +0.85), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.3594, LOPO +0.14 to +0.47
+     per person: t2:+1.167, t3:+1.833, t4:+0.556, t5:-0.389, t6:+0.278, t7:+0.389, t8:-0.833, t9:-0.333, t10:+0.278
+
+==============================================================================================================
+4b. LINEAR CROSS-REPEAT DENOISER (seed-2026 decoder; source-fitted unless "target")
+==============================================================================================================
+held-out-source R^2 to disjoint repeats (mean over folds): target_val_r2 -0.017, ridge_val_r2 -0.033, shuffled_val_r2 -0.038, pca_val_r2 -1.267, ridge_setting 10.000, shuffled_setting 10.000, pca_setting 16.000, identity_val_r2 -2.749
+target-calibrated denoiser, held-out R^2 (mean): -0.017
+
+rule cos
+query                s4R1   s4R4  s4R20  bench
+denoiser  method                              
+identity  plain_img  3.16   7.58  13.69  17.78
+          rigid      3.69  11.64  22.19  28.70
+          zero       3.77   9.20  15.67  18.28
+pca       plain_img  0.60   0.58   0.37   0.56
+          rigid      0.44   0.51   0.52   0.72
+          zero       0.57   0.62   0.52   0.54
+ridge     plain_img  1.68   2.91   4.13   4.93
+          rigid      1.98   4.29   5.76   7.87
+          zero       2.12   3.59   4.81   5.54
+ridge_raw plain_img  1.12   0.96   1.13   1.06
+          rigid      2.45   3.67   4.28   4.74
+          zero       1.34   1.37   1.59   1.44
+shuffled  plain_img  0.52   0.49   0.65   0.43
+          rigid      0.83   0.99   1.13   1.39
+          zero       0.39   0.54   0.43   0.44
+target    plain_img  1.07   1.74   3.07   3.31
+          rigid      1.44   3.01   5.19   6.98
+          zero       1.26   2.25   3.63   3.85
+
+rule csls_batch
+query                s4R1   s4R4  s4R20  bench
+denoiser  method                              
+identity  plain_img  3.29   8.21  16.59  23.46
+          rigid      4.56  13.91  28.19  36.93
+          zero       4.04  10.12  18.89  23.07
+pca       plain_img  0.47   0.62   0.33   0.57
+          rigid      0.46   0.48   0.56   0.61
+          zero       0.65   0.61   0.76   0.59
+ridge     plain_img  1.77   3.48   5.56   6.39
+          rigid      2.25   5.14   8.50  11.30
+          zero       2.30   3.98   6.41   7.61
+ridge_raw plain_img  1.64   1.74   1.57   1.57
+          rigid      2.98   4.92   7.15   7.83
+          zero       1.88   2.07   2.24   2.56
+shuffled  plain_img  0.56   0.57   0.52   0.54
+          rigid      0.86   1.16   1.43   2.52
+          zero       0.60   0.54   0.52   0.57
+target    plain_img  1.06   1.90   3.56   5.09
+          rigid      1.64   3.27   6.39  10.06
+          zero       1.31   2.67   4.56   5.48
+  source denoiser - none, zero, s4R1: mean -1.65 (95% CI -2.28 to -1.03), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -1.82 to -1.42
+     per person: t2:-1.944, t3:-0.278, t4:-2.111, t5:-0.778, t6:-2.611, t7:-0.500, t8:-1.389, t9:-1.778, t10:-3.444
+  source denoiser - PCA control, zero, s4R1: mean +1.55 (95% CI +1.01 to +2.00), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.42 to +1.76
+     per person: t2:+2.333, t3:+1.889, t4:+1.222, t5:+1.722, t6:+1.056, t7:+1.500, t8:+1.778, t9:-0.167, t10:+2.611
+  source denoiser - shuffled-pair control, zero, s4R1: mean +1.73 (95% CI +1.19 to +2.19), +8/0:1/-0, sign p=0.0078 (non-ties), Wilcoxon p=0.0078, LOPO +1.61 to +1.94
+     per person: t2:+2.667, t3:+1.944, t4:+1.000, t5:+1.667, t6:+1.667, t7:+1.889, t8:+2.611, t9:+0.000, t10:+2.111
+  target-calibrated denoiser - none, zero, s4R1: mean -2.51 (95% CI -3.20 to -1.90), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -2.69 to -2.26
+     per person: t2:-3.944, t3:-2.000, t4:-2.389, t5:-2.278, t6:-2.611, t7:-1.056, t8:-2.000, t9:-1.778, t10:-4.500
+  variance-matched - raw ridge output, zero, s4R1: mean +0.78 (95% CI +0.35 to +1.10), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0195, LOPO +0.69 to +0.97
+     per person: t2:+0.778, t3:+1.222, t4:+0.778, t5:+0.667, t6:+0.611, t7:+1.056, t8:+1.111, t9:-0.722, t10:+1.500
+  source denoiser - none, rigid, s4R1: mean -1.72 (95% CI -2.42 to -0.96), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO -1.98 to -1.53
+     per person: t2:-1.944, t3:-1.778, t4:-1.111, t5:+0.389, t6:-3.167, t7:-1.278, t8:-3.222, t9:-0.778, t10:-2.556
+  source denoiser - PCA control, rigid, s4R1: mean +1.54 (95% CI +1.25 to +1.86), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.42 to +1.61
+     per person: t2:+1.778, t3:+1.500, t4:+0.944, t5:+1.667, t6:+1.944, t7:+1.000, t8:+1.389, t9:+1.111, t10:+2.500
+  source denoiser - shuffled-pair control, rigid, s4R1: mean +1.15 (95% CI +0.86 to +1.45), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.04 to +1.23
+     per person: t2:+1.444, t3:+1.278, t4:+0.500, t5:+1.389, t6:+1.389, t7:+0.556, t8:+1.000, t9:+0.778, t10:+2.000
+  target-calibrated denoiser - none, rigid, s4R1: mean -2.25 (95% CI -3.02 to -1.51), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -2.44 to -1.99
+     per person: t2:-3.389, t3:-2.722, t4:-1.056, t5:-0.722, t6:-4.333, t7:-1.222, t8:-2.333, t9:-1.444, t10:-3.000
+  variance-matched - raw ridge output, rigid, s4R1: mean -0.48 (95% CI -0.83 to -0.12), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.0742, LOPO -0.58 to -0.38
+     per person: t2:-0.556, t3:-1.222, t4:-0.056, t5:+0.111, t6:+0.389, t7:-1.222, t8:-0.889, t9:-0.111, t10:-0.722
+  source denoiser - none, zero, s4R4: mean -5.62 (95% CI -7.94 to -3.49), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -6.24 to -4.83
+     per person: t2:-9.889, t3:-0.611, t4:-3.111, t5:-3.222, t6:-7.667, t7:-6.056, t8:-4.444, t9:-3.667, t10:-11.889
+  source denoiser - PCA control, zero, s4R4: mean +2.96 (95% CI +2.40 to +3.52), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.81 to +3.14
+     per person: t2:+4.167, t3:+2.833, t4:+1.889, t5:+3.500, t6:+2.944, t7:+1.556, t8:+3.389, t9:+2.278, t10:+4.111
+  source denoiser - shuffled-pair control, zero, s4R4: mean +3.04 (95% CI +2.39 to +3.66), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.86 to +3.28
+     per person: t2:+4.500, t3:+2.667, t4:+1.889, t5:+3.611, t6:+3.444, t7:+1.111, t8:+3.444, t9:+2.833, t10:+3.889
+  target-calibrated denoiser - none, zero, s4R4: mean -6.95 (95% CI -9.43 to -4.77), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -7.50 to -6.19
+     per person: t2:-13.056, t3:-2.556, t4:-3.278, t5:-6.222, t6:-8.944, t7:-6.222, t8:-5.222, t9:-4.611, t10:-12.444
+  variance-matched - raw ridge output, zero, s4R4: mean +2.22 (95% CI +1.68 to +2.73), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.08 to +2.40
+     per person: t2:+2.944, t3:+2.333, t4:+1.167, t5:+3.111, t6:+1.833, t7:+0.722, t8:+2.444, t9:+2.111, t10:+3.278
+  source denoiser - none, rigid, s4R4: mean -7.35 (95% CI -9.69 to -4.86), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -8.13 to -6.69
+     per person: t2:-8.889, t3:-7.611, t4:-4.667, t5:-1.056, t6:-10.944, t7:-6.111, t8:-11.056, t9:-3.167, t10:-12.611
+  source denoiser - PCA control, rigid, s4R4: mean +3.78 (95% CI +3.01 to +4.54), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.56 to +4.01
+     per person: t2:+3.667, t3:+1.889, t4:+2.111, t5:+4.778, t6:+5.167, t7:+3.500, t8:+4.056, t9:+3.333, t10:+5.500
+  source denoiser - shuffled-pair control, rigid, s4R4: mean +3.30 (95% CI +2.67 to +3.90), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.13 to +3.49
+     per person: t2:+3.167, t3:+1.944, t4:+1.778, t5:+4.611, t6:+4.333, t7:+3.000, t8:+3.556, t9:+3.056, t10:+4.222
+  target-calibrated denoiser - none, rigid, s4R4: mean -8.62 (95% CI -10.81 to -6.52), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -9.17 to -7.96
+     per person: t2:-11.167, t3:-7.944, t4:-4.278, t5:-4.833, t6:-13.944, t7:-7.444, t8:-9.722, t9:-5.667, t10:-12.611
+  variance-matched - raw ridge output, rigid, s4R4: mean +0.62 (95% CI +0.03 to +1.38), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.0977, LOPO +0.32 to +0.79
+     per person: t2:-0.722, t3:-0.000, t4:+0.111, t5:+3.056, t6:+1.222, t7:-0.056, t8:+0.778, t9:+0.222, t10:+1.000
+
+profile.csv:
+   encoder target  sec_per_epoch  min_per_model  params
+eegproject    aug            3.7            3.1 6454273
+eegproject  clean            2.0            1.7 6454273
+eegproject    mid            2.0            1.7 6454273
+       cnn    aug            8.1            6.7 2555673
+       cnn  clean            7.8            6.5 2555673
+       cnn    mid            7.9            6.6 2555673
+
+lr_choice.csv:
+   encoder target     lr  val_top1
+       cnn    aug 0.0003 16.925926
+       cnn  clean 0.0010 12.944444
+       cnn    mid 0.0003 19.907407
+eegproject    aug 0.0010 33.185184
+eegproject  clean 0.0010 22.351851
+eegproject    mid 0.0010 40.277777
+
+==============================================================================================================
+2. ENCODER x VISUAL TARGET (people 2-10; zero = output offset + population gallery)
+==============================================================================================================
+
+rule cos
+query                     s4R1              s4R4                s4R20                bench              
+method                   plain rigid  zero plain  rigid   zero  plain  rigid   zero  plain  rigid   zero
+encoder    visual_target                                                                                
+cnn        aug            3.74  2.96  3.78  9.15   9.45   8.90  13.61  21.33  14.28  17.22  26.07  17.57
+           clean          2.94  2.32  3.14  6.89   6.98   7.48  11.17  15.81  11.72  13.00  19.93  13.63
+           mid            4.41  3.40  4.43  9.61  11.53  10.08  17.61  24.26  17.48  21.83  30.96  22.22
+eegproject aug            3.15  2.76  3.38  6.50   6.89   7.73   9.89  12.50  12.81  10.78  15.98  14.35
+           clean          2.28  2.13  2.66  4.28   5.09   5.41   7.17   8.72   8.72   7.11  11.85  10.28
+           mid            3.63  3.15  3.83  8.13   7.28   8.59  12.00  12.13  14.17  15.33  15.43  17.37
+
+rule csls_batch
+query                     s4R1               s4R4                s4R20                bench              
+method                   plain rigid  zero  plain  rigid   zero  plain  rigid   zero  plain  rigid   zero
+encoder    visual_target                                                                                 
+cnn        aug            3.74  3.86  4.26   9.67  10.98   9.52  17.33  23.98  18.69  21.83  31.04  22.15
+           clean          3.35  2.93  3.19   7.07   8.10   7.94  12.56  17.57  14.56  15.83  23.02  17.15
+           mid            4.61  4.22  4.53  10.52  13.49  11.15  22.61  28.54  21.11  27.61  36.87  26.72
+eegproject aug            2.98  3.28  3.53   7.94   9.99   8.93  13.17  20.43  16.07  16.67  28.09  20.35
+           clean          2.24  2.86  2.85   4.85   7.23   6.45   8.89  13.72  11.96  11.00  18.41  14.70
+           mid            3.70  4.23  4.14   9.20  11.08  10.43  14.56  21.39  18.65  19.33  28.76  24.30
+seeds: [np.int64(2025)]; folds: [np.int64(1), np.int64(2), np.int64(3), np.int64(4), np.int64(5), np.int64(6), np.int64(7), np.int64(8), np.int64(9), np.int64(10)]
+  eegproject/clean - eegproject/aug (current), plain, s4R4, cos: mean -2.22 (95% CI -2.85 to -1.59), +0/0:0/-9, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO -2.42 to -2.04
+     per person: t2:-3.500, t3:-3.167, t4:-1.000, t5:-2.167, t6:-2.167, t7:-0.667, t8:-1.833, t9:-1.833, t10:-3.667
+  eegproject/clean - eegproject/aug (current), zero, s4R4, cos: mean -2.33 (95% CI -3.35 to -1.31), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO -2.66 to -1.99
+     per person: t2:-4.222, t3:-2.722, t4:+0.333, t5:-1.222, t6:-1.611, t7:-1.611, t8:-3.333, t9:-1.500, t10:-5.056
+  eegproject/clean - eegproject/aug (current), rigid, s4R4, cos: mean -1.80 (95% CI -2.61 to -1.04), +1/0:0/-8, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO -2.05 to -1.58
+     per person: t2:-2.778, t3:-1.333, t4:-1.944, t5:-1.111, t6:-3.611, t7:+0.167, t8:-3.500, t9:-0.722, t10:-1.389
+  eegproject/mid - eegproject/aug (current), plain, s4R4, cos: mean +1.63 (95% CI +0.67 to +3.02), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.00 to +1.85
+     per person: t2:+1.000, t3:-0.167, t4:+2.167, t5:+0.333, t6:+0.833, t7:+1.833, t8:+6.667, t9:+1.000, t10:+1.000
+  eegproject/mid - eegproject/aug (current), zero, s4R4, cos: mean +0.86 (95% CI +0.05 to +1.60), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0742, LOPO +0.65 to +1.15
+     per person: t2:-1.500, t3:+1.556, t4:+0.944, t5:+1.611, t6:+2.500, t7:+0.056, t8:+1.611, t9:+1.444, t10:-0.500
+  eegproject/mid - eegproject/aug (current), rigid, s4R4, cos: mean +0.39 (95% CI -0.35 to +1.11), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.4258, LOPO +0.20 to +0.60
+     per person: t2:-1.167, t3:+0.389, t4:-1.278, t5:+1.889, t6:-0.611, t7:+1.167, t8:+0.500, t9:+1.889, t10:+0.722
+  cnn/aug - eegproject/aug (current), plain, s4R4, cos: mean +2.65 (95% CI +1.15 to +4.26), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.17 to +2.96
+     per person: t2:+0.167, t3:+0.167, t4:+0.333, t5:+1.000, t6:+5.833, t7:+2.667, t8:+5.333, t9:+1.833, t10:+6.500
+  cnn/aug - eegproject/aug (current), zero, s4R4, cos: mean +1.16 (95% CI +0.19 to +2.31), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0742, LOPO +0.74 to +1.41
+     per person: t2:-0.778, t3:+0.500, t4:-0.833, t5:+1.056, t6:+4.556, t7:+0.833, t8:+1.667, t9:+0.389, t10:+3.056
+  cnn/aug - eegproject/aug (current), rigid, s4R4, cos: mean +2.56 (95% CI +1.74 to +3.44), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.25 to +2.80
+     per person: t2:+1.889, t3:+3.889, t4:+0.667, t5:+1.667, t6:+3.778, t7:+2.556, t8:+1.444, t9:+2.111, t10:+5.056
+  cnn/clean - eegproject/aug (current), plain, s4R4, cos: mean +0.39 (95% CI -0.70 to +1.48), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.4961, LOPO +0.06 to +0.75
+     per person: t2:-2.500, t3:+2.000, t4:+0.500, t5:-1.500, t6:+3.000, t7:-0.167, t8:+1.667, t9:+1.000, t10:-0.500
+  cnn/clean - eegproject/aug (current), zero, s4R4, cos: mean -0.25 (95% CI -1.44 to +0.86), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.60 to +0.18
+     per person: t2:-3.722, t3:+1.056, t4:+0.667, t5:-1.889, t6:+2.556, t7:+0.278, t8:+0.556, t9:-0.333, t10:-1.444
+  cnn/clean - eegproject/aug (current), rigid, s4R4, cos: mean +0.09 (95% CI -0.52 to +0.68), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.5703, LOPO -0.06 to +0.24
+     per person: t2:-1.000, t3:+0.278, t4:+0.111, t5:-0.944, t6:-0.167, t7:+1.167, t8:-1.111, t9:+1.167, t10:+1.278
+  cnn/mid - eegproject/aug (current), plain, s4R4, cos: mean +3.11 (95% CI +2.09 to +4.20), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.75 to +3.40
+     per person: t2:+1.667, t3:+3.000, t4:+1.833, t5:+2.167, t6:+0.833, t7:+6.000, t8:+5.500, t9:+3.333, t10:+3.667
+  cnn/mid - eegproject/aug (current), zero, s4R4, cos: mean +2.35 (95% CI +1.25 to +3.54), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.96 to +2.68
+     per person: t2:-0.333, t3:+1.389, t4:+2.222, t5:+1.278, t6:+5.444, t7:+5.000, t8:+2.833, t9:+0.889, t10:+2.389
+  cnn/mid - eegproject/aug (current), rigid, s4R4, cos: mean +4.64 (95% CI +3.60 to +5.73), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +4.26 to +4.94
+     per person: t2:+5.500, t3:+2.833, t4:+2.278, t5:+3.389, t6:+5.611, t7:+7.722, t8:+4.056, t9:+4.167, t10:+6.222

@@ -1,0 +1,12 @@
+kind,claim,mean,ci,improved,wilcoxon_p,evidence,limitation,t2,t3,t4,t5,t6,t7,t8,t9,t10
+calibration,"500-image calibration (rigid) beats the zero-label pipeline, s4R4, batch CSLS (locked, seed 2026)",3.89,+2.40 to +5.40,9/9,0.0039,"round 7 confirm, 5 draws",same 9 people as development; one dataset,1.9,7.8,2.0,0.567,5.8,4.333,6.533,1.867,4.167
+calibration,"same, each query scored alone",2.42,+0.71 to +4.27,7/9,0.0391,round 7 confirm,as above,-0.867,5.8,1.733,-0.833,4.067,2.267,7.5,0.067,2.033
+calibration,"same, single-presentation queries (s4R1)",0.58,-0.22 to +1.33,6/9,0.25,round 7 confirm,small or no gain: the consumer-like single-view case is not solved,0.6,1.333,-1.467,-0.433,2.467,1.2,1.567,0.867,-0.933
+calibration,same-day calibration,4.08,+2.63 to +5.58,9/9,0.0039,round 7 confirm,as above,4.2,7.933,4.1,0.8,5.933,2.267,6.7,1.8,3.0
+calibration,fine-tuning + rigid beats fine-tuning alone at 4000 images,2.39,+1.26 to +3.54,7/9,0.0156,round 7 combo,"8,000 labeled presentations; 1 draw",4.0,2.167,-0.333,3.833,5.333,2.167,2.333,-0.333,2.333
+calibration,fine-tuning + rigid vs rigid alone at 500 images,0.04,-0.76 to +0.83,4/9,0.8438,round 7 combo,no gain: fine-tuning does not help at small budgets,0.583,0.0,1.417,1.417,-1.917,-1.083,-0.583,-1.167,1.667
+gallery,"predicted population gallery beats the spectrum-matched image-only gallery (zero labels, scored alone)",1.65,+0.29 to +3.18,6/9,0.1289,round 8 gallery test,"image-only controls cover whitening, spectrum and rank, not every possible metric",6.333,0.111,-0.111,3.389,0.222,2.944,-0.722,-0.056,2.722
+gallery,predicted population gallery beats the same ridge with pairs shuffled within concept,2.99,+1.74 to +4.41,9/9,0.0039,round 8 gallery test,as above,6.167,0.5,1.556,1.944,4.167,2.5,2.222,1.278,6.611
+gallery,measured source templates beat predicted ones (headroom; privileged),9.94,+7.54 to +12.50,9/9,0.0039,round 8 gallery test,requires earlier people to have seen every candidate,8.0,10.0,9.056,4.0,11.611,9.167,13.667,6.111,17.833
+gallery,"retrieval-trained template predictor vs ridge, rigid k = 500",-1.23,-3.28 to +0.96,3/9,0.25,round 8 gallery test,trained on source people and held concepts only,0.167,-5.444,-0.333,5.222,-4.167,0.833,-5.444,-0.389,-1.5
+calibration,calibrated cross-subject decoder beats a decoder trained from scratch on the same 500 images,9.02,+6.58 to +11.46,9/9,0.0039,round 8 scratch control,scratch recipe tuned only by epochs (person 1),11.444,6.778,4.167,3.944,13.222,8.222,11.833,6.667,14.944

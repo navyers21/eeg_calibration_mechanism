@@ -1,0 +1,7 @@
+encoder,target,sec_per_epoch,min_per_model,params
+eegproject,aug,3.7,3.1,6454273
+eegproject,clean,2.0,1.7,6454273
+eegproject,mid,2.0,1.7,6454273
+cnn,aug,8.1,6.7,2555673
+cnn,clean,7.8,6.5,2555673
+cnn,mid,7.9,6.6,2555673
