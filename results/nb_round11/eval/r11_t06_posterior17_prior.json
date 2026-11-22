@@ -1,0 +1,1 @@
+{"target": 6, "rpop_dist_from_I": 0.10742832344037247, "source_dist_from_I": 0.2997628546859754, "source_agreement": 0.04099922583231495, "space_fit_cos": 0.9454137020640903, "lam_source": 1.0, "lam_space": 0.01, "target_vs_prior": 0.04454350471496582, "target_vs_random_axes": 0.02356082573533058, "prior_rot_vs_target": 0.14975494146347046}

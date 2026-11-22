@@ -1,0 +1,145 @@
+device: cuda
+ROUND 11: population rotation prior (posterior17, seed-2026 decoders, people 2-10; top-1 %)
+
+THE PRIOR (means over targets)
+  R_pop distance from identity 0.123; single sources 0.351
+  agreement between the 9 source rotations (cosine of departures from identity): 0.052 (0 = unrelated)
+  pair-decoder -> target-decoder space fit (cosine): 0.947
+  chosen shrinkage (median): source rotations 0.1, space map 0.01
+  target's own 500-image rotation vs R_pop: 0.050; vs same angles on random axes: 0.024  (per target: t2 0.06, t3 0.05, t4 0.05, t5 0.05, t6 0.04, t7 0.05, t8 0.04, t9 0.06, t10 0.05)
+
+s4R4, cos (rows = method, columns = calibration images)
+k           25    50     100    200    500
+method                                    
+pop0       8.76  8.84   9.07   9.13   9.23
+pop0_half  8.69  8.94   9.04   9.15   9.25
+rigid      4.00  5.58   7.48   9.33  11.64
+rot        8.97  9.93  10.77  10.93  12.83
+rot_prior  9.05  9.89  10.75  10.95  12.64
+rot_rand   8.94  9.94  10.77  10.93  12.90
+zero       8.56  8.88   8.98   9.16   9.20
+
+s4R1, cos (rows = method, columns = calibration images)
+k           25    50    100   200   500
+method                                 
+pop0       3.91  4.06  3.97  4.03  4.02
+pop0_half  3.89  4.03  3.95  3.92  3.88
+rigid      1.79  2.14  2.51  3.07  3.69
+rot        3.86  4.16  4.43  4.38  5.13
+rot_prior  3.93  4.19  4.45  4.53  5.02
+rot_rand   3.85  4.15  4.41  4.43  5.09
+zero       3.62  3.72  3.73  3.71  3.77
+
+bench, cos (rows = method, columns = calibration images)
+k            25     50     100    200    500
+method                                      
+pop0       15.59  16.51  17.03  17.38  17.19
+pop0_half  15.72  16.69  17.46  17.24  17.13
+rigid       9.61  12.84  17.99  24.51  28.70
+rot        17.34  20.12  21.62  22.22  24.72
+rot_prior  17.21  19.71  21.54  22.08  23.83
+rot_rand   17.48  20.12  21.74  22.32  24.65
+zero       16.38  17.11  17.81  18.07  18.28
+
+s4R4, csls_batch (rows = method, columns = calibration images)
+k            25     50     100    200    500
+method                                      
+pop0       10.07  10.14  10.34  10.49  10.52
+pop0_half   9.95  10.15  10.19  10.24  10.40
+rigid       5.74   7.73   9.84  11.77  13.91
+rot        10.46  11.34  12.00  12.19  14.73
+rot_prior  10.57  11.21  12.01  12.20  14.12
+rot_rand   10.43  11.33  11.98  12.22  14.69
+zero        9.79   9.87   9.93   9.98  10.12
+
+s4R1, csls_batch (rows = method, columns = calibration images)
+k           25    50    100   200   500
+method                                 
+pop0       4.31  4.45  4.40  4.48  4.45
+pop0_half  4.29  4.35  4.37  4.34  4.43
+rigid      2.36  2.80  3.26  3.99  4.56
+rot        4.25  4.43  4.73  4.81  5.31
+rot_prior  4.24  4.58  4.69  4.87  5.32
+rot_rand   4.21  4.46  4.77  4.79  5.27
+zero       4.03  4.03  4.05  4.03  4.04
+
+bench, csls_batch (rows = method, columns = calibration images)
+k            25     50     100    200    500
+method                                      
+pop0       21.69  22.16  22.74  22.88  22.83
+pop0_half  21.72  22.24  22.76  22.89  23.02
+rigid      14.61  19.28  25.83  32.00  36.93
+rot        23.26  25.74  27.59  28.40  32.96
+rot_prior  23.17  25.63  27.74  28.22  32.11
+rot_rand   23.27  25.92  27.94  28.53  33.06
+zero       21.68  22.50  22.68  22.82  23.07
+
+chosen strength (most common): 
+     lam_rot  lam_prior  lam_rand
+k                                
+25     100.0      100.0     100.0
+50     100.0      100.0     100.0
+100     10.0       10.0      10.0
+200     10.0       10.0      10.0
+500      1.0        1.0       1.0
+
+PRIMARY
+  [PRIMARY] rot_prior - rot, k = 100, s4R4, cos: mean -0.02 (95% CI -0.28 to +0.22), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.08 to +0.06
+     per person: t2:-0.300, t3:+0.067, t4:-0.067, t5:+0.400, t6:+0.367, t7:-0.500, t8:+0.433, t9:-0.667, t10:+0.067
+  ZERO LABELS: pop0 - zero (unlabeled trials of the k = 500 draws): mean +0.02 (95% CI -0.57 to +0.60), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.9102, LOPO -0.15 to +0.21
+     per person: t2:-1.444, t3:-1.111, t4:+0.500, t5:+1.444, t6:+0.444, t7:+0.222, t8:+0.722, t9:+0.167, t10:-0.722
+  rot_prior - rot, k = 25: mean +0.09 (95% CI -0.13 to +0.29), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.4258, LOPO +0.03 to +0.15
+     per person: t2:-0.433, t3:-0.367, t4:+0.000, t5:+0.333, t6:+0.133, t7:+0.567, t8:-0.100, t9:+0.167, t10:+0.467
+  rot_prior - rot_rand (learned vs random axes), k = 100: mean -0.02 (95% CI -0.30 to +0.25), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.09 to +0.06
+     per person: t2:-0.467, t3:+0.133, t4:+0.100, t5:+0.500, t6:+0.467, t7:-0.167, t8:+0.400, t9:-0.500, t10:-0.667
+  primary with batch CSLS: mean +0.01 (95% CI -0.19 to +0.22), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.06 to +0.07
+     per person: t2:+0.333, t3:+0.167, t4:+0.567, t5:+0.100, t6:-0.267, t7:+0.200, t8:-0.267, t9:-0.300, t10:-0.433
+  HOLM over the secondaries: {'k=25': 1.0, 'axes': 1.0, 'pop0 - zero': 1.0, 'csls': 1.0}
+
+EVERY BUDGET (cos, s4R4)
+  rot_prior - rot, k = 25: mean +0.09 (95% CI -0.13 to +0.29), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.4258, LOPO +0.03 to +0.15
+     per person: t2:-0.433, t3:-0.367, t4:+0.000, t5:+0.333, t6:+0.133, t7:+0.567, t8:-0.100, t9:+0.167, t10:+0.467
+  rot_prior - zero, k = 25: mean +0.50 (95% CI +0.00 to +0.96), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0742, LOPO +0.39 to +0.69
+     per person: t2:-1.033, t3:+0.200, t4:+0.200, t5:+1.367, t6:+1.333, t7:+0.700, t8:+1.067, t9:-0.133, t10:+0.767
+  rot_prior - rot_rand, k = 25: mean +0.11 (95% CI -0.15 to +0.35), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.3594, LOPO +0.04 to +0.20
+     per person: t2:-0.633, t3:-0.333, t4:+0.233, t5:+0.133, t6:+0.400, t7:+0.667, t8:+0.033, t9:-0.033, t10:+0.533
+  rot_prior - rot, k = 50: mean -0.05 (95% CI -0.33 to +0.15), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.6523, LOPO -0.09 to +0.08
+     per person: t2:-1.067, t3:-0.033, t4:+0.133, t5:+0.233, t6:+0.133, t7:+0.133, t8:-0.200, t9:-0.067, t10:+0.300
+  rot_prior - zero, k = 50: mean +1.01 (95% CI +0.30 to +1.67), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0547, LOPO +0.85 to +1.25
+     per person: t2:-0.933, t3:+1.933, t4:+0.100, t5:+1.067, t6:+1.600, t7:+2.267, t8:+2.300, t9:-0.167, t10:+0.900
+  rot_prior - rot_rand, k = 50: mean -0.06 (95% CI -0.40 to +0.20), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.12 to +0.10
+     per person: t2:-1.267, t3:+0.033, t4:-0.267, t5:+0.067, t6:+0.433, t7:+0.300, t8:-0.067, t9:-0.033, t10:+0.300
+  rot_prior - rot, k = 100: mean -0.02 (95% CI -0.28 to +0.22), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.9102, LOPO -0.08 to +0.06
+     per person: t2:-0.300, t3:+0.067, t4:-0.067, t5:+0.400, t6:+0.367, t7:-0.500, t8:+0.433, t9:-0.667, t10:+0.067
+  rot_prior - zero, k = 100: mean +1.77 (95% CI +0.94 to +2.61), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.55 to +2.06
+     per person: t2:-0.567, t3:+2.333, t4:+1.733, t5:+3.533, t6:+3.067, t7:+1.167, t8:+3.033, t9:+0.700, t10:+0.933
+  rot_prior - rot_rand, k = 100: mean -0.02 (95% CI -0.30 to +0.25), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.09 to +0.06
+     per person: t2:-0.467, t3:+0.133, t4:+0.100, t5:+0.500, t6:+0.467, t7:-0.167, t8:+0.400, t9:-0.500, t10:-0.667
+  rot_prior - rot, k = 200: mean +0.02 (95% CI -0.13 to +0.17), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.8203, LOPO -0.03 to +0.06
+     per person: t2:-0.300, t3:+0.400, t4:-0.100, t5:+0.100, t6:+0.133, t7:+0.067, t8:+0.267, t9:-0.100, t10:-0.300
+  rot_prior - zero, k = 200: mean +1.79 (95% CI +0.97 to +2.60), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.52 to +2.07
+     per person: t2:-0.467, t3:+2.033, t4:+1.567, t5:+3.000, t6:+2.667, t7:+1.867, t8:+3.867, t9:+0.533, t10:+1.000
+  rot_prior - rot_rand, k = 200: mean +0.02 (95% CI -0.20 to +0.21), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.4961, LOPO -0.02 to +0.12
+     per person: t2:-0.733, t3:+0.333, t4:-0.033, t5:+0.133, t6:+0.333, t7:+0.233, t8:+0.233, t9:-0.100, t10:-0.200
+  rot_prior - rot, k = 500: mean -0.19 (95% CI -0.60 to +0.15), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.7344, LOPO -0.26 to -0.03
+     per person: t2:+0.278, t3:+0.389, t4:+0.389, t5:+0.000, t6:-1.444, t7:-0.389, t8:+0.167, t9:-0.278, t10:-0.778
+  rot_prior - zero, k = 500: mean +3.44 (95% CI +1.86 to +5.02), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +2.97 to +3.94
+     per person: t2:-0.611, t3:+7.167, t4:+2.556, t5:+3.667, t6:+3.889, t7:+4.389, t8:+6.889, t9:+0.667, t10:+2.333
+  rot_prior - rot_rand, k = 500: mean -0.25 (95% CI -0.64 to +0.10), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.3594, LOPO -0.35 to -0.13
+     per person: t2:+0.167, t3:+0.556, t4:+0.333, t5:-0.056, t6:-1.222, t7:-0.500, t8:+0.056, t9:-0.722, t10:-0.889
+  exploratory: pop0_half - zero, s4R4: mean +0.05 (95% CI -0.49 to +0.54), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.7344, LOPO -0.07 to +0.22
+     per person: t2:-1.333, t3:-1.167, t4:+0.333, t5:+0.833, t6:+0.222, t7:+0.556, t8:+1.000, t9:+0.278, t10:-0.278
+
+ZERO LABELS, OTHER QUERIES
+  pop0 - zero, s4R1: mean +0.25 (95% CI -0.15 to +0.66), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.3594, LOPO +0.13 to +0.38
+     per person: t2:-0.778, t3:+0.278, t4:-0.167, t5:+0.278, t6:-0.444, t7:+0.889, t8:+1.000, t9:-0.000, t10:+1.222
+  pop0 - zero, s4R20: mean -1.46 (95% CI -2.33 to -0.59), +1/0:1/-7, sign p=0.0703 (non-ties), Wilcoxon p=0.0234, LOPO -1.75 to -1.17
+     per person: t2:-3.833, t3:+0.833, t4:-0.667, t5:+0.000, t6:-2.500, t7:-2.000, t8:-1.333, t9:-1.333, t10:-2.333
+  pop0 - zero, bench: mean -1.09 (95% CI -2.48 to +0.04), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.1289, LOPO -1.40 to -0.52
+     per person: t2:-5.667, t3:-2.833, t4:-0.167, t5:+1.333, t6:-0.667, t7:-0.833, t8:-1.333, t9:-0.167, t10:+0.500
+  rot_prior - rot, k = 100, s4R1: mean +0.03 (95% CI -0.05 to +0.12), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.8203, LOPO -0.01 to +0.05
+     per person: t2:-0.000, t3:-0.000, t4:-0.067, t5:+0.067, t6:+0.167, t7:+0.333, t8:-0.067, t9:-0.133, t10:-0.067
+  rot_prior - rot, k = 100, bench: mean -0.08 (95% CI -0.31 to +0.13), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.8008, LOPO -0.14 to +0.01
+     per person: t2:-0.300, t3:-0.800, t4:-0.200, t5:+0.400, t6:-0.100, t7:-0.100, t8:+0.200, t9:-0.100, t10:+0.300
+
+DECISION: primary does not pass (mean -0.02, Wilcoxon p = 0.9102)
