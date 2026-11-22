@@ -65,8 +65,10 @@ def odir():
 # ---------------------------------------------------------------------------------------------------------------
 # training on single presentations
 # ---------------------------------------------------------------------------------------------------------------
-def train_rep(kind, mon, B, epochs=50, batch=1024, lr=1e-4, wd=1e-4):
-    path = N.ckpt_path(kind, mon, B, SEED, 'last')
+def train_rep(kind, mon, B, epochs=50, batch=1024, lr=1e-4, wd=1e-4, people=None, save_as=None):
+    """people: training people (default: everyone but B). save_as: checkpoint kind name (default: kind)."""
+    src = [s for s in PEOPLE if s != B] if people is None else list(people)
+    path = N.ckpt_path(save_as or kind, mon, B, SEED, 'last')
     if os.path.exists(path):
         print(f'  [{kind}] {mon} t{B}: done')
         return
@@ -74,9 +76,7 @@ def train_rep(kind, mon, B, epochs=50, batch=1024, lr=1e-4, wd=1e-4):
     torch.manual_seed(SEED)
     np.random.seed(SEED)
     Xs, IM, val = [], [], []
-    for s in PEOPLE:
-        if s == B:
-            continue
+    for s in src:
         d = N.subject_data(s, mon, keys=('train', 'train_labels'))
         pool, draws = N.split(d['train_labels'])
         Xs.append(torch.from_numpy(np.asarray(R.load_reps(s, mon)[pool], np.float16)))
@@ -122,9 +122,9 @@ def train_rep(kind, mon, B, epochs=50, batch=1024, lr=1e-4, wd=1e-4):
         hist.append(rec)
     m.eval()
     cfg = dict(kind=kind, montage=mon, target=B, seed=SEED, epochs=epochs, lr=lr, wd=wd, batch=batch, n_train=n,
-               channels=C, recipe='neurobridge + single-presentation sampling (round 5)')
+               channels=C, people=src, recipe='neurobridge + single-presentation sampling (round 5)')
     N.save_model(m, path, cfg, hist, epochs)
-    N.save_model(m, N.ckpt_path(kind, mon, B, SEED, 'best'), cfg, hist, epochs)
+    N.save_model(m, N.ckpt_path(save_as or kind, mon, B, SEED, 'best'), cfg, hist, epochs)
     d = N.subject_data(B, mon, keys=('test',))
     t1 = N.retrieval(m, d['test'], fte)[0]
     print(f'  => [{kind}] {mon} t{B}: 80-rep test top-1 {t1:.1f} [{(time.time() - t0) / 60:.1f} min]', flush=True)
