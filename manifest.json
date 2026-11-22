@@ -1,0 +1,659 @@
+{
+ "montage": "posterior17",
+ "input_shape": [
+  17,
+  250
+ ],
+ "people": {
+  "1": {
+   "stages": {
+    "f0": {
+     "file": "p01/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 7.166666413346927,
+     "bench_top1": 13.499999046325684,
+     "max_abs_diff": 6.093038246035576e-05
+    },
+    "rot100": {
+     "file": "p01/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 11.333333204189936,
+     "bench_top1": 21.99999988079071,
+     "max_abs_diff": 7.311254739761353e-05
+    },
+    "zero": {
+     "file": "p01/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 10.499999672174454,
+     "bench_top1": 18.50000023841858,
+     "max_abs_diff": 6.678886711597443e-05
+    },
+    "rot500": {
+     "file": "p01/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 13.000000019868216,
+     "bench_top1": 25.499999523162842,
+     "max_abs_diff": 7.433444261550903e-05
+    },
+    "within": {
+     "file": "p01/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 13.833332806825638,
+     "bench_top1": 46.99999988079071,
+     "max_abs_diff": 5.9046316891908646e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p01/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 15.333332618077597,
+     "bench_top1": 45.99999785423279,
+     "max_abs_diff": 6.592646241188049e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "2": {
+   "stages": {
+    "f0": {
+     "file": "p02/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 9.166666368643442,
+     "bench_top1": 19.499999284744263,
+     "max_abs_diff": 6.44794199615717e-05
+    },
+    "rot100": {
+     "file": "p02/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 12.166666487852732,
+     "bench_top1": 19.499999284744263,
+     "max_abs_diff": 8.047372102737427e-05
+    },
+    "zero": {
+     "file": "p02/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 14.166666567325592,
+     "bench_top1": 24.49999898672104,
+     "max_abs_diff": 6.499513983726501e-05
+    },
+    "rot500": {
+     "file": "p02/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 14.833333094914755,
+     "bench_top1": 21.49999886751175,
+     "max_abs_diff": 7.651746273040771e-05
+    },
+    "within": {
+     "file": "p02/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 18.49999924500783,
+     "bench_top1": 62.99999952316284,
+     "max_abs_diff": 6.639957427978516e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p02/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 15.333333114782969,
+     "bench_top1": 45.99999785423279,
+     "max_abs_diff": 7.772259414196014e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "3": {
+   "stages": {
+    "f0": {
+     "file": "p03/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 4.833333194255829,
+     "bench_top1": 7.499999552965164,
+     "max_abs_diff": 6.907805800437927e-05
+    },
+    "rot100": {
+     "file": "p03/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 5.16666645805041,
+     "bench_top1": 15.999999642372131,
+     "max_abs_diff": 7.830187678337097e-05
+    },
+    "zero": {
+     "file": "p03/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 4.333333174387614,
+     "bench_top1": 7.499999552965164,
+     "max_abs_diff": 7.324386388063431e-05
+    },
+    "rot500": {
+     "file": "p03/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 9.333333124717077,
+     "bench_top1": 26.499998569488525,
+     "max_abs_diff": 7.721222937107086e-05
+    },
+    "within": {
+     "file": "p03/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 20.333332816759746,
+     "bench_top1": 60.499995946884155,
+     "max_abs_diff": 6.75637274980545e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p03/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 20.999998847643536,
+     "bench_top1": 53.999996185302734,
+     "max_abs_diff": 5.802139639854431e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "4": {
+   "stages": {
+    "f0": {
+     "file": "p04/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 5.833333233992259,
+     "bench_top1": 12.5,
+     "max_abs_diff": 6.683357059955597e-05
+    },
+    "rot100": {
+     "file": "p04/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 7.499999925494194,
+     "bench_top1": 17.999999225139618,
+     "max_abs_diff": 7.909536361694336e-05
+    },
+    "zero": {
+     "file": "p04/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 6.666666517655055,
+     "bench_top1": 16.499999165534973,
+     "max_abs_diff": 6.898492574691772e-05
+    },
+    "rot500": {
+     "file": "p04/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 8.833333104848862,
+     "bench_top1": 18.99999976158142,
+     "max_abs_diff": 8.177757263183594e-05
+    },
+    "within": {
+     "file": "p04/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 14.499999582767487,
+     "bench_top1": 57.999998331069946,
+     "max_abs_diff": 6.988272070884705e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p04/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 14.999999602635702,
+     "bench_top1": 46.50000035762787,
+     "max_abs_diff": 5.690380930900574e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "5": {
+   "stages": {
+    "f0": {
+     "file": "p05/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 4.666666562358539,
+     "bench_top1": 7.999999821186066,
+     "max_abs_diff": 6.53974711894989e-05
+    },
+    "rot100": {
+     "file": "p05/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 8.166666577259699,
+     "bench_top1": 23.499999940395355,
+     "max_abs_diff": 7.903203368186951e-05
+    },
+    "zero": {
+     "file": "p05/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 5.3333332141240435,
+     "bench_top1": 15.999999642372131,
+     "max_abs_diff": 6.99944794178009e-05
+    },
+    "rot500": {
+     "file": "p05/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 9.999999652306238,
+     "bench_top1": 23.499999940395355,
+     "max_abs_diff": 8.321553468704224e-05
+    },
+    "within": {
+     "file": "p05/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 12.333332747220993,
+     "bench_top1": 50.0,
+     "max_abs_diff": 7.814168930053711e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p05/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 11.66666621963183,
+     "bench_top1": 37.5,
+     "max_abs_diff": 6.158463656902313e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "6": {
+   "stages": {
+    "f0": {
+     "file": "p06/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 5.3333332141240435,
+     "bench_top1": 13.499999046325684,
+     "max_abs_diff": 7.04452395439148e-05
+    },
+    "rot100": {
+     "file": "p06/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 14.166666070620218,
+     "bench_top1": 28.999999165534973,
+     "max_abs_diff": 7.108040153980255e-05
+    },
+    "zero": {
+     "file": "p06/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 11.66666621963183,
+     "bench_top1": 18.50000023841858,
+     "max_abs_diff": 6.767851300537586e-05
+    },
+    "rot500": {
+     "file": "p06/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 16.666666169961292,
+     "bench_top1": 28.00000011920929,
+     "max_abs_diff": 7.943063974380493e-05
+    },
+    "within": {
+     "file": "p06/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 22.6666659116745,
+     "bench_top1": 68.00000071525574,
+     "max_abs_diff": 7.371604442596436e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p06/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 25.333333015441895,
+     "bench_top1": 55.50000071525574,
+     "max_abs_diff": 5.7714059948921204e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "7": {
+   "stages": {
+    "f0": {
+     "file": "p07/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 5.16666645805041,
+     "bench_top1": 8.500000089406967,
+     "max_abs_diff": 6.617605686187744e-05
+    },
+    "rot100": {
+     "file": "p07/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 8.333333333333334,
+     "bench_top1": 18.99999976158142,
+     "max_abs_diff": 8.051842451095581e-05
+    },
+    "zero": {
+     "file": "p07/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 7.666666557391484,
+     "bench_top1": 16.499999165534973,
+     "max_abs_diff": 7.272511720657349e-05
+    },
+    "rot500": {
+     "file": "p07/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 12.166666239500046,
+     "bench_top1": 23.499999940395355,
+     "max_abs_diff": 7.94045627117157e-05
+    },
+    "within": {
+     "file": "p07/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 16.16666615009308,
+     "bench_top1": 56.00000023841858,
+     "max_abs_diff": 7.808953523635864e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p07/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 17.333332697550457,
+     "bench_top1": 56.00000023841858,
+     "max_abs_diff": 5.7522207498550415e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "8": {
+   "stages": {
+    "f0": {
+     "file": "p08/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 7.666666309038798,
+     "bench_top1": 13.499999046325684,
+     "max_abs_diff": 6.109755486249924e-05
+    },
+    "rot100": {
+     "file": "p08/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 12.833333015441895,
+     "bench_top1": 17.999999225139618,
+     "max_abs_diff": 7.464364171028137e-05
+    },
+    "zero": {
+     "file": "p08/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 8.999999860922495,
+     "bench_top1": 12.5,
+     "max_abs_diff": 7.454492151737213e-05
+    },
+    "rot500": {
+     "file": "p08/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 15.499999622503916,
+     "bench_top1": 21.99999988079071,
+     "max_abs_diff": 8.062273263931274e-05
+    },
+    "within": {
+     "file": "p08/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 25.66666603088379,
+     "bench_top1": 68.50000023841858,
+     "max_abs_diff": 6.017275154590607e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p08/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 29.333333174387615,
+     "bench_top1": 63.999998569488525,
+     "max_abs_diff": 4.760129377245903e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "9": {
+   "stages": {
+    "f0": {
+     "file": "p09/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 5.166666582226753,
+     "bench_top1": 10.999999940395355,
+     "max_abs_diff": 6.380490958690643e-05
+    },
+    "rot100": {
+     "file": "p09/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 7.833333313465118,
+     "bench_top1": 20.499999821186066,
+     "max_abs_diff": 7.769465446472168e-05
+    },
+    "zero": {
+     "file": "p09/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 8.166666453083357,
+     "bench_top1": 18.50000023841858,
+     "max_abs_diff": 7.07339495420456e-05
+    },
+    "rot500": {
+     "file": "p09/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 7.999999572833379,
+     "bench_top1": 21.99999988079071,
+     "max_abs_diff": 7.776357233524323e-05
+    },
+    "within": {
+     "file": "p09/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 12.833333015441895,
+     "bench_top1": 59.49999690055847,
+     "max_abs_diff": 6.268732249736786e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p09/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 13.333332786957422,
+     "bench_top1": 39.49999809265137,
+     "max_abs_diff": 5.2385032176971436e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  },
+  "10": {
+   "stages": {
+    "f0": {
+     "file": "p10/f0.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 8.833332856496176,
+     "bench_top1": 18.50000023841858,
+     "max_abs_diff": 6.856769323348999e-05
+    },
+    "rot100": {
+     "file": "p10/rot100.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 100,
+     "calib_session": 3,
+     "rot_lambda": 10.0,
+     "s4R4_top1": 17.333332697550457,
+     "bench_top1": 32.999998331069946,
+     "max_abs_diff": 8.130818605422974e-05
+    },
+    "zero": {
+     "file": "p10/zero.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "s4R4_top1": 15.999999642372131,
+     "bench_top1": 28.49999964237213,
+     "max_abs_diff": 7.837451994419098e-05
+    },
+    "rot500": {
+     "file": "p10/rot500.pt",
+     "seed": 2025,
+     "base": "f0",
+     "gallery": "population",
+     "calib_k": 500,
+     "calib_session": 3,
+     "rot_lambda": 1.0,
+     "s4R4_top1": 19.83333279689153,
+     "bench_top1": 37.5,
+     "max_abs_diff": 8.486793376505375e-05
+    },
+    "within": {
+     "file": "p10/within.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 25.166666011015575,
+     "bench_top1": 73.499995470047,
+     "max_abs_diff": 7.988139986991882e-05,
+     "recipe": "neurobridge-intra@4f59fbb"
+    },
+    "within_rep": {
+     "file": "p10/within_rep.pt",
+     "seed": 2025,
+     "gallery": "image",
+     "s4R4_top1": 26.833332578341167,
+     "bench_top1": 61.000001430511475,
+     "max_abs_diff": 6.35519390925765e-05,
+     "recipe": "neurobridge + single-presentation sampling (round 5)"
+    }
+   }
+  }
+ }
+}
