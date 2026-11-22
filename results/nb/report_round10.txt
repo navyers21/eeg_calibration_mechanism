@@ -1,0 +1,188 @@
+device: cuda
+ROUND 10 (posterior17; seeds [np.int64(2025), np.int64(2026), np.int64(2027)]; folds [np.int64(1), np.int64(2), np.int64(3), np.int64(4), np.int64(5), np.int64(6), np.int64(7), np.int64(8), np.int64(9), np.int64(10)]; people 2-10 tested; top-1 %)
+
+s4R4, cos (mean over seeds; rows = decoder x method x gallery, columns = calibration images)
+k                        100    200    500    2000
+decoder method gallery                            
+cnn_mid ft     img        NaN    NaN  14.76  17.22
+        ft+rot anchor     NaN    NaN  14.22  16.85
+        rigid  anchor    9.48  11.05  12.89  13.49
+        rot    anchor   11.20  11.32  12.81  13.51
+        zero   anchor    8.66   8.74   8.85   8.83
+               img       8.25   8.27   8.33   8.34
+eeg_aug ft     img        NaN    NaN   9.87  13.85
+        ft+rot anchor     NaN    NaN  12.63  17.25
+        rigid  anchor    7.47   9.33  11.48  12.67
+        rot    anchor   10.65  10.82  12.74  13.88
+        zero   anchor    9.01   9.12   9.12   9.27
+               img       7.27   7.28   7.38   7.36
+
+s4R1, cos (mean over seeds; rows = decoder x method x gallery, columns = calibration images)
+k                       100   200   500   2000
+decoder method gallery                        
+cnn_mid ft     img       NaN   NaN  6.01  6.90
+        ft+rot anchor    NaN   NaN  5.90  6.62
+        rigid  anchor   3.81  4.52  4.88  5.25
+        rot    anchor   5.08  5.01  5.39  5.66
+        zero   anchor   4.57  4.58  4.59  4.58
+               img      4.37  4.37  4.36  4.35
+eeg_aug ft     img       NaN   NaN  4.03  5.05
+        ft+rot anchor    NaN   NaN  4.80  6.78
+        rigid  anchor   2.56  3.11  3.71  3.85
+        rot    anchor   4.24  4.32  4.97  5.54
+        zero   anchor   3.66  3.62  3.70  3.67
+               img      3.05  2.99  3.05  3.02
+
+bench, cos (mean over seeds; rows = decoder x method x gallery, columns = calibration images)
+k                        100    200    500    2000
+decoder method gallery                            
+cnn_mid ft     img        NaN    NaN  27.69  32.46
+        ft+rot anchor     NaN    NaN  25.62  31.39
+        rigid  anchor   16.11  20.61  24.19  26.46
+        rot    anchor   23.21  23.94  26.40  29.67
+        zero   anchor   14.83  15.10  15.04  14.78
+               img      12.73  12.86  12.78  12.96
+eeg_aug ft     img        NaN    NaN  22.19  32.69
+        ft+rot anchor     NaN    NaN  19.39  29.61
+        rigid  anchor   18.21  24.25  28.90  32.43
+        rot    anchor   21.35  21.99  24.87  28.81
+        zero   anchor   17.88  18.23  18.23  18.20
+               img      17.18  17.49  17.74  17.89
+
+s4R4, csls_batch (mean over seeds; rows = decoder x method x gallery, columns = calibration images)
+k                        100    200    500    2000
+decoder method gallery                            
+cnn_mid ft     img        NaN    NaN  16.13  18.82
+        ft+rot anchor     NaN    NaN  16.44  18.44
+        rigid  anchor   10.56  12.50  14.05  14.60
+        rot    anchor   12.90  13.03  14.67  15.23
+        zero   anchor   10.71  10.81  10.87  10.91
+               img       9.83   9.84   9.87   9.79
+eeg_aug ft     img        NaN    NaN  11.24  15.65
+        ft+rot anchor     NaN    NaN  14.30  19.64
+        rigid  anchor    9.73  11.68  13.92  14.88
+        rot    anchor   11.96  11.95  14.49  15.70
+        zero   anchor    9.92   9.94  10.02  10.09
+               img       8.01   8.00   7.98   8.04
+
+s4R1, csls_batch (mean over seeds; rows = decoder x method x gallery, columns = calibration images)
+k                       100   200   500   2000
+decoder method gallery                        
+cnn_mid ft     img       NaN   NaN  6.20  6.97
+        ft+rot anchor    NaN   NaN  6.08  7.06
+        rigid  anchor   4.19  4.92  5.19  5.38
+        rot    anchor   5.15  5.09  5.48  5.73
+        zero   anchor   4.75  4.74  4.77  4.77
+               img      4.54  4.53  4.49  4.54
+eeg_aug ft     img       NaN   NaN  4.05  5.18
+        ft+rot anchor    NaN   NaN  5.22  7.07
+        rigid  anchor   3.31  3.97  4.64  4.85
+        rot    anchor   4.60  4.70  5.28  5.89
+        zero   anchor   3.87  3.87  3.89  3.90
+               img      3.16  3.17  3.19  3.21
+
+bench, csls_batch (mean over seeds; rows = decoder x method x gallery, columns = calibration images)
+k                        100    200    500    2000
+decoder method gallery                            
+cnn_mid ft     img        NaN    NaN  41.33  47.02
+        ft+rot anchor     NaN    NaN  38.66  43.19
+        rigid  anchor   23.02  28.16  31.75  34.41
+        rot    anchor   29.60  31.00  34.98  38.28
+        zero   anchor   23.45  23.88  23.80  23.98
+               img      21.03  21.19  21.24  21.35
+eeg_aug ft     img        NaN    NaN  33.91  45.59
+        ft+rot anchor     NaN    NaN  31.44  41.50
+        rigid  anchor   25.84  31.73  36.88  40.02
+        rot    anchor   27.99  28.51  33.10  36.91
+        zero   anchor   22.84  23.01  23.24  23.43
+               img      23.19  23.40  23.70  24.04
+
+REPRODUCTION CHECK
+  eeg_aug seed 2026: rigid - zero, k = 500, csls_batch, s4R4 (round 7: +3.89): mean +3.79 (95% CI +2.16 to +5.43), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.26 to +4.23
+     per person: t2:+1.111, t3:+8.000, t4:+1.944, t5:+0.278, t6:+6.278, t7:+4.667, t8:+6.333, t9:+1.889, t10:+3.611
+
+PRIMARY (cos = each query scored on its own; per person, mean over seeds)
+  [PRIMARY] cnn_mid + rot - eeg_aug + rigid (current), k = 500, s4R4, cos: mean +1.33 (95% CI -0.12 to +2.81), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.1641, LOPO +0.94 to +1.71
+     per person: t2:-0.870, t3:+2.407, t4:+3.815, t5:+4.370, t6:+0.352, t7:+3.574, t8:-1.778, t9:+1.630, t10:-1.574
+  decoder effect: cnn_mid - eeg_aug, both rot, k = 500: mean +0.06 (95% CI -1.23 to +1.32), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.30 to +0.50
+     per person: t2:-1.778, t3:+2.500, t4:+3.000, t5:+0.167, t6:-0.278, t7:+1.000, t8:-1.537, t9:+0.926, t10:-3.426
+  edit effect: rot - rigid, eeg_aug, k = 500: mean +1.26 (95% CI +0.47 to +2.22), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0195, LOPO +0.89 to +1.45
+     per person: t2:+0.907, t3:-0.093, t4:+0.815, t5:+4.204, t6:+0.630, t7:+2.574, t8:-0.241, t9:+0.704, t10:+1.852
+  zero labels: cnn_mid - eeg_aug: mean -0.27 (95% CI -1.82 to +1.13), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.64 to +0.24
+     per person: t2:-3.741, t3:+2.185, t4:+0.778, t5:-0.148, t6:-0.204, t7:+2.704, t8:+1.056, t9:-0.704, t10:-4.333
+  primary with batch CSLS: mean +0.74 (95% CI -0.27 to +1.80), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.4258, LOPO +0.47 to +0.98
+     per person: t2:-1.130, t3:+2.167, t4:+2.593, t5:+2.148, t6:-0.056, t7:+2.926, t8:-1.037, t9:-0.259, t10:-0.648
+  HOLM over the secondaries: {'edit (eeg_aug)': np.float64(0.0781), 'primary, csls': 1.0, 'decoder (both rot)': 1.0, 'zero-label': 1.0}
+
+OTHER QUERIES AND BUDGETS (cnn_mid + rot - eeg_aug + rigid, cos)
+  k = 500, s4R1: mean +1.67 (95% CI +0.94 to +2.33), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.44 to +1.96
+     per person: t2:+2.111, t3:+1.685, t4:+0.944, t5:+2.037, t6:+1.759, t7:+3.574, t8:-0.648, t9:+1.370, t10:+2.222
+  k = 500, s4R20: mean -0.80 (95% CI -3.80 to +2.14), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.6523, LOPO -1.65 to +0.27
+     per person: t2:-0.833, t3:+5.944, t4:+3.056, t5:+4.167, t6:-4.667, t7:+0.611, t8:-4.500, t9:-1.611, t10:-9.389
+  k = 500, bench: mean -2.50 (95% CI -5.42 to +0.38), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.1641, LOPO -3.26 to -1.67
+     per person: t2:+0.056, t3:+0.944, t4:+3.611, t5:+3.222, t6:-4.222, t7:-3.833, t8:-9.111, t9:-4.111, t10:-9.056
+  k = 100, s4R4: mean +3.74 (95% CI +2.68 to +4.72), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.45 to +4.16
+     per person: t2:+3.700, t3:+4.433, t4:+2.956, t5:+6.044, t6:+5.122, t7:+4.978, t8:+0.400, t9:+3.300, t10:+2.711
+  k = 200, s4R4: mean +1.99 (95% CI +0.68 to +3.14), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0273, LOPO +1.73 to +2.52
+     per person: t2:+1.233, t3:+3.633, t4:+1.811, t5:+4.056, t6:+2.422, t7:+3.622, t8:-2.278, t9:+3.122, t10:+0.289
+  k = 2000, s4R4: mean +0.85 (95% CI -0.89 to +2.57), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.3008, LOPO +0.49 to +1.34
+     per person: t2:-2.222, t3:+3.000, t4:+3.667, t5:+3.611, t6:+0.167, t7:+3.667, t8:-2.389, t9:+1.222, t10:-3.111
+
+EACH SEED ALONE (primary contrast)
+  seed 2025: mean +1.06 (95% CI -0.78 to +2.93), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.4258, LOPO +0.50 to +1.63
+     per person: t2:-1.944, t3:+3.167, t4:+3.167, t5:+5.556, t6:+0.111, t7:+3.222, t8:-3.500, t9:+1.333, t10:-1.556
+  seed 2026: mean +0.91 (95% CI -0.49 to +2.33), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.3594, LOPO +0.47 to +1.40
+     per person: t2:-0.611, t3:+1.389, t4:+2.833, t5:+4.444, t6:-0.500, t7:+2.722, t8:-0.611, t9:+1.500, t10:-2.944
+  seed 2027: mean +2.00 (95% CI +0.65 to +3.41), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.0547, LOPO +1.57 to +2.40
+     per person: t2:-0.056, t3:+2.667, t4:+5.444, t5:+3.111, t6:+1.444, t7:+4.778, t8:-1.222, t9:+2.056, t10:-0.222
+
+CALIBRATION GAINS WITHIN EACH DECODER (rot - zero, cos, s4R4)
+  eeg_aug: rot - zero, k = 100: mean +1.64 (95% CI +1.09 to +2.21), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.49 to +1.84
+     per person: t2:+0.078, t3:+2.011, t4:+1.089, t5:+2.778, t6:+2.211, t7:+1.567, t8:+2.844, t9:+1.111, t10:+1.111
+  eeg_aug: rot - zero, k = 200: mean +1.71 (95% CI +1.13 to +2.34), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.51 to +1.88
+     per person: t2:+0.344, t3:+1.344, t4:+1.122, t5:+2.856, t6:+2.011, t7:+2.256, t8:+3.256, t9:+0.756, t10:+1.411
+  eeg_aug: rot - zero, k = 500: mean +3.62 (95% CI +2.31 to +4.88), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.27 to +4.00
+     per person: t2:+0.630, t3:+5.667, t4:+1.593, t5:+3.667, t6:+4.556, t7:+4.796, t8:+6.481, t9:+0.778, t10:+4.444
+  eeg_aug: rot - zero, k = 2000: mean +4.61 (95% CI +3.49 to +5.65), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +4.32 to +5.01
+     per person: t2:+1.444, t3:+6.222, t4:+3.278, t5:+5.611, t6:+5.222, t7:+5.056, t8:+6.944, t9:+2.778, t10:+4.944
+  cnn_mid: rot - zero, k = 100: mean +2.54 (95% CI +1.84 to +3.32), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.30 to +2.70
+     per person: t2:+1.478, t3:+4.367, t4:+1.633, t5:+3.044, t6:+2.933, t7:+1.222, t8:+1.833, t9:+1.900, t10:+4.444
+  cnn_mid: rot - zero, k = 200: mean +2.58 (95% CI +1.95 to +3.31), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.32 to +2.73
+     per person: t2:+1.633, t3:+4.078, t4:+2.067, t5:+2.600, t6:+2.811, t7:+1.344, t8:+1.756, t9:+2.278, t10:+4.644
+  cnn_mid: rot - zero, k = 500: mean +3.95 (95% CI +3.25 to +4.70), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.70 to +4.15
+     per person: t2:+2.593, t3:+5.981, t4:+3.815, t5:+3.981, t6:+4.481, t7:+3.093, t8:+3.889, t9:+2.407, t10:+5.352
+  cnn_mid: rot - zero, k = 2000: mean +4.69 (95% CI +3.74 to +5.75), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +4.31 to +4.92
+     per person: t2:+2.833, t3:+7.722, t4:+4.722, t5:+4.667, t6:+5.333, t7:+3.056, t8:+4.111, t9:+3.222, t10:+6.500
+
+FINE-TUNING
+  eeg_aug: ft+rot - ft, k = 500: mean +2.76 (95% CI +1.79 to +3.75), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.51 to +3.01
+     per person: t2:+3.648, t3:+1.148, t4:+1.870, t5:+4.519, t6:+4.407, t7:+0.796, t8:+1.500, t9:+2.167, t10:+4.796
+  eeg_aug: ft+rot - rot, k = 500: mean -0.11 (95% CI -0.96 to +0.71), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.34 to +0.18
+     per person: t2:+0.778, t3:+0.444, t4:+0.981, t5:+1.741, t6:-1.407, t7:-2.426, t8:-1.352, t9:+0.648, t10:-0.389
+  cnn_mid: ft+rot - ft, k = 500: mean -0.53 (95% CI -1.40 to +0.44), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.2500, LOPO -0.88 to -0.30
+     per person: t2:-2.426, t3:-0.370, t4:+1.019, t5:+2.241, t6:-0.278, t7:-0.259, t8:-2.111, t9:-1.130, t10:-1.500
+  cnn_mid: ft+rot - rot, k = 500: mean +1.42 (95% CI +0.74 to +2.11), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +1.20 to +1.61
+     per person: t2:+0.630, t3:+3.148, t4:+1.870, t5:+1.759, t6:+1.333, t7:+0.148, t8:+2.833, t9:-0.130, t10:+1.167
+  decoder effect with ft+rot, k = 500: mean +1.59 (95% CI +0.00 to +3.14), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0742, LOPO +1.14 to +2.03
+     per person: t2:-1.926, t3:+5.204, t4:+3.889, t5:+0.185, t6:+2.463, t7:+3.574, t8:+2.648, t9:+0.148, t10:-1.870
+  eeg_aug: ft+rot - ft, k = 2000: mean +3.40 (95% CI +2.52 to +4.40), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.00 to +3.61
+     per person: t2:+3.889, t3:+2.167, t4:+2.889, t5:+4.667, t6:+6.556, t7:+1.833, t8:+1.667, t9:+3.556, t10:+3.333
+  eeg_aug: ft+rot - rot, k = 2000: mean +3.37 (95% CI +2.75 to +3.96), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.23 to +3.58
+     per person: t2:+2.944, t3:+4.389, t4:+2.222, t5:+4.000, t6:+3.889, t7:+2.722, t8:+3.944, t9:+1.722, t10:+4.500
+  cnn_mid: ft+rot - ft, k = 2000: mean -0.38 (95% CI -1.70 to +0.94), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.6523, LOPO -0.72 to +0.01
+     per person: t2:-2.722, t3:+0.389, t4:+1.944, t5:+1.722, t6:+2.389, t7:-1.778, t8:-3.500, t9:-1.444, t10:-0.389
+  cnn_mid: ft+rot - rot, k = 2000: mean +3.33 (95% CI +2.38 to +4.26), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.06 to +3.67
+     per person: t2:+2.611, t3:+5.500, t4:+3.111, t5:+2.722, t6:+4.333, t7:+2.333, t8:+5.333, t9:+0.611, t10:+3.444
+  decoder effect with ft+rot, k = 2000: mean -0.40 (95% CI -2.14 to +1.51), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.6523, LOPO -1.08 to +0.15
+     per person: t2:-2.444, t3:+5.000, t4:+3.000, t5:-2.333, t6:-0.111, t7:+0.333, t8:-0.389, t9:-1.889, t10:-4.778
+
+FROM-SCRATCH DECODER ON THE SAME IMAGES (round 8, 50 epochs, cos, s4R4)
+  cnn_mid + rot - scratch, k = 500: mean +10.12 (95% CI +8.90 to +11.48), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +9.65 to +10.43
+     per person: t2:+9.981, t3:+9.630, t4:+7.889, t5:+8.630, t6:+13.833, t7:+10.981, t8:+9.630, t9:+7.593, t10:+12.870
+  cnn_mid + rot - scratch, k = 2000: mean +6.92 (95% CI +5.29 to +8.43), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +6.46 to +7.56
+     per person: t2:+7.222, t3:+8.556, t4:+6.389, t5:+6.167, t6:+10.611, t7:+9.500, t8:+1.833, t9:+4.833, t10:+7.167
+
+LEVELS (s4R4, cos, mean over seeds): eeg_aug zero 9.12, eeg_aug rigid 11.48, cnn_mid zero 8.85, cnn_mid rot 12.81 (k = 500); cnn_mid ft+rot at 2000 16.85
+chosen rotation strength (most common): {'cnn_mid': 10.0, 'eeg_aug': 10.0}
+
+DECISION: primary does not pass (mean +1.33, Wilcoxon p = 0.1641)
