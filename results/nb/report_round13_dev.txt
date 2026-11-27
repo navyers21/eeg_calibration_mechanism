@@ -1,11 +1,4 @@
-archived the first-version development run to /content/drive/MyDrive/eegcal_neurobridge/results/nb_round13/dev_v1_20261127_094147
-   variant search: draw 0 done
-   variant search: draw 1 done
-   variant search: draw 2 done
-   variant search: draw 3 done
-   variant search: draw 4 done
-   chosen variant mm0|pop|rho1|q1|s2|ag1 with score (dev s4R4 10.97)
-[dev] t1: 97.7 min | gate: max |diff| vs round 10 zero/img over 20 cells: 4.44e-16 | checked: 94 support concepts, 200 test concepts, empty intersection
+[dev] t1: done
 
 DEVELOPMENT (person 1, k = 100 x 2, s4R4, mean over draws and query draws)
   no calibration: image gallery 6.73, population gallery 10.23
@@ -14,15 +7,15 @@ VARIANT SEARCH (inferred bank, rotation only; top 10 and the published default)
                             score  score_csls  precision     m   best  true_pairs
 variant                                                                          
 mm0|pop|rho1|q0.25|s2|ag1   10.33       10.97       0.40  10.0  10.97       10.77
-mm0|pop|rho1|q1|s2|ag1      10.97       10.57       0.20  43.2  10.97       11.40
 mm0|pop|rho1|q0.25|s1|ag1   10.47       10.97       0.37  11.4  10.97       10.90
+mm0|pop|rho1|q1|s2|ag1      10.97       10.57       0.20  43.2  10.97       11.40
 mm0|pop|rho3|q0.25|s1|ag1   10.47       10.97       0.37  11.4  10.97       10.80
 mm0|pop|rho30|q0.25|s2|ag1   9.83       10.97       0.40  10.0  10.97       10.50
 mm0|pop|rho3|q0.25|s1|ag0   10.37       10.93       0.36  12.8  10.93       11.20
 mm0|pop|rho30|q0.25|s1|ag0  10.37       10.90       0.36  12.8  10.90       11.20
 mm0|pop|rho3|q0.5|s1|ag0    10.70       10.87       0.30  25.0  10.87       11.30
-mm0|pop|rho3|q1|s1|ag1      10.87       10.57       0.22  44.4  10.87       11.10
 mm0|pop|rho3|q0.25|s2|ag1    9.97       10.87       0.40  10.0  10.87       10.50
+mm0|pop|rho3|q1|s1|ag1      10.87       10.57       0.22  44.4  10.87       11.10
   default: variant                                                  
 mm1|img|rho0.1|q1|s1|ag0  4.23  5.3  0.11  53.8  5.3  5.3
   mean over the grid by mm: True: 7.59, False: 8.83
@@ -80,4 +73,4 @@ CORRUPTION SWEEP, chosen variant (rotation | profile)
   100%: 9.03 | 0.37
 
 DECISION GATE: chosen recovery 10.97 vs no calibration 10.23 (same gallery); true-pair profile 3.60 vs true-pair rotation 10.90; alpha true 0.25, inferred 0. Proceed.
-locked settings -> /content/drive/MyDrive/eegcal_neurobridge/results/nb_round13/locked_settings.json: {'variant': {'mm': False, 'target': 'pop', 'rho': 1.0, 'q': 1.0, 'steps': 2, 'agree': True}, 'variant_name': 'mm0|pop|rho1|q1|s2|ag1', 'rule': 'score', 'alpha': 0.0, 'gamma': 0.01, 'alpha_true': 0.25, 'gate_stop': False, 'dev_person': 1, 'k': 100, 'locked': '2026-11-27 11:19'}
+locked settings -> /content/drive/MyDrive/eegcal_neurobridge/results/nb_round13/locked_settings.json: {'variant': {'mm': False, 'target': 'pop', 'rho': 1.0, 'q': 1.0, 'steps': 2, 'agree': True}, 'variant_name': 'mm0|pop|rho1|q1|s2|ag1', 'rule': 'score', 'alpha': 0.0, 'gamma': 0.01, 'alpha_true': 0.25, 'gate_stop': False, 'dev_person': 1, 'k': 100, 'locked': '2026-11-27 19:30'}
