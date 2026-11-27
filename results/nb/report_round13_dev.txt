@@ -1,0 +1,83 @@
+archived the first-version development run to /content/drive/MyDrive/eegcal_neurobridge/results/nb_round13/dev_v1_20261127_094147
+   variant search: draw 0 done
+   variant search: draw 1 done
+   variant search: draw 2 done
+   variant search: draw 3 done
+   variant search: draw 4 done
+   chosen variant mm0|pop|rho1|q1|s2|ag1 with score (dev s4R4 10.97)
+[dev] t1: 97.7 min | gate: max |diff| vs round 10 zero/img over 20 cells: 4.44e-16 | checked: 94 support concepts, 200 test concepts, empty intersection
+
+DEVELOPMENT (person 1, k = 100 x 2, s4R4, mean over draws and query draws)
+  no calibration: image gallery 6.73, population gallery 10.23
+
+VARIANT SEARCH (inferred bank, rotation only; top 10 and the published default)
+                            score  score_csls  precision     m   best  true_pairs
+variant                                                                          
+mm0|pop|rho1|q0.25|s2|ag1   10.33       10.97       0.40  10.0  10.97       10.77
+mm0|pop|rho1|q1|s2|ag1      10.97       10.57       0.20  43.2  10.97       11.40
+mm0|pop|rho1|q0.25|s1|ag1   10.47       10.97       0.37  11.4  10.97       10.90
+mm0|pop|rho3|q0.25|s1|ag1   10.47       10.97       0.37  11.4  10.97       10.80
+mm0|pop|rho30|q0.25|s2|ag1   9.83       10.97       0.40  10.0  10.97       10.50
+mm0|pop|rho3|q0.25|s1|ag0   10.37       10.93       0.36  12.8  10.93       11.20
+mm0|pop|rho30|q0.25|s1|ag0  10.37       10.90       0.36  12.8  10.90       11.20
+mm0|pop|rho3|q0.5|s1|ag0    10.70       10.87       0.30  25.0  10.87       11.30
+mm0|pop|rho3|q1|s1|ag1      10.87       10.57       0.22  44.4  10.87       11.10
+mm0|pop|rho3|q0.25|s2|ag1    9.97       10.87       0.40  10.0  10.87       10.50
+  default: variant                                                  
+mm1|img|rho0.1|q1|s1|ag0  4.23  5.3  0.11  53.8  5.3  5.3
+  mean over the grid by mm: True: 7.59, False: 8.83
+  mean over the grid by target: img: 6.71, pop: 9.71
+  mean over the grid by rho: 0.1: 7.24, 0.3: 8.21, 1.0: 8.51, 3.0: 8.49, 10.0: 8.41, 30.0: 8.40
+  mean over the grid by q: 1.0: 8.30, 0.5: 8.18, 0.25: 8.14
+  mean over the grid by steps: 1: 8.28, 2: 8.13
+  mean over the grid by agree: False: 8.24, True: 8.18
+  CHOSEN: mm0|pop|rho1|q1|s2|ag1 scored with score (10.97)
+
+[default] landmarks m = 53.8, effective 34.6, precision 0.11
+cond2       corrupt_0  corrupt_0.25  corrupt_0.5  corrupt_0.75  corrupt_1  inferred  oracle_all  shuffled  true
+method                                                                                                         
+dot              1.87          1.57         1.50          1.07       0.47      1.77        2.00      0.54  1.87
+fuse_0           4.67          4.43         4.20          2.37       1.37      4.23        5.37      1.55  4.67
+fuse_0.25        4.83          4.20         4.13          2.07       1.07      4.77        5.60      1.40  4.83
+fuse_0.5         4.70          4.13         3.73          1.87       0.70      4.73        6.00      1.00  4.70
+fuse_0.75        4.47          3.33         2.87          1.40       0.40      4.70        5.80      0.75  4.47
+fuse_1           2.33          1.73         1.43          0.80       0.27      3.30        4.33      0.53  2.33
+prof             2.33          1.73         1.43          0.80       0.27      3.30        4.33      0.53  2.33
+ridge_0.01       2.53          1.53         1.07          0.57       0.73      2.33        2.23      0.50  2.53
+ridge_0.1        2.27          1.60         1.17          0.53       0.60      2.50        2.37      0.53  2.27
+ridge_1          2.13          1.90         1.33          0.63       0.53      2.30        2.60      0.49  2.13
+ridge_10         2.20          1.57         1.10          0.90       0.70      1.87        2.70      0.45  2.20
+ridge_100        1.30          0.83         0.93          0.80       0.33      0.97        0.93      0.54  1.30
+score            4.67          4.43         4.20          2.37       1.37      4.23        5.37      1.55  4.67
+score_csls       5.30          5.03         4.47          2.63       1.73      5.30        6.30      1.79  5.30
+
+[chosen] landmarks m = 43.2, effective 25.6, precision 0.20
+cond2       corrupt_0  corrupt_0.25  corrupt_0.5  corrupt_0.75  corrupt_1  inferred  oracle_all  shuffled   true
+method                                                                                                          
+dot              1.20          1.07         0.80          0.47       0.30      1.77        1.37      0.57   1.20
+fuse_0          10.90         10.53        10.37         10.40       9.03     10.97       10.37      9.65  10.90
+fuse_0.25       11.43         10.67         9.80          9.03       6.77     10.73       11.63      7.40  11.43
+fuse_0.5        10.63          9.17         7.30          4.50       2.57     10.67       11.47      2.93  10.63
+fuse_0.75        8.23          6.20         4.27          1.60       0.83      8.23        9.90      1.18   8.23
+fuse_1           3.60          2.70         1.83          0.77       0.37      4.30        5.77      0.55   3.60
+prof             3.60          2.70         1.83          0.77       0.37      4.30        5.77      0.55   3.60
+ridge_0.01       2.93          2.07         1.37          0.80       0.53      4.43        3.37      0.55   2.93
+ridge_0.1        3.00          2.27         1.43          0.97       0.43      4.33        3.57      0.57   3.00
+ridge_1          2.93          2.43         1.27          0.90       0.53      4.07        3.87      0.49   2.93
+ridge_10         1.67          1.57         1.13          0.67       0.43      2.70        2.80      0.54   1.67
+ridge_100        0.77          0.70         0.67          0.40       0.33      0.83        0.80      0.58   0.77
+score           10.90         10.53        10.37         10.40       9.03     10.97       10.37      9.65  10.90
+score_csls      11.40         11.33        10.67         11.17       9.87     10.57       11.40     10.20  11.40
+  chosen, inferred: fusion by alpha 0: 10.97, 0.25: 10.73, 0.5: 10.67, 0.75: 8.23, 1: 4.30 -> 0
+  chosen, true: fusion by alpha 0: 10.90, 0.25: 11.43, 0.5: 10.63, 0.75: 8.23, 1: 3.60 -> 0.25
+  ridge on inferred pairs by gamma: 0.01: 4.43, 0.1: 4.33, 1: 4.07, 10: 2.70, 100: 0.83 -> 0.01
+
+CORRUPTION SWEEP, chosen variant (rotation | profile)
+    0%: 10.90 | 3.60
+   25%: 10.53 | 2.70
+   50%: 10.37 | 1.83
+   75%: 10.40 | 0.77
+  100%: 9.03 | 0.37
+
+DECISION GATE: chosen recovery 10.97 vs no calibration 10.23 (same gallery); true-pair profile 3.60 vs true-pair rotation 10.90; alpha true 0.25, inferred 0. Proceed.
+locked settings -> /content/drive/MyDrive/eegcal_neurobridge/results/nb_round13/locked_settings.json: {'variant': {'mm': False, 'target': 'pop', 'rho': 1.0, 'q': 1.0, 'steps': 2, 'agree': True}, 'variant_name': 'mm0|pop|rho1|q1|s2|ag1', 'rule': 'score', 'alpha': 0.0, 'gamma': 0.01, 'alpha_true': 0.25, 'gate_stop': False, 'dev_person': 1, 'k': 100, 'locked': '2026-11-27 11:19'}

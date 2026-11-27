@@ -1,0 +1,12 @@
+{
+ "target": 1,
+ "mode": "dev",
+ "seed": 2026,
+ "montage": "posterior17",
+ "checkpoint": "repaug seed 2026 (rounds 7-12)",
+ "features": "aug (NeuroBridge fused degraded CLIP RN50), decoder image gallery",
+ "concept_check": "checked: 94 support concepts, 200 test concepts, empty intersection",
+ "checkpoint_gate": "max |diff| vs round 10 zero/img over 20 cells: 4.44e-16",
+ "settings": {},
+ "minutes": 13.5
+}

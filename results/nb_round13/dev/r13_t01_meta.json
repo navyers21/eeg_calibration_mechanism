@@ -1,0 +1,27 @@
+{
+ "target": 1,
+ "mode": "dev",
+ "seed": 2026,
+ "montage": "posterior17",
+ "checkpoint": "repaug seed 2026 (rounds 7-12)",
+ "features": "aug (NeuroBridge fused degraded CLIP RN50); img = decoder image gallery, pop = predicted population gallery",
+ "concept_check": "checked: 94 support concepts, 200 test concepts, empty intersection",
+ "checkpoint_gate": "max |diff| vs round 10 zero/img over 20 cells: 4.44e-16",
+ "settings": {
+  "variant": {
+   "mm": false,
+   "target": "pop",
+   "rho": 1.0,
+   "q": 1.0,
+   "steps": 2,
+   "agree": true
+  },
+  "rule": "score",
+  "search_top1": 10.96666639049848
+ },
+ "arms": {
+  "default": "mm1|img|rho0.1|q1|s1|ag0 / score",
+  "chosen": "mm0|pop|rho1|q1|s2|ag1 / score"
+ },
+ "minutes": 97.7
+}

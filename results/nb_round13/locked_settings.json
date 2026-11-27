@@ -1,0 +1,19 @@
+{
+ "variant": {
+  "mm": false,
+  "target": "pop",
+  "rho": 1.0,
+  "q": 1.0,
+  "steps": 2,
+  "agree": true
+ },
+ "variant_name": "mm0|pop|rho1|q1|s2|ag1",
+ "rule": "score",
+ "alpha": 0.0,
+ "gamma": 0.01,
+ "alpha_true": 0.25,
+ "gate_stop": false,
+ "dev_person": 1,
+ "k": 100,
+ "locked": "2026-11-27 11:19"
+}

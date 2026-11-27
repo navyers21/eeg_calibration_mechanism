@@ -1,0 +1,106 @@
+  z = (r_plus - mn) / se
+ROUND 13: relative profiles vs SCORE recovery on NeuroBridge (seed 2026, posterior17)
+  locked on person 1: variant mm0|pop|rho1|q1|s2|ag1 scored with score; alpha 0; ridge gamma 0.01; published default = mm1|img|rho0.1|q1|s1|ag0 / score
+  t2: gate max |diff| vs round 10 zero/img over 20 cells: 1.78e-15; checked: 25 support concepts, 200 test concepts, empty intersection
+  t3: gate max |diff| vs round 10 zero/img over 20 cells: 1.78e-15; checked: 25 support concepts, 200 test concepts, empty intersection
+  t4: gate max |diff| vs round 10 zero/img over 20 cells: 1.78e-15; checked: 25 support concepts, 200 test concepts, empty intersection
+
+LANDMARKS (inferred bank)
+                  m    neff  precision
+variant k                             
+chosen  25    11.60    7.97       0.36
+        50    22.73   13.45       0.28
+        100   45.73   26.52       0.18
+        200   84.47   47.34       0.12
+        500  201.89  115.65       0.07
+default 25    13.93    9.09       0.26
+        50    27.33   18.40       0.18
+        100   52.00   32.92       0.10
+        200   98.93   61.36       0.07
+        500  240.22  149.45       0.03
+
+k = 100, s4R4, people 2-10 (rows = method, columns = variant / bank)
+variant       chosen                            default                            none             
+cond2       inferred oracle_all shuffled  true inferred oracle_all shuffled  true  none transductive
+method                                                                                              
+dot             1.82       1.68     0.58  1.89     1.92       2.23     0.58  2.03   NaN          NaN
+fuse_0          7.37       8.02     6.90  7.79     4.54       6.29     1.58  5.67   NaN          NaN
+prof            3.76       5.80     0.52  3.50     2.86       4.86     0.47  2.93   NaN          NaN
+raw              NaN        NaN      NaN   NaN      NaN        NaN      NaN   NaN  6.21          NaN
+raw_pop          NaN        NaN      NaN   NaN      NaN        NaN      NaN   NaN  7.59          NaN
+ridge_0.01      3.20       4.50      NaN  3.17     1.96       2.72      NaN  2.69   NaN          NaN
+score           7.37       8.02     6.90  7.79     4.54       6.29     1.58  5.67   NaN          NaN
+score_csls      7.48       8.19     7.16  8.09     5.07       6.98     1.88  6.30   NaN          NaN
+trans_score      NaN        NaN      NaN   NaN      NaN        NaN      NaN   NaN   NaN         7.41
+
+PRIMARY (fixed at lock, before evaluation)
+  development chose alpha = 0: fuse == recovery by construction; profiles are not carried forward.
+
+KEY SECONDARY: is anything better than no calibration?
+  chosen recovery (score) - no calibration (raw_pop): mean -0.22 (95% CI -0.63 to +0.53), +1/0:0/-2, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO -0.60 to -0.02
+     per person: t2:-0.633, t3:-0.567, t4:+0.533
+  chosen fuse_0 - no calibration: mean -0.22 (95% CI -0.63 to +0.53), +1/0:0/-2, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO -0.60 to -0.02
+     per person: t2:-0.633, t3:-0.567, t4:+0.533
+  published SCORE default - no calibration: mean -1.67 (95% CI -2.03 to -1.43), +0/0:0/-3, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO -1.78 to -1.48
+     per person: t2:-2.033, t3:-1.433, t4:-1.533
+  chosen - published default recovery: mean +2.82 (95% CI +0.00 to +6.70), +3/0:0/-0, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO +0.88 to +4.23
+     per person: t2:+6.700, t3:+0.000, t4:+1.767
+  HOLM: {'default vs none': 1.0, 'chosen vs default': 1.0, 'chosen recovery vs none': 1.0, 'chosen fuse vs none': 1.0}
+
+PROFILES
+  profile - recovery (standalone), chosen: mean -3.61 (95% CI -8.30 to -0.07), +0/0:0/-3, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO -5.38 to -1.27
+     per person: t2:-8.300, t3:-0.067, t4:-2.467
+  Pearson profile - bilinear dot control: mean +1.93 (95% CI +1.27 to +3.13), +3/0:0/-0, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO +1.33 to +2.27
+     per person: t2:+3.133, t3:+1.267, t4:+1.400
+  fuse_0 - recovery, published default (the original spec contrast): mean +0.00 (95% CI +0.00 to +0.00), +0/0:3/-0, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO +0.00 to +0.00
+     per person: t2:+0.000, t3:+0.000, t4:+0.000
+  ridge_0.01 - recovery, same pseudo-pairs: mean -4.17 (95% CI -8.80 to -1.07), +0/0:0/-3, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO -5.72 to -1.85
+     per person: t2:-8.800, t3:-1.067, t4:-2.633
+  score: inferred - shuffled pairs (does correspondence matter?): mean +0.47 (95% CI -0.19 to +1.11), +2/0:0/-1, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO +0.15 to +0.80
+     per person: t2:+1.113, t3:-0.193, t4:+0.487
+  prof: inferred - shuffled pairs (does correspondence matter?): mean +3.24 (95% CI +2.18 to +4.68), +3/0:0/-0, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO +2.52 to +3.77
+     per person: t2:+4.680, t3:+2.180, t4:+2.853
+
+TRUE PAIRS (same EEG rows and weights; labelled diagnostic)
+  score: true - inferred (correspondence bottleneck): mean +0.42 (95% CI -0.13 to +1.10), +2/0:0/-1, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO +0.08 to +0.70
+     per person: t2:-0.133, t3:+1.100, t4:+0.300
+  prof: true - inferred (correspondence bottleneck): mean -0.26 (95% CI -1.23 to +0.33), +2/0:0/-1, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.55 to +0.23
+     per person: t2:-1.233, t3:+0.133, t4:+0.333
+  fuse_0: true - inferred (correspondence bottleneck): mean +0.42 (95% CI -0.13 to +1.10), +2/0:0/-1, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO +0.08 to +0.70
+     per person: t2:-0.133, t3:+1.100, t4:+0.300
+  true pairs: profile - rotation: mean -4.29 (95% CI -9.40 to -1.03), +0/0:0/-3, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO -5.92 to -1.73
+     per person: t2:-9.400, t3:-1.033, t4:-2.433
+  all 100 TRUE pairs, chosen rotation - no calibration: mean +0.43 (95% CI +0.30 to +0.50), +3/0:0/-0, sign p=0.2500 (non-ties), Wilcoxon p=0.2500, LOPO +0.40 to +0.50
+     per person: t2:+0.300, t3:+0.500, t4:+0.500
+
+TRANSDUCTIVE REFERENCE (published-style, fits on the evaluation batch; not comparable to the primary)
+  s4R1: transductive 2.71 | chosen 3.47 | none 3.52
+  s4R4: transductive 7.41 | chosen 7.37 | none 7.59
+  s4R20: transductive 18.63 | chosen 11.80 | none 12.53
+  bench: transductive 23.30 | chosen 14.90 | none 15.43
+
+BUDGET (s4R4, people 2-10)
+k                         25    50    100   200   500
+row                                                  
+chosen|inferred|fuse_0   7.12  7.43  7.37  7.83  7.87
+chosen|inferred|prof     2.06  2.54  3.76  4.54  5.61
+chosen|inferred|score    7.12  7.43  7.37  7.83  7.87
+chosen|true|score        7.06  7.38  7.79  7.80  8.17
+default|inferred|fuse_0  3.82  4.68  4.54  4.54  5.72
+default|inferred|prof    1.26  2.09  2.86  3.26  4.70
+default|inferred|score   3.82  4.68  4.54  4.54  5.72
+none|none|raw            6.00  5.79  6.21  6.14  6.15
+none|none|raw_pop        7.36  7.64  7.59  8.06  8.11
+
+QUERY NOISE (k = 100, chosen recovery vs no calibration)
+  s4R1: mean -0.06 (95% CI -0.10 to +0.00), +1/0:0/-2, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO -0.08 to -0.03
+     per person: t2:+0.000, t3:-0.067, t4:-0.100
+  s4R20: mean -0.73 (95% CI -2.10 to +0.50), +1/0:0/-2, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO -1.35 to -0.05
+     per person: t2:-2.100, t3:+0.500, t4:-0.600
+  bench: mean -0.53 (95% CI -1.00 to +0.20), +1/0:0/-2, sign p=1.0000 (non-ties), Wilcoxon p=0.5000, LOPO -0.90 to -0.30
+     per person: t2:-1.000, t3:-0.800, t4:+0.200
+
+ONLY-ONE-CORRECT COUNTS (k = 100, s4R4, chosen, inferred)
+  r13_t02.csv: recovery only 319, profile only 70
+  r13_t03.csv: recovery only 75, profile only 73
+  r13_t04.csv: recovery only 141, profile only 67

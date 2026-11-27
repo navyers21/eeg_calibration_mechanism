@@ -1,0 +1,12 @@
+{
+ "variant": {
+  "mm": false,
+  "target": "pop",
+  "rho": 1.0,
+  "q": 1.0,
+  "steps": 2,
+  "agree": true
+ },
+ "rule": "score",
+ "search_top1": 10.96666639049848
+}
