@@ -559,6 +559,11 @@ def report():
     ps['prof vs score'] = R4m.pstats(g('inferred', 'prof'), g('inferred', 'score'), 'profile - rotation (standalone), inferred')
     ps['prof vs dot'] = R4m.pstats(g('inferred', 'prof'), g('inferred', 'dot'), 'Pearson profile - bilinear dot control, inferred')
     ps['score vs raw'] = R4m.pstats(g('inferred', 'score'), g('inferred', 'raw'), 'SCORE recovery - unadapted cosine')
+    # added after the development run (report only; locked settings unchanged): on person 1 the frozen recovery scored
+    # BELOW the unadapted readout, so a fusion gain over recovery must also be read against doing nothing
+    R4m.pstats(g('inferred', fuse), g('inferred', 'raw'), f'{fuse} - unadapted cosine (is anything better than no calibration?)')
+    R4m.pstats(g('inferred', 'score_csls'), g('inferred', 'raw'), 'SCORE recovery with support-CSLS - unadapted cosine')
+    R4m.pstats(g('oracle_all', 'score'), g('inferred', 'raw'), 'all 100 TRUE pairs, same rotation - unadapted cosine')
     ps['ridge vs score'] = R4m.pstats(g('inferred', ridge), g('inferred', 'score'), f'{ridge} - score, same pseudo-pairs')
     sh = s[s.cond.str.startswith('shuffled') & s.target.isin(TEST)]
     for meth in ('score', 'prof'):
