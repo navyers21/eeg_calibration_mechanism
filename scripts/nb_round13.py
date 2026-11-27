@@ -36,9 +36,18 @@ Readouts (identical landmark rows, images and weights):
 Conditions: inferred (SCORE pairs), true (same EEG rows and weights, true image partners), shuffled (same rows, images
 permuted among the selected ones; 5 fixed permutations), oracle_all (all k true pairs, equal weights; labelled reference).
 
-PRIMARY (locked follow-up on the existing cohort): fuse - score, inferred bank, k = 100 x 2, s4R4, cosine, people 2-10
-(draws averaged within person), Wilcoxon, all nine differences printed. If development picks alpha = 0 the contrast is
-zero by construction and the report says so (decision gate: stop).
+AMENDMENT after the first development run (person 1 only; people 2-10 never looked at): the published defaults scored
+BELOW no calibration (4.23% vs 6.73%), even with all 100 true pairs (5.37%), with landmark precision 0.11. Development
+now searches, on person 1 only, 288 pipeline variants: shrinkage rho in {0.1 ... 30}, target space (image gallery vs
+the predicted population gallery our working calibration uses), landmark margin filter (keep 100 / 50 / 25%), one or
+two landmark re-selection steps, a repeat-agreement filter (drop the bottom quartile of support groups whose two
+presentations disagree; label-free), moment matching on / off; scored by cosine or support-CSLS. The best variant is
+locked with the fusion weight and ridge strength, then evaluated once on people 2-10 next to the published default.
+
+PRIMARY (locked follow-up on the existing cohort): fuse - recovery within the chosen variant, inferred bank,
+k = 100 x 2, s4R4, people 2-10 (draws averaged within person), Wilcoxon, all nine differences printed. If development
+picks alpha = 0 the contrast is zero by construction and the report says so. Key secondary: chosen recovery and fusion
+against NO calibration in the same gallery (Holm over four), and against the published default.
 """
 import argparse
 import glob
@@ -71,6 +80,22 @@ RHO = 0.1
 ETA = 1e-3
 EPS = 1e-6
 QSETS = ('s4R1', 's4R4', 's4R20', 'bench')
+# Development-only search (added after the first development run, chosen on person 1 and locked before evaluation):
+# shrinkage, target space, landmark margin filter, re-selection steps, repeat-agreement filter, moment matching.
+DEFAULT = dict(mm=True, target='img', rho=0.1, q=1.0, steps=1, agree=False)     # SCORE's published deployment
+GRID = dict(mm=(True, False), target=('img', 'pop'), rho=(0.1, 0.3, 1.0, 3.0, 10.0, 30.0), q=(1.0, 0.5, 0.25),
+            steps=(1, 2), agree=(False, True))
+AGREE_DROP = 0.25          # agreement filter drops the support groups in the bottom quartile of repeat agreement
+
+
+def vname(v):
+    return f"mm{int(v['mm'])}|{v['target']}|rho{v['rho']:g}|q{v['q']:g}|s{v['steps']}|ag{int(v['agree'])}"
+
+
+def variants():
+    import itertools
+    keys = list(GRID)
+    return [dict(zip(keys, vals)) for vals in itertools.product(*(GRID[k] for k in keys))]
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -171,29 +196,53 @@ def metrics(S):
                 mrr=float((1.0 / (rank + 1).float()).mean())), rank.cpu().numpy()
 
 
-def recover(Xs, Ys, gen):
+def prep(Z, mm):
+    return Z if mm is None else moment_apply(Z, mm)
+
+
+def recover(Xs, Ys, gen, v=None, agree=None):
     """The UNLABELED pipeline: support EEG groups and support image pool arrive in independent random orders.
-    Returns the bank in ORIGINAL support indices so true partners can be swapped in by the evaluator only."""
+    v: pipeline variant (default = SCORE's published deployment). agree: per support group, the cosine between its two
+    presentations (label-free: repeats of the same anonymous stimulus are known). Returns the bank in ORIGINAL support
+    indices so true partners can be swapped in by the evaluator only."""
+    import math
+    v = v or DEFAULT
     n = len(Xs)
     p1 = torch.randperm(n, generator=gen).to(Xs.device)
     p2 = torch.randperm(n, generator=gen).to(Xs.device)
-    mm = moment_fit(Xs[p1], Ys[p2])
-    qi, gj, w = mnn_landmarks(moment_apply(Xs[p1], mm), Ys[p2])
+    Xp, Yp = Xs[p1], Ys[p2]
+    mm = moment_fit(Xp, Yp) if v['mm'] else None
+    allow = torch.arange(n, device=Xs.device)
+    if v['agree'] and agree is not None:
+        a = agree[p1]
+        allow = torch.nonzero(a >= torch.quantile(a.float(), AGREE_DROP)).flatten()
+    Xq = prep(Xp, mm)
+    cur = Xq
+    for step in range(v['steps']):
+        qi, gj, w = mnn_landmarks(cur[allow], Yp)
+        qi = allow[qi]
+        if v['q'] < 1 and len(qi) > 3:
+            keep = w.argsort(descending=True)[:max(3, int(math.ceil(v['q'] * len(qi))))]
+            qi, gj, w = qi[keep], gj[keep], w[keep]
+            w = len(w) * w / w.sum()
+        if step < v['steps'] - 1 and len(qi) >= 2:
+            R, mx, my, _ = fit_rotation(Xq[qi], Yp[gj], w, v['rho'])
+            cur = apply_rotation(Xq, R, mx, my)
     return dict(mm=mm, eeg=p1[qi], img=p2[gj], w=w)
 
 
-def readouts(bank_eeg, bank_img, w, mm, Xs, Ys, Q, G, alphas=ALPHAS, gammas=(), hub_ref=True):
+def readouts(bank_eeg, bank_img, w, mm, Xs, Ys, Q, G, alphas=ALPHAS, gammas=(), hub_ref=True, rho=RHO, rule='score'):
     """Every readout from ONE bank (indices into the support), so all methods see identical information.
     Q: (n, d) query EEG embeddings, G: (200, d) gallery. Row i of Q belongs to column i of G (evaluator only)."""
     out, flags = {}, {}
-    Xl, Yl = moment_apply(Xs[bank_eeg], mm), Ys[bank_img]
-    Qm = moment_apply(Q, mm)
-    R, mx, my, fb_rot = fit_rotation(Xl, Yl, w)
+    Xl, Yl = prep(Xs[bank_eeg], mm), Ys[bank_img]
+    Qm = prep(Q, mm)
+    R, mx, my, fb_rot = fit_rotation(Xl, Yl, w, rho)
     Qr = apply_rotation(Qm, R, mx, my)
     s_rot = l2n(Qr) @ l2n(G).T
     out['score'] = s_rot
     if hub_ref:
-        out['score_csls'] = csls(Qr, G, rB=hub_term(apply_rotation(moment_apply(Xs, mm), R, mx, my), G))
+        out['score_csls'] = csls(Qr, G, rB=hub_term(apply_rotation(prep(Xs, mm), R, mx, my), G))
     if len(bank_eeg) >= 3:
         s_prof, s_dot, bad = profiles(Qm, Xl, G, Yl, w)
         fb_prof = bad.any(1)
@@ -202,7 +251,7 @@ def readouts(bank_eeg, bank_img, w, mm, Xs, Ys, Q, G, alphas=ALPHAS, gammas=(), 
         fb_prof = torch.ones(len(Q), dtype=torch.bool, device=Q.device)
     s_prof = torch.where(fb_prof[:, None], s_rot, s_prof)        # prespecified fallback: rotation score, flagged
     out['prof'], out['dot'] = s_prof, s_dot
-    zr, zp = zrow(s_rot), zrow(s_prof)
+    zr, zp = zrow(out.get(rule, s_rot)), zrow(s_prof)
     for a in alphas:
         f = (1 - a) * zr + a * zp
         out[f'fuse_{a:g}'] = torch.where(fb_prof[:, None], zr, f)
@@ -295,6 +344,14 @@ def selftest():
     check('independent scoring (subset of queries == full batch rows)',
           max(float((o1[k][:17] - os_[k]).abs().max()) for k in os_) < 1e-10)
     check('alpha = 0 reproduces rotation ranks', torch.equal(o1['fuse_0'].argsort(1), zrow(o1['score']).argsort(1)))
+    # every searched variant stays order-invariant (agreement scores travel with their EEG group)
+    agree = torch.rand(len(Xn), dtype=dt)
+    vx = dict(mm=False, target='img', rho=3.0, q=0.5, steps=2, agree=True)
+    v1 = recover(Xn, Ys, torch.Generator().manual_seed(5), vx, agree)
+    v2 = recover(Xn, Ys, torch.Generator().manual_seed(6), vx, agree)
+    check('variant (no moment matching, 2 steps, margin + agreement filters) is order-invariant', pairs(v1) == pairs(v2)
+          and len(v1['w']) >= 3, f'(m = {len(v1["w"])})')
+    check('agreement filter only drops low-agreement groups', bool((agree[v1['eeg']] >= torch.quantile(agree, AGREE_DROP)).all()))
     # true-pair swap keeps rows and weights
     true_img = b1['eeg']
     check('true-pair bank keeps the same EEG rows and weights', len(true_img) == len(b1['img']))
@@ -338,10 +395,11 @@ def concept_check(N, GL, B, ims):
 
 
 class Target:
-    """Frozen embeddings for one held-out person; computed once and cached on Drive."""
+    """Frozen embeddings for one held-out person; everything label-free about the target is computed here."""
 
     def __init__(self, B):
         N, R, R6m, GL, R9, R10 = _mods()
+        import nb_next as X
         self.B = B
         dev = N.ENV['device']
         m = R10.load_decoder('eeg_aug', B, MON, SEED, train=False)
@@ -350,16 +408,21 @@ class Target:
         self.m = m
         lab = N.subject_data(B, MON, keys=('train_labels',))['train_labels']
         self.pool, _ = N.split(lab)
-        H = []
+        Zs, H = [], []
         for s in PEOPLE:
             if s == B:
                 continue
             tr_s = N.subject_data(s, MON, keys=('train',))['train']
+            Zs.append(R10.z_of(m, tr_s[self.pool]))
             H.append(R10.h1_mean(m, tr_s[np.random.RandomState(3).choice(self.pool, 300, replace=False)]))
             del tr_s
         self.mS = torch.stack(H).mean(0)                                 # identical to round 10
-        self.Gtr = m.gallery(N.features('train', 'aug').to(dev))         # decoder's own image gallery (normalized)
-        self.Gte = m.gallery(N.features('test', 'aug').to(dev))
+        self.pool_z = torch.stack(Zs).mean(0)                            # source people's responses (no target data)
+        ftr, fte = N.features('train', 'aug').to(dev), N.features('test', 'aug').to(dev)
+        self.Gtr, self.Gte = m.gallery(ftr), m.gallery(fte)              # decoder's own image gallery (normalized)
+        Bm, xm, ym = X.ridge_svd(ftr[torch.as_tensor(self.pool, device=dev)], self.pool_z)
+        self.Ganc = l2n((fte - xm) @ Bm + ym)                            # predicted population gallery (round 10)
+        self.pos_of = {int(i): j for j, i in enumerate(self.pool)}
         self.Q, ses = R9._queries(B, MON)
         self.tr = ses['train']
         self.reps = R.load_reps(B, MON)
@@ -371,21 +434,66 @@ class Target:
         rr = np.stack([np.nonzero(self.tr[i] == self.R10.CS)[0] for i in ims])
         x2 = np.asarray(self.reps[ims[:, None], rr], np.float32)
         d1 = self.mS - self.R10.h1_mean(self.m, x2.reshape(-1, *x2.shape[2:]))      # label-free, support trials only
-        Xs = self.R10.z_of(self.m, x2.mean(1), d1)
-        Zq = {qk: [self.R10.z_of(self.m, q, d1) for q in self.Q[qk]] for qk in QSETS}
-        return ims, Xs, self.Gtr[torch.as_tensor(ims, device=Xs.device)], Zq
+        z1, z2 = self.R10.z_of(self.m, x2[:, 0], d1), self.R10.z_of(self.m, x2[:, 1], d1)
+        dev = z1.device
+        return dict(ims=ims, Xs=self.R10.z_of(self.m, x2.mean(1), d1), agree=(l2n(z1) * l2n(z2)).sum(1),
+                    Ys={'img': self.Gtr[torch.as_tensor(ims, device=dev)],
+                        'pop': self.pool_z[torch.as_tensor([self.pos_of[int(i)] for i in ims], device=dev)]},
+                    G={'img': self.Gte, 'pop': self.Ganc},
+                    Zq={qk: [self.R10.z_of(self.m, q, d1) for q in self.Q[qk]] for qk in QSETS})
+
+
+def rot_scores(bank, Xs, Ys, zs, G, rho):
+    """Rotation-only scores for the variant search: cosine and support-CSLS per query set draw."""
+    Xl, Yl = prep(Xs[bank['eeg']], bank['mm']), Ys[bank['img']]
+    R, mx, my, _ = fit_rotation(Xl, Yl, bank['w'], rho)
+    hub = hub_term(apply_rotation(prep(Xs, bank['mm']), R, mx, my), G)
+    out = []
+    for z in zs:
+        Zr = apply_rotation(prep(z, bank['mm']), R, mx, my)
+        out.append((metrics(l2n(Zr) @ l2n(G).T)[0]['top1'], metrics(csls(Zr, G, rB=hub))[0]['top1']))
+    return out
+
+
+def search_variants(T):
+    """Development only: every variant x support draw, inferred and true-pair rotation scores on s4R4."""
+    rows = []
+    for draw in range(T.R6m.ndraw(K_MAIN)):
+        sup = T.support(K_MAIN, draw)
+        for v in variants():
+            bank = recover(sup['Xs'], sup['Ys'][v['target']], torch.Generator().manual_seed(10000 * T.B + draw), v,
+                           sup['agree'])
+            dg = bank_diag(bank, bank['w'])
+            for cond, bk in (('inferred', bank), ('true', dict(bank, img=bank['eeg']))):
+                if len(bk['w']) < 2:
+                    continue
+                for qi_, (c, cs) in enumerate(rot_scores(bk, sup['Xs'], sup['Ys'][v['target']], sup['Zq']['s4R4'],
+                                                         sup['G'][v['target']], v['rho'])):
+                    rows.append(dict(draw=draw, variant=vname(v), cond=cond, qdraw=qi_, score=c, score_csls=cs, **dg))
+        print(f'   variant search: draw {draw} done', flush=True)
+    return pd.DataFrame(rows)
 
 
 def run_target(B, settings, mode):
-    """mode 'dev': Experiment 1 grid on the development person. mode 'eval': locked settings on a test person."""
+    """mode 'dev': variant search + Experiment 1 grid on the development person. mode 'eval': locked settings."""
     out = os.path.join(odir(mode), f'r13_t{B:02d}.csv')
     if os.path.exists(out):
         print(f'[{mode}] t{B}: done')
         return
     t0 = time.time()
     T = Target(B)
-    rows, diags, ranks = [], [], {}
-    gate = []
+    if mode == 'dev':
+        grid = search_variants(T)
+        grid.to_csv(out.replace('.csv', '_variants.csv'), index=False)
+        g = grid[grid.cond == 'inferred'].groupby('variant')[['score', 'score_csls']].mean()
+        best = max(((vn, rule, g.loc[vn, rule]) for vn in g.index for rule in ('score', 'score_csls')),
+                   key=lambda t: (round(t[2], 6), t[0] == vname(DEFAULT), t[1] == 'score'))
+        chosen = next(v for v in variants() if vname(v) == best[0])
+        settings = dict(variant=chosen, rule=best[1], search_top1=float(best[2]))
+        json.dump(settings, open(out.replace('.csv', '_chosen.json'), 'w'), indent=1)
+        print(f'   chosen variant {best[0]} with {best[1]} (dev s4R4 {best[2]:.2f})', flush=True)
+    arms = [('default', DEFAULT, 'score'), ('chosen', settings['variant'], settings['rule'])]
+    rows, diags, ranks, gate = [], [], {}, []
     r10 = os.path.join(T.N.ENV['results_dir'], 'nb_round10', 'eval', f'r10_s{SEED}_t{B:02d}_{MON}.csv')
     alphas = ALPHAS if mode == 'dev' else tuple(sorted({0.0, settings['alpha']}))
     gammas = GAMMAS if mode == 'dev' else (settings['gamma'],)
@@ -395,59 +503,62 @@ def run_target(B, settings, mode):
         if k > len(T.cand):
             continue
         for draw in range(T.R6m.ndraw(k)):
-            ims, Xs, Ys, Zq = T.support(k, draw)
+            sup = T.support(k, draw)
             if cmsg is None:
-                cmsg = concept_check(T.N, T.GL, B, ims)
-            gen = torch.Generator().manual_seed(10000 * B + 100 * k + draw)
-            bank = recover(Xs, Ys, gen)
-            n = len(Xs)
-            conds = {'inferred': (bank['eeg'], bank['img'], bank['w']),
-                     'true': (bank['eeg'], bank['eeg'], bank['w']),
-                     'oracle_all': (torch.arange(n, device=Xs.device),) * 2 + (torch.ones(n, device=Xs.device),)}
-            pg = torch.Generator().manual_seed(777 + draw)
-            for p in range(N_PERM):
-                perm = torch.randperm(len(bank['img']), generator=pg).to(Xs.device)
-                conds[f'shuffled_{p}'] = (bank['eeg'], bank['img'][perm], bank['w'])
-            if mode == 'dev':
-                cg = torch.Generator().manual_seed(999 + draw)
-                mlen = len(bank['eeg'])
-                for c in CORRUPT:
-                    nc = int(round(c * mlen))
-                    img = bank['eeg'].clone()
-                    if nc >= 2:
-                        sel = torch.randperm(mlen, generator=cg)[:nc].to(Xs.device)
-                        img[sel] = img[sel.roll(1)]                      # cyclic shift = no fixed points
-                    conds[f'corrupt_{c:g}'] = (bank['eeg'], img, bank['w'])
-            dg = bank_diag(bank, bank['w'])
-            diags.append(dict(target=B, k=k, draw=draw, **dg))
-            for cname, (be, bi, bw) in conds.items():
-                main = cname in ('inferred', 'true', 'oracle_all') or mode == 'dev'
-                for qk in QSETS:
-                    if not main and qk != 's4R4':
-                        continue
-                    for qi_, z in enumerate(Zq[qk]):
-                        o, fl = readouts(be, bi, bw, bank['mm'], Xs, Ys, z, T.Gte, alphas=alphas,
-                                         gammas=gammas if main else ())
-                        if cname == 'inferred':
-                            o['raw'] = l2n(z) @ l2n(T.Gte).T
-                            o['mm_only'] = l2n(moment_apply(z, bank['mm'])) @ l2n(T.Gte).T
-                        for meth, S in o.items():
-                            mt, rk = metrics(S)
-                            rows.append(dict(target=B, k=k, draw=draw, cond=cname, method=meth, query=qk, qdraw=qi_, **mt))
-                            if k == K_MAIN and qk == 's4R4' and cname in ('inferred', 'true'):
-                                ranks[f'{cname}|{meth}|d{draw}|q{qi_}'] = rk
-                        if cname == 'inferred' and qk == 's4R4' and qi_ == 0:
-                            diags[-1].update(fl)
-            if k == K_MAIN:
-                for qk in QSETS:
-                    for qi_, z in enumerate(Zq[qk]):
-                        S, mt_ = transductive_score(z, T.Gte)
-                        rows.append(dict(target=B, k=k, draw=draw, cond='transductive', method='trans_score', query=qk,
-                                         qdraw=qi_, **metrics(S)[0]))
-                        gate_row = [r for r in rows if r['k'] == k and r['draw'] == draw and r['method'] == 'raw'
-                                    and r['query'] == qk and r['qdraw'] == qi_]
-                        if gate_row and os.path.exists(r10):
-                            gate.append((draw, qk, qi_, gate_row[-1]['top1']))
+                cmsg = concept_check(T.N, T.GL, B, sup['ims'])
+            Xs, n = sup['Xs'], len(sup['Xs'])
+            for qk in QSETS:
+                for qi_, z in enumerate(sup['Zq'][qk]):
+                    for meth, G in (('raw', T.Gte), ('raw_pop', T.Ganc)):
+                        mt, rk = metrics(l2n(z) @ l2n(G).T)
+                        rows.append(dict(target=B, k=k, draw=draw, variant='none', cond='none', method=meth, query=qk,
+                                         qdraw=qi_, **mt))
+                        if meth == 'raw' and k == K_MAIN:
+                            gate.append((draw, qk, qi_, mt['top1']))
+                    if k == K_MAIN:
+                        S, _ = transductive_score(z, T.Gte)
+                        rows.append(dict(target=B, k=k, draw=draw, variant='none', cond='transductive',
+                                         method='trans_score', query=qk, qdraw=qi_, **metrics(S)[0]))
+            for tag, v, rule in arms:
+                Ys, G = sup['Ys'][v['target']], sup['G'][v['target']]
+                bank = recover(Xs, Ys, torch.Generator().manual_seed(10000 * B + 100 * k + draw), v, sup['agree'])
+                conds = {'inferred': (bank['eeg'], bank['img'], bank['w']),
+                         'true': (bank['eeg'], bank['eeg'], bank['w']),
+                         'oracle_all': (torch.arange(n, device=Xs.device),) * 2 + (torch.ones(n, device=Xs.device),)}
+                pg = torch.Generator().manual_seed(777 + draw)
+                for p in range(N_PERM):
+                    perm = torch.randperm(len(bank['img']), generator=pg).to(Xs.device)
+                    conds[f'shuffled_{p}'] = (bank['eeg'], bank['img'][perm], bank['w'])
+                if mode == 'dev':
+                    cg = torch.Generator().manual_seed(999 + draw)
+                    mlen = len(bank['eeg'])
+                    for c in CORRUPT:
+                        nc = int(round(c * mlen))
+                        img = bank['eeg'].clone()
+                        if nc >= 2:
+                            sel = torch.randperm(mlen, generator=cg)[:nc].to(Xs.device)
+                            img[sel] = img[sel.roll(1)]                  # cyclic shift = no fixed points
+                        conds[f'corrupt_{c:g}'] = (bank['eeg'], img, bank['w'])
+                diags.append(dict(target=B, k=k, draw=draw, variant=tag, **bank_diag(bank, bank['w'])))
+                # the oracle bank is moment-matched with the support pool's stats (same preprocessing as inferred)
+                for cname, (be, bi, bw) in conds.items():
+                    main = cname in ('inferred', 'true', 'oracle_all') or mode == 'dev'
+                    for qk in QSETS:
+                        if not main and qk != 's4R4':
+                            continue
+                        for qi_, z in enumerate(sup['Zq'][qk]):
+                            if len(be) < 2:
+                                continue
+                            o, fl = readouts(be, bi, bw, bank['mm'], Xs, Ys, z, G, alphas=alphas,
+                                             gammas=gammas if main else (), rho=v['rho'], rule=rule)
+                            for meth, S in o.items():
+                                mt, rk = metrics(S)
+                                rows.append(dict(target=B, k=k, draw=draw, variant=tag, cond=cname, method=meth,
+                                                 query=qk, qdraw=qi_, **mt))
+                                if k == K_MAIN and qk == 's4R4' and cname in ('inferred', 'true'):
+                                    ranks[f'{tag}|{cname}|{meth}|d{draw}|q{qi_}'] = rk
+                            if cname == 'inferred' and qk == 's4R4' and qi_ == 0:
+                                diags[-1].update(fl)
     df = pd.DataFrame(rows)
     df.to_csv(out, index=False)
     pd.DataFrame(diags).to_csv(out.replace('.csv', '_landmarks.csv'), index=False)
@@ -461,53 +572,87 @@ def run_target(B, settings, mode):
         j = mine.index.intersection(ref.index)
         gmsg = f'max |diff| vs round 10 zero/img over {len(j)} cells: {float((mine[j] - ref[j]).abs().max()):.2e}'
     meta = dict(target=B, mode=mode, seed=SEED, montage=MON, checkpoint='repaug seed %d (rounds 7-12)' % SEED,
-                features='aug (NeuroBridge fused degraded CLIP RN50), decoder image gallery', concept_check=cmsg,
-                checkpoint_gate=gmsg, settings=settings, minutes=round((time.time() - t0) / 60, 1))
-    json.dump(meta, open(out.replace('.csv', '_meta.json'), 'w'), indent=1)
+                features='aug (NeuroBridge fused degraded CLIP RN50); img = decoder image gallery, pop = predicted '
+                         'population gallery', concept_check=cmsg, checkpoint_gate=gmsg, settings=settings,
+                arms={t: vname(v) + f' / {r_}' for t, v, r_ in arms}, minutes=round((time.time() - t0) / 60, 1))
+    json.dump(meta, open(out.replace('.csv', '_meta.json'), 'w'), indent=1, default=str)
     print(f'[{mode}] t{B}: {meta["minutes"]} min | gate: {gmsg} | {cmsg}', flush=True)
 
 
 # ---------------------------------------------------------------------------------------------------------------
 # development gate, locking, evaluation, report
 # ---------------------------------------------------------------------------------------------------------------
-def per_target(df, k, cond, method, query='s4R4'):
-    x = df[(df.k == k) & (df.cond == cond) & (df.method == method) & (df['query'] == query)]
+def per_target(df, k, variant, cond, method, query='s4R4'):
+    x = df[(df.k == k) & (df.variant == variant) & (df.cond == cond) & (df.method == method) & (df['query'] == query)]
     return x.groupby('target').top1.mean()
 
 
 def dev():
-    run_target(DEV[0], {}, 'dev')
-    df = pd.read_csv(os.path.join(odir('dev'), f'r13_t{DEV[0]:02d}.csv'))
-    lm = pd.read_csv(os.path.join(odir('dev'), f'r13_t{DEV[0]:02d}_landmarks.csv'))
-    print(f'\nDEVELOPMENT (person {DEV[0]}, k = {K_MAIN} x 2, s4R4, cosine, mean over draws and query draws)')
-    print(f'  landmarks: m = {lm.m.mean():.1f} (range {lm.m.min()}-{lm.m.max()}), effective {lm.neff.mean():.1f}, '
-          f'precision {lm.precision.mean():.2f}; profile fallback rate {lm.get("prof_fallback_rate", pd.Series([np.nan])).mean():.2f}')
+    B = DEV[0]
+    base = os.path.join(odir('dev'), f'r13_t{B:02d}')
+    if os.path.exists(base + '.csv') and not os.path.exists(base + '_variants.csv'):     # first-version development run
+        import shutil
+        dst = os.path.join(odir(), f'dev_v1_{time.strftime("%Y%m%d_%H%M%S")}')
+        shutil.move(odir('dev'), dst)
+        if os.path.exists(settings_path()):
+            shutil.move(settings_path(), os.path.join(dst, 'locked_settings_v1.json'))
+        print(f'archived the first-version development run to {dst}')
+    run_target(B, {}, 'dev')
+    df, lm = pd.read_csv(base + '.csv'), pd.read_csv(base + '_landmarks.csv')
+    grid = pd.read_csv(base + '_variants.csv')
+    ch = json.load(open(base + '_chosen.json'))
+    rule = ch['rule']
     s = df[(df['query'] == 's4R4') & (df.k == K_MAIN)].copy()
-    s['cond2'] = s.cond.str.replace(r'shuffled_\d', 'shuffled', regex=True)
-    tab = s.groupby(['cond2', 'method']).top1.mean().unstack(0).round(2)
-    print(tab.to_string())
+    raw = s[s.method == 'raw'].top1.mean()
+    raw_pop = s[s.method == 'raw_pop'].top1.mean()
+    print(f'\nDEVELOPMENT (person {B}, k = {K_MAIN} x 2, s4R4, mean over draws and query draws)')
+    print(f'  no calibration: image gallery {raw:.2f}, population gallery {raw_pop:.2f}')
+    print('\nVARIANT SEARCH (inferred bank, rotation only; top 10 and the published default)')
+    g = grid[grid.cond == 'inferred'].groupby('variant')[['score', 'score_csls', 'precision', 'm']].mean()
+    g['best'] = g[['score', 'score_csls']].max(1)
+    gt = grid[grid.cond == 'true'].groupby('variant')[['score', 'score_csls']].mean().max(1).rename('true_pairs')
+    g = g.join(gt).sort_values('best', ascending=False)
+    print(g.head(10).round(2).to_string())
+    print('  default: ' + g.loc[[vname(DEFAULT)]].round(2).to_string(header=False))
+    for key in GRID:
+        vals = {}
+        for val in GRID[key]:
+            tag = {'mm': f'mm{int(val) if isinstance(val, bool) else val}', 'target': f'|{val}|', 'rho': f'|rho{val:g}|',
+                   'q': f'|q{val:g}|', 'steps': f'|s{val}|', 'agree': f'|ag{int(val)}'}[key]
+            vals[val] = g[[tag in vn for vn in g.index]].best.mean()
+        print(f'  mean over the grid by {key}: ' + ', '.join(f'{k_}: {v_:.2f}' for k_, v_ in vals.items()))
+    print(f"  CHOSEN: {vname(ch['variant'])} scored with {rule} ({ch['search_top1']:.2f})")
+    for tag in ('default', 'chosen'):
+        x = s[s.variant == tag].copy()
+        x['cond2'] = x.cond.str.replace(r'shuffled_\d', 'shuffled', regex=True)
+        l_ = lm[lm.variant == tag]
+        print(f'\n[{tag}] landmarks m = {l_.m.mean():.1f}, effective {l_.neff.mean():.1f}, precision {l_.precision.mean():.2f}')
+        print(x.groupby(['cond2', 'method']).top1.mean().unstack(0).round(2).to_string())
+    c = s[s.variant == 'chosen']
     best = {}
     for cond in ('inferred', 'true'):
-        fz = {a: s[(s.cond == cond) & (s.method == f'fuse_{a:g}')].top1.mean() for a in ALPHAS}
-        a_best = max(ALPHAS, key=lambda a: (round(fz[a], 6), -a))
-        best[cond] = a_best
-        print(f'  {cond}: fusion by alpha ' + ', '.join(f'{a:g}: {v:.2f}' for a, v in fz.items()) + f' -> best {a_best:g}')
-    gz = {g: s[(s.cond == 'inferred') & (s.method == f'ridge_{g:g}')].top1.mean() for g in GAMMAS}
-    g_best = max(GAMMAS, key=lambda g: (round(gz[g], 6), g))
-    t_rot = s[(s.cond == 'true') & (s.method == 'score')].top1.mean()
-    t_prof = s[(s.cond == 'true') & (s.method == 'prof')].top1.mean()
-    print(f'  ridge on inferred pairs by gamma: ' + ', '.join(f'{g:g}: {v:.2f}' for g, v in gz.items()) + f' -> {g_best:g}')
-    print('\nCORRUPTION SWEEP (true bank with a fraction of its images reassigned; rotation | profile)')
-    for c in CORRUPT:
-        print(f'  {c:4.0%}: ' + f"{s[(s.cond == f'corrupt_{c:g}') & (s.method == 'score')].top1.mean():.2f} | "
-              f"{s[(s.cond == f'corrupt_{c:g}') & (s.method == 'prof')].top1.mean():.2f}")
+        fz = {a: c[(c.cond == cond) & (c.method == f'fuse_{a:g}')].top1.mean() for a in ALPHAS}
+        best[cond] = max(ALPHAS, key=lambda a: (round(fz[a], 6), -a))
+        print(f'  chosen, {cond}: fusion by alpha ' + ', '.join(f'{a:g}: {v:.2f}' for a, v in fz.items()) + f' -> {best[cond]:g}')
+    gz = {gm: c[(c.cond == 'inferred') & (c.method == f'ridge_{gm:g}')].top1.mean() for gm in GAMMAS}
+    g_best = max(GAMMAS, key=lambda gm: (round(gz[gm], 6), gm))
+    print('  ridge on inferred pairs by gamma: ' + ', '.join(f'{k_:g}: {v_:.2f}' for k_, v_ in gz.items()) + f' -> {g_best:g}')
+    print('\nCORRUPTION SWEEP, chosen variant (rotation | profile)')
+    for cc in CORRUPT:
+        q_ = c[c.cond == f'corrupt_{cc:g}']
+        print(f'  {cc:4.0%}: {q_[q_.method == rule].top1.mean():.2f} | {q_[q_.method == "prof"].top1.mean():.2f}')
+    t_rot = c[(c.cond == 'true') & (c.method == rule)].top1.mean()
+    t_prof = c[(c.cond == 'true') & (c.method == 'prof')].top1.mean()
+    i_rot = c[(c.cond == 'inferred') & (c.method == rule)].top1.mean()
+    ref = raw_pop if ch['variant']['target'] == 'pop' else raw
     gate_stop = best['true'] == 0.0 and t_prof <= t_rot
-    print(f'\nDECISION GATE: true-pair profile {t_prof:.2f} vs true-pair rotation {t_rot:.2f}; best true-pair alpha '
-          f'{best["true"]:g}; inferred alpha {best["inferred"]:g}. '
-          + ('STOP: profiles add nothing even with true pairs (report the diagnostic, do not run eval).' if gate_stop else
-             'Proceed: locking alpha from the INFERRED bank (the primary condition).'))
-    settings = dict(alpha=float(best['inferred']), gamma=float(g_best), alpha_true=float(best['true']), gate_stop=bool(gate_stop),
-                    dev_person=DEV[0], k=K_MAIN, locked=time.strftime('%Y-%m-%d %H:%M'))
+    print(f'\nDECISION GATE: chosen recovery {i_rot:.2f} vs no calibration {ref:.2f} (same gallery); true-pair profile '
+          f'{t_prof:.2f} vs true-pair rotation {t_rot:.2f}; alpha true {best["true"]:g}, inferred {best["inferred"]:g}. '
+          + ('STOP for profiles: they add nothing even with true pairs.' if gate_stop else 'Proceed.')
+          + ('' if i_rot > ref else ' NOTE: even the best unlabeled recovery does not beat no calibration on this person.'))
+    settings = dict(variant=ch['variant'], variant_name=vname(ch['variant']), rule=rule, alpha=float(best['inferred']),
+                    gamma=float(g_best), alpha_true=float(best['true']), gate_stop=bool(gate_stop), dev_person=B,
+                    k=K_MAIN, locked=time.strftime('%Y-%m-%d %H:%M'))
     json.dump(settings, open(settings_path(), 'w'), indent=1)
     print(f'locked settings -> {settings_path()}: {settings}')
 
@@ -516,8 +661,17 @@ def evaluate(targets):
     if not os.path.exists(settings_path()):
         raise SystemExit('run `dev` first: evaluation needs the locked development settings')
     st = json.load(open(settings_path()))
+    if 'variant' not in st:
+        raise SystemExit('locked settings predate the variant search: delete results/nb_round13 and rerun `dev`')
     if st.get('gate_stop'):
-        print('NOTE: the development gate said STOP; running the locked evaluation anyway as a documented negative check.')
+        print('NOTE: the development gate said STOP for profiles; running the locked evaluation as a documented check.')
+    old = [x for x in glob.glob(os.path.join(odir('eval'), 'r13_t??.csv'))
+           if 'variant' not in pd.read_csv(x, nrows=1).columns]
+    if old:                                                               # first-version evaluation files
+        import shutil
+        dst = os.path.join(odir(), f'eval_v1_{time.strftime("%Y%m%d_%H%M%S")}')
+        shutil.move(odir('eval'), dst)
+        print(f'archived {len(old)} first-version evaluation file(s) to {dst}')
     for B in targets:
         run_target(B, st, 'eval')
 
@@ -526,72 +680,77 @@ def report():
     import nb_round4 as R4m
     pd.set_option('display.width', 250)
     st = json.load(open(settings_path())) if os.path.exists(settings_path()) else {}
-    f = sorted(glob.glob(os.path.join(odir('eval'), 'r13_t*.csv')))
-    f = [x for x in f if not x.endswith('_landmarks.csv')]
+    f = sorted(x for x in glob.glob(os.path.join(odir('eval'), 'r13_t*.csv')) if x.endswith(tuple(f'{i:02d}.csv' for i in PEOPLE)))
     if not f:
         print('no evaluation results yet')
         return
     df = pd.concat([pd.read_csv(x) for x in f], ignore_index=True)
     lm = pd.concat([pd.read_csv(x.replace('.csv', '_landmarks.csv')) for x in f], ignore_index=True)
-    a = st.get('alpha', 0.0)
-    fuse = f'fuse_{a:g}'
-    ridge = f'ridge_{st.get("gamma", 1.0):g}'
-    print(f'ROUND 13: relative profiles vs SCORE recovery on NeuroBridge (seed {SEED}, {MON}); locked settings {st}')
+    a, rule = st.get('alpha', 0.0), st.get('rule', 'score')
+    fuse, ridge = f'fuse_{a:g}', f'ridge_{st.get("gamma", 1.0):g}'
+    rawc = 'raw_pop' if st.get('variant', {}).get('target') == 'pop' else 'raw'
+    print(f'ROUND 13: relative profiles vs SCORE recovery on NeuroBridge (seed {SEED}, {MON})')
+    print(f'  locked on person {st.get("dev_person")}: variant {st.get("variant_name")} scored with {rule}; alpha {a:g}; '
+          f'ridge gamma {st.get("gamma")}; published default = {vname(DEFAULT)} / score')
     for x in f:
         meta = json.load(open(x.replace('.csv', '_meta.json')))
         print(f"  t{meta['target']}: gate {meta['checkpoint_gate']}; {meta['concept_check']}")
-    print('\nLANDMARKS (inferred bank, by budget)')
-    print(lm.groupby('k')[['m', 'neff', 'precision']].mean().round(2).to_string())
-    s = df[(df.k == K_MAIN) & (df['query'] == 's4R4')].copy()
+    print('\nLANDMARKS (inferred bank)')
+    print(lm.groupby(['variant', 'k'])[['m', 'neff', 'precision']].mean().round(2).to_string())
+    s = df[(df.k == K_MAIN) & (df['query'] == 's4R4') & df.target.isin(TEST)].copy()
     s['cond2'] = s.cond.str.replace(r'shuffled_\d', 'shuffled', regex=True)
-    T = s[s.target.isin(TEST)].groupby(['cond2', 'method']).top1.mean().unstack(0).round(2)
-    print(f'\nk = {K_MAIN}, s4R4, cosine unless named (people 2-10)')
-    print(T.to_string())
-    g = lambda c, m, q='s4R4', k=K_MAIN: per_target(df, k, c, m, q)  # noqa: E731
-    print('\nPRIMARY')
+    print(f'\nk = {K_MAIN}, s4R4, people 2-10 (rows = method, columns = variant / bank)')
+    print(s.groupby(['variant', 'cond2', 'method']).top1.mean().unstack([0, 1]).round(2).to_string())
+    g = lambda var, c, m, q='s4R4', k=K_MAIN: per_target(df, k, var, c, m, q)  # noqa: E731
+    print('\nPRIMARY (fixed at lock, before evaluation)')
     if a == 0.0:
-        print('  development chose alpha = 0, so fuse == score by construction: the profile readout is not carried '
-              'forward (decision gate). Diagnostics below.')
+        print('  development chose alpha = 0: fuse == recovery by construction; profiles are not carried forward.')
     else:
-        R4m.pstats(g('inferred', fuse), g('inferred', 'score'), f'{fuse} - score, inferred bank, k = {K_MAIN}, s4R4', primary=True)
-    print('\nSECONDARY')
+        R4m.pstats(g('chosen', 'inferred', fuse), g('chosen', 'inferred', rule),
+                   f'{fuse} - recovery, chosen variant, inferred bank, k = {K_MAIN}, s4R4', primary=True)
+    print('\nKEY SECONDARY: is anything better than no calibration?')
     ps = {}
-    ps['prof vs score'] = R4m.pstats(g('inferred', 'prof'), g('inferred', 'score'), 'profile - rotation (standalone), inferred')
-    ps['prof vs dot'] = R4m.pstats(g('inferred', 'prof'), g('inferred', 'dot'), 'Pearson profile - bilinear dot control, inferred')
-    ps['score vs raw'] = R4m.pstats(g('inferred', 'score'), g('inferred', 'raw'), 'SCORE recovery - unadapted cosine')
-    # added after the development run (report only; locked settings unchanged): on person 1 the frozen recovery scored
-    # BELOW the unadapted readout, so a fusion gain over recovery must also be read against doing nothing
-    R4m.pstats(g('inferred', fuse), g('inferred', 'raw'), f'{fuse} - unadapted cosine (is anything better than no calibration?)')
-    R4m.pstats(g('inferred', 'score_csls'), g('inferred', 'raw'), 'SCORE recovery with support-CSLS - unadapted cosine')
-    R4m.pstats(g('oracle_all', 'score'), g('inferred', 'raw'), 'all 100 TRUE pairs, same rotation - unadapted cosine')
-    ps['ridge vs score'] = R4m.pstats(g('inferred', ridge), g('inferred', 'score'), f'{ridge} - score, same pseudo-pairs')
-    sh = s[s.cond.str.startswith('shuffled') & s.target.isin(TEST)]
-    for meth in ('score', 'prof'):
-        R4m.pstats(g('inferred', meth), sh[sh.method == meth].groupby('target').top1.mean(),
-                   f'{meth}: inferred - shuffled pairs (does correspondence matter?)')
+    ps['chosen recovery vs none'] = R4m.pstats(g('chosen', 'inferred', rule), g('none', 'none', rawc),
+                                               f'chosen recovery ({rule}) - no calibration ({rawc})')
+    ps['chosen fuse vs none'] = R4m.pstats(g('chosen', 'inferred', fuse), g('none', 'none', rawc), f'chosen {fuse} - no calibration')
+    ps['default vs none'] = R4m.pstats(g('default', 'inferred', 'score'), g('none', 'none', 'raw'), 'published SCORE default - no calibration')
+    ps['chosen vs default'] = R4m.pstats(g('chosen', 'inferred', rule), g('default', 'inferred', 'score'), 'chosen - published default recovery')
     print(f'  HOLM: {holm(ps)}')
+    print('\nPROFILES')
+    R4m.pstats(g('chosen', 'inferred', 'prof'), g('chosen', 'inferred', rule), 'profile - recovery (standalone), chosen')
+    R4m.pstats(g('chosen', 'inferred', 'prof'), g('chosen', 'inferred', 'dot'), 'Pearson profile - bilinear dot control')
+    R4m.pstats(g('default', 'inferred', fuse), g('default', 'inferred', 'score'), f'{fuse} - recovery, published default (the original spec contrast)')
+    R4m.pstats(g('chosen', 'inferred', ridge), g('chosen', 'inferred', rule), f'{ridge} - recovery, same pseudo-pairs')
+    sh = s[(s.variant == 'chosen') & s.cond.str.startswith('shuffled')]
+    for meth in (rule, 'prof'):
+        R4m.pstats(g('chosen', 'inferred', meth), sh[sh.method == meth].groupby('target').top1.mean(),
+                   f'{meth}: inferred - shuffled pairs (does correspondence matter?)')
     print('\nTRUE PAIRS (same EEG rows and weights; labelled diagnostic)')
-    for meth in ('score', 'prof', 'dot', fuse):
-        R4m.pstats(g('true', meth), g('inferred', meth), f'{meth}: true - inferred (correspondence bottleneck)')
-    R4m.pstats(g('true', 'prof'), g('true', 'score'), 'true pairs: profile - rotation')
-    R4m.pstats(g('oracle_all', 'score'), g('inferred', 'score'), 'all k true pairs (labelled few-shot) - inferred, rotation')
-    print('\nTRANSDUCTIVE REFERENCE (fits on the evaluation batch; not comparable to the primary)')
+    for meth in (rule, 'prof', fuse):
+        R4m.pstats(g('chosen', 'true', meth), g('chosen', 'inferred', meth), f'{meth}: true - inferred (correspondence bottleneck)')
+    R4m.pstats(g('chosen', 'true', 'prof'), g('chosen', 'true', rule), 'true pairs: profile - rotation')
+    R4m.pstats(g('chosen', 'oracle_all', rule), g('none', 'none', rawc), 'all 100 TRUE pairs, chosen rotation - no calibration')
+    print('\nTRANSDUCTIVE REFERENCE (published-style, fits on the evaluation batch; not comparable to the primary)')
     for q in QSETS:
-        print(f'  {q}: transductive SCORE {g("transductive", "trans_score", q).reindex(TEST).mean():.2f} vs frozen '
-              f'{g("inferred", "score", q).reindex(TEST).mean():.2f} vs raw {g("inferred", "raw", q).reindex(TEST).mean():.2f}')
-    print('\nBUDGET (inferred, s4R4, people 2-10)')
-    b = df[(df.cond == 'inferred') & (df['query'] == 's4R4') & df.target.isin(TEST)]
-    print(b[b.method.isin(['raw', 'score', 'prof', fuse, ridge])].groupby(['method', 'k']).top1.mean().unstack('k').round(2).to_string())
-    print('\nQUERY NOISE (k = 100, inferred)')
+        print(f'  {q}: transductive {g("none", "transductive", "trans_score", q).reindex(TEST).mean():.2f} | chosen '
+              f'{g("chosen", "inferred", rule, q).reindex(TEST).mean():.2f} | none {g("none", "none", rawc, q).reindex(TEST).mean():.2f}')
+    print('\nBUDGET (s4R4, people 2-10)')
+    b = df[(df['query'] == 's4R4') & df.target.isin(TEST)]
+    b = b[((b.variant == 'none') & b.method.isin(['raw', 'raw_pop'])) |
+          ((b.cond == 'inferred') & b.method.isin([rule, 'score', 'prof', fuse])) |
+          ((b.variant == 'chosen') & (b.cond == 'true') & (b.method == rule))]
+    b = b.assign(row=b.variant + '|' + b.cond + '|' + b.method)
+    print(b.groupby(['row', 'k']).top1.mean().unstack('k').round(2).to_string())
+    print('\nQUERY NOISE (k = 100, chosen recovery vs no calibration)')
     for q in ('s4R1', 's4R20', 'bench'):
-        R4m.pstats(g('inferred', fuse if a else 'prof', q), g('inferred', 'score', q), f'{fuse if a else "prof"} - score, {q}')
-    print('\nONLY-ONE-CORRECT COUNTS (k = 100, s4R4, inferred; summed over draws and query draws)')
+        R4m.pstats(g('chosen', 'inferred', rule, q), g('none', 'none', rawc, q), f'{q}')
+    print('\nONLY-ONE-CORRECT COUNTS (k = 100, s4R4, chosen, inferred)')
     for x in f:
         r = np.load(x.replace('.csv', '_ranks.npz'))
-        keys = [k for k in r.files if k.startswith('inferred|score|')]
-        so = sum(int(((r[k] == 0) & (r[k.replace('|score|', '|prof|')] != 0)).sum()) for k in keys)
-        po = sum(int(((r[k] != 0) & (r[k.replace('|score|', '|prof|')] == 0)).sum()) for k in keys)
-        print(f'  {os.path.basename(x)}: rotation only {so}, profile only {po}')
+        keys = [k_ for k_ in r.files if k_.startswith(f'chosen|inferred|{rule}|')]
+        so = sum(int(((r[k_] == 0) & (r[k_.replace(f'|{rule}|', '|prof|')] != 0)).sum()) for k_ in keys)
+        po = sum(int(((r[k_] != 0) & (r[k_.replace(f'|{rule}|', '|prof|')] == 0)).sum()) for k_ in keys)
+        print(f'  {os.path.basename(x)}: recovery only {so}, profile only {po}')
     pd.DataFrame(R4m.CONTRASTS).to_csv(os.path.join(odir(), 'contrasts_per_person.csv'), index=False)
 
 
