@@ -617,8 +617,8 @@ def dev():
     for key in GRID:
         vals = {}
         for val in GRID[key]:
-            tag = {'mm': f'mm{int(val) if isinstance(val, bool) else val}', 'target': f'|{val}|', 'rho': f'|rho{val:g}|',
-                   'q': f'|q{val:g}|', 'steps': f'|s{val}|', 'agree': f'|ag{int(val)}'}[key]
+            tag = (f'mm{int(val)}|' if key == 'mm' else f'|{val}|' if key == 'target' else f'|rho{val:g}|' if key == 'rho'
+                   else f'|q{val:g}|' if key == 'q' else f'|s{val}|' if key == 'steps' else f'|ag{int(val)}')
             vals[val] = g[[tag in vn for vn in g.index]].best.mean()
         print(f'  mean over the grid by {key}: ' + ', '.join(f'{k_}: {v_:.2f}' for k_, v_ in vals.items()))
     print(f"  CHOSEN: {vname(ch['variant'])} scored with {rule} ({ch['search_top1']:.2f})")
