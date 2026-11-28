@@ -1,0 +1,206 @@
+====================================================================================================
+ROUND 14A: clean support x noisy query (200-way, B queries vs all 200 candidates; seed 2026)
+  t1: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: Round 13 file not found
+  t2: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 1.49e-06
+  t3: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 3.73e-07
+  t4: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 3.73e-07
+  t5: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 0.00e+00
+  t6: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 0.00e+00
+  t7: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 0.00e+00
+  t8: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 0.00e+00
+  t9: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 0.00e+00
+  t10: variant mm0|pop|rho1|q1|s2|ag1 (rho 1.0), 20 session-3 repeats; gate: max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 1.78e-15
+
+TOP-1 %, people 2-10 (rows = method, columns = support presentations R_s / query presentations R_q)
+rs            4             20       
+rq            4      20     4      20
+method                               
+base        9.31  15.02   9.41  15.28
+center      8.83  14.57   8.72  15.33
+rec         9.29  14.37   9.37  16.06
+rec_all     9.74  15.43  10.15  16.39
+rec_bcsls  10.73  18.83  11.44  19.61
+rec_cv      9.23  14.72  10.72  16.72
+rec_true    9.33  14.69   9.50  16.11
+sup_rot    10.80  17.20  12.20  22.50
+trans       8.49  19.50   8.44  19.33
+true_cv     9.96  16.06  11.02  17.78
+
+SENSITIVITY: strictly disjoint 100-way (B candidates only; chance 1%)
+rs            4             20       
+rq            4      20     4      20
+method                               
+base       14.23  22.56  14.43  22.78
+center     14.47  22.78  14.31  23.44
+rec        14.80  22.22  15.11  24.00
+rec_all    15.69  23.76  16.06  24.94
+rec_bcsls  16.62  28.17  17.43  29.78
+rec_cv     14.66  22.70  17.11  25.50
+rec_true   15.14  22.91  15.04  23.89
+sup_rot    17.33  26.30  19.35  31.50
+trans      13.46  28.20  13.56  28.39
+true_cv    16.07  24.69  18.02  27.72
+
+LANDMARKS (people 2-10): m and precision by R_s
+         m  precision
+rs                   
+4   44.204      0.406
+20  50.667      0.747
+
+PRIMARY (R_q = 4; cost: R_s = 4 is 400 presentations, ~1.3 min, R_s = 20 is 2,000 presentations, ~6.7 min)
+  [PRIMARY] P1 rec(R_s 20) - rec(R_s 4), R_q 4: mean +0.08 (95% CI -0.41 to +0.59), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=0.6523, LOPO -0.06 to +0.21
+     per person: t2:-0.500, t3:+0.333, t4:-0.833, t5:+1.000, t6:+0.944, t7:+1.167, t8:-0.944, t9:-0.333, t10:-0.111
+  [PRIMARY] P2 rec(R_s 20) - base(R_s 20), R_q 4: mean -0.04 (95% CI -0.57 to +0.52), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.21 to +0.13
+     per person: t2:-1.333, t3:-0.167, t4:+0.333, t5:+0.333, t6:+1.333, t7:+0.333, t8:+0.667, t9:-0.667, t10:-1.167
+  HOLM: {'P1 rec 20 vs 4': 1.0, 'P2 rec vs base': 1.0}
+
+SECONDARY (R_q = 4 unless noted; matched baseline = base at the same R_s)
+  center - base, R_s 4: mean -0.49 (95% CI -0.93 to -0.09), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.0742, LOPO -0.60 to -0.32
+     per person: t2:-1.111, t3:-1.833, t4:+0.222, t5:-0.444, t6:-0.167, t7:-0.611, t8:+0.389, t9:-0.167, t10:-0.667
+  center - base, R_s 20: mean -0.69 (95% CI -1.30 to -0.11), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.0742, LOPO -0.83 to -0.50
+     per person: t2:-2.167, t3:-1.000, t4:+0.500, t5:-0.833, t6:+0.167, t7:-0.500, t8:+0.333, t9:-0.667, t10:-2.000
+  rec_true - base, R_s 4: mean +0.01 (95% CI -0.53 to +0.58), +4/0:0/-5, sign p=1.0000 (non-ties), Wilcoxon p=1.0000, LOPO -0.21 to +0.21
+     per person: t2:-1.556, t3:-0.222, t4:-0.222, t5:-0.167, t6:+0.444, t7:+0.611, t8:+1.778, t9:-0.556, t10:+0.000
+  rec_true - base, R_s 20: mean +0.09 (95% CI -0.63 to +0.74), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.8203, LOPO -0.04 to +0.33
+     per person: t2:-1.833, t3:+1.000, t4:+0.500, t5:+0.833, t6:+1.000, t7:+0.167, t8:+1.167, t9:-0.667, t10:-1.333
+  rec_all - base, R_s 4: mean +0.43 (95% CI -0.09 to +1.09), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.3594, LOPO +0.15 to +0.56
+     per person: t2:-0.389, t3:+0.444, t4:+0.167, t5:+0.611, t6:+1.000, t7:-0.056, t8:+2.667, t9:-0.000, t10:-0.611
+  rec_all - base, R_s 20: mean +0.74 (95% CI +0.15 to +1.37), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0391, LOPO +0.50 to +0.92
+     per person: t2:-0.500, t3:+0.833, t4:+0.833, t5:+0.833, t6:+1.333, t7:+0.333, t8:+2.667, t9:+1.000, t10:-0.667
+  sup_rot - base, R_s 4: mean +1.48 (95% CI +0.68 to +2.33), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0117, LOPO +1.20 to +1.69
+     per person: t2:-0.167, t3:+2.944, t4:+1.444, t5:+1.944, t6:+2.333, t7:+0.833, t8:+3.722, t9:+0.000, t10:+0.278
+  sup_rot - base, R_s 20: mean +2.80 (95% CI +1.48 to +4.33), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +2.21 to +3.17
+     per person: t2:+1.333, t3:+7.500, t4:+2.000, t5:+2.000, t6:+2.500, t7:+2.667, t8:+5.667, t9:+1.667, t10:-0.167
+  rec_bcsls - base, R_s 4: mean +1.42 (95% CI +1.02 to +1.73), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.37 to +1.56
+     per person: t2:+0.556, t3:+1.778, t4:+1.500, t5:+1.722, t6:+1.778, t7:+1.611, t8:+1.778, t9:+0.278, t10:+1.778
+  rec_bcsls - base, R_s 20: mean +2.04 (95% CI +1.28 to +2.74), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.83 to +2.29
+     per person: t2:+0.500, t3:+1.833, t4:+2.167, t5:+2.667, t6:+3.667, t7:+3.167, t8:+2.667, t9:+0.000, t10:+1.667
+  trans - base, R_s 4: mean -0.83 (95% CI -1.75 to +0.06), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.1641, LOPO -1.12 to -0.53
+     per person: t2:-3.167, t3:+1.500, t4:-0.389, t5:-1.278, t6:-1.667, t7:-2.556, t8:+0.167, t9:-0.167, t10:+0.111
+  trans - base, R_s 20: mean -0.96 (95% CI -1.89 to -0.00), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.0977, LOPO -1.29 to -0.71
+     per person: t2:-3.000, t3:+1.667, t4:-0.000, t5:-2.333, t6:-1.500, t7:-2.500, t8:+0.500, t9:-0.667, t10:-0.833
+  rec_cv - base, R_s 4: mean -0.09 (95% CI -0.47 to +0.40), +2/0:0/-7, sign p=0.1797 (non-ties), Wilcoxon p=0.4258, LOPO -0.29 to +0.01
+     per person: t2:-0.278, t3:-0.778, t4:+0.389, t5:-0.833, t6:-0.056, t7:-0.222, t8:+1.556, t9:-0.389, t10:-0.167
+  rec_cv - base, R_s 20: mean +1.31 (95% CI +0.59 to +2.06), +7/0:1/-1, sign p=0.0703 (non-ties), Wilcoxon p=0.0156, LOPO +1.06 to +1.54
+     per person: t2:-0.500, t3:+1.833, t4:+1.000, t5:+1.500, t6:+2.500, t7:+1.667, t8:+3.333, t9:+0.500, t10:+0.000
+  true_cv - base, R_s 4: mean +0.64 (95% CI -0.08 to +1.41), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.2500, LOPO +0.39 to +0.86
+     per person: t2:-1.111, t3:+2.333, t4:+0.556, t5:+0.833, t6:+0.056, t7:+0.833, t8:+2.667, t9:-0.222, t10:-0.167
+  true_cv - base, R_s 20: mean +1.61 (95% CI +0.74 to +2.50), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0117, LOPO +1.31 to +1.88
+     per person: t2:-0.500, t3:+4.000, t4:+2.000, t5:+2.333, t6:+2.000, t7:+0.833, t8:+3.000, t9:+0.667, t10:+0.167
+  rec_true: R_s 20 - R_s 4: mean +0.17 (95% CI -0.28 to +0.64), +6/0:0/-3, sign p=0.5078 (non-ties), Wilcoxon p=0.4961, LOPO +0.03 to +0.32
+     per person: t2:-0.444, t3:+1.167, t4:+0.333, t5:+1.278, t6:+0.500, t7:-0.389, t8:-1.000, t9:+0.056, t10:+0.056
+  rec_all: R_s 20 - R_s 4: mean +0.41 (95% CI +0.06 to +0.76), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0547, LOPO +0.29 to +0.51
+     per person: t2:-0.278, t3:+0.333, t4:+0.278, t5:+0.500, t6:+0.278, t7:+0.444, t8:-0.389, t9:+1.167, t10:+1.333
+  sup_rot: R_s 20 - R_s 4: mean +1.41 (95% CI +0.67 to +2.33), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.02 to +1.57
+     per person: t2:+1.333, t3:+4.500, t4:+0.167, t5:+0.333, t6:+0.111, t7:+1.889, t8:+1.556, t9:+1.833, t10:+0.944
+  query noise (R_q = 20):
+  rec - base, R_s 20, R_q 20: mean +0.78 (95% CI -1.00 to +2.39), +6/0:1/-2, sign p=0.2891 (non-ties), Wilcoxon p=0.1953, LOPO +0.25 to +1.50
+     per person: t2:-5.000, t3:+1.500, t4:+2.000, t5:+5.000, t6:-0.500, t7:+1.000, t8:+2.000, t9:+1.000, t10:+0.000
+  rec_true - base, R_s 20, R_q 20: mean +0.83 (95% CI -0.78 to +2.33), +5/0:3/-1, sign p=0.2188 (non-ties), Wilcoxon p=0.3125, LOPO +0.38 to +1.44
+     per person: t2:-4.000, t3:+2.500, t4:+0.500, t5:+4.500, t6:+0.000, t7:+0.500, t8:+3.500, t9:+0.000, t10:+0.000
+  center - base, R_s 20, R_q 20: mean +0.06 (95% CI -2.06 to +1.89), +4/0:1/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.7422, LOPO -0.50 to +0.88
+     per person: t2:-6.500, t3:+0.000, t4:+2.500, t5:+4.500, t6:-1.000, t7:-2.000, t8:+1.500, t9:+2.000, t10:-0.500
+  P2 on the strictly disjoint 100-way set: mean +0.69 (95% CI -0.13 to +1.63), +5/0:0/-4, sign p=1.0000 (non-ties), Wilcoxon p=0.4258, LOPO +0.37 to +0.85
+     per person: t2:-0.667, t3:-0.500, t4:+0.667, t5:+1.500, t6:+3.167, t7:+0.167, t8:+2.500, t9:-0.000, t10:-0.667
+  shrinkage reconciliation (exploratory; same landmark rows, CV-chosen vs locked rho):
+  rec_cv - rec, R_s 4: mean -0.06 (95% CI -0.33 to +0.24), +3/0:0/-6, sign p=0.5078 (non-ties), Wilcoxon p=0.8203, LOPO -0.16 to -0.01
+     per person: t2:+0.722, t3:-0.222, t4:-0.389, t5:-0.444, t6:-0.389, t7:+0.556, t8:+0.333, t9:-0.222, t10:-0.500
+  true_cv - rec_true, R_s 4: mean +0.63 (95% CI +0.15 to +1.20), +7/0:0/-2, sign p=0.1797 (non-ties), Wilcoxon p=0.0391, LOPO +0.39 to +0.76
+     per person: t2:+0.444, t3:+2.556, t4:+0.778, t5:+1.000, t6:-0.389, t7:+0.222, t8:+0.889, t9:+0.333, t10:-0.167
+  sup_rot - rec_all (all true pairs: CV vs locked rho), R_s 4: mean +1.06 (95% CI +0.62 to +1.52), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +0.87 to +1.19
+     per person: t2:+0.222, t3:+2.500, t4:+1.278, t5:+1.333, t6:+1.333, t7:+0.889, t8:+1.056, t9:+0.000, t10:+0.889
+  rec_cv - rec, R_s 20: mean +1.35 (95% CI +1.02 to +1.76), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.19 to +1.44
+     per person: t2:+0.833, t3:+2.000, t4:+0.667, t5:+1.167, t6:+1.167, t7:+1.333, t8:+2.667, t9:+1.167, t10:+1.167
+  true_cv - rec_true, R_s 20: mean +1.52 (95% CI +1.17 to +1.96), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.33 to +1.62
+     per person: t2:+1.333, t3:+3.000, t4:+1.500, t5:+1.500, t6:+1.000, t7:+0.667, t8:+1.833, t9:+1.333, t10:+1.500
+  sup_rot - rec_all (all true pairs: CV vs locked rho), R_s 20: mean +2.06 (95% CI +1.09 to +3.35), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +1.48 to +2.25
+     per person: t2:+1.833, t3:+6.667, t4:+1.167, t5:+1.167, t6:+1.167, t7:+2.333, t8:+3.000, t9:+0.667, t10:+0.500
+
+DECISION (threshold +3 over matched baseline, R_s 20, R_q 4): rec -0.04, rec_true +0.09, rec_bcsls +2.04; at R_q 20: rec +0.78
+  -> no clean-support effect at the threshold for this estimator and protocol
+
+====================================================================================================
+ROUND 14B: deployable galleries on the frozen decoder (Round 8 evaluator, seed 2026)
+  t1: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 2.98e-06; val G0-model 35.45, G1 44.00 [l21|l31|l41], G2 s 1.5 {'0.5': 45.07500022649765, '1': 45.72499990463257, '1.5': 46.37500062584877}, G2shuf 43.98; anchor cos to G* G0 0.805, Gstar 1.000, G1 0.834, G2 0.848, G2shuf 0.834
+  t2: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 3.55e-15; val G0-model 31.65, G1 40.47 [l21|l31|l40.5], G2 s 1.5 {'0.5': 42.07499876618385, '1': 42.64999881386757, '1.5': 42.849998623132706}, G2shuf 40.40; anchor cos to G* G0 0.803, Gstar 1.000, G1 0.833, G2 0.849, G2shuf 0.833
+  t3: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 1.78e-15; val G0-model 32.12, G1 39.90 [l21|l31|l41], G2 s 1.0 {'0.5': 40.7999986410141, '1': 41.649999022483826, '1.5': 41.37499913573265}, G2shuf 39.82; anchor cos to G* G0 0.788, Gstar 1.000, G1 0.819, G2 0.835, G2shuf 0.819
+  t4: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 3.55e-15; val G0-model 27.32, G1 34.27 [l21|l31|l40.5], G2 s 1.5 {'0.5': 35.52499920129776, '1': 36.074999421834946, '1.5': 36.199998930096626}, G2shuf 34.22; anchor cos to G* G0 0.804, Gstar 1.000, G1 0.834, G2 0.851, G2shuf 0.834
+  t5: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 7.11e-15; val G0-model 32.05, G1 40.85 [l21|l31|l40.5], G2 s 1.0 {'0.5': 42.42499887943268, '1': 43.24999883770943, '1.5': 43.0999992787838}, G2shuf 40.85; anchor cos to G* G0 0.792, Gstar 1.000, G1 0.823, G2 0.838, G2shuf 0.823
+  t6: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 3.55e-15; val G0-model 35.20, G1 43.87 [l21|l31|l41], G2 s 1.5 {'0.5': 45.37499934434891, '1': 46.59999907016754, '1.5': 46.94999933242798}, G2shuf 43.92; anchor cos to G* G0 0.794, Gstar 1.000, G1 0.825, G2 0.842, G2shuf 0.825
+  t7: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 1.78e-15; val G0-model 29.20, G1 35.62 [l21|l31|l40.5], G2 s 1.5 {'0.5': 36.59999921917915, '1': 37.67499879002571, '1.5': 38.47499892115593}, G2shuf 35.57; anchor cos to G* G0 0.798, Gstar 1.000, G1 0.829, G2 0.844, G2shuf 0.829
+  t8: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 7.11e-15; val G0-model 28.70, G1 36.42 [l21|l31|l40.5], G2 s 1.5 {'0.5': 37.27499932050705, '1': 37.549999356269836, '1.5': 37.57499918341637}, G2shuf 36.47; anchor cos to G* G0 0.792, Gstar 1.000, G1 0.824, G2 0.840, G2shuf 0.824
+  t9: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 1.78e-15; val G0-model 32.30, G1 40.37 [l21|l31|l41], G2 s 1.5 {'0.5': 41.57499872148037, '1': 42.49999888241291, '1.5': 42.899999395012856}, G2shuf 40.45; anchor cos to G* G0 0.804, Gstar 1.000, G1 0.833, G2 0.849, G2shuf 0.833
+  t10: gate max |diff| vs Round 8 (G0, G*; zero, cos) over 24 cells: 7.11e-15; val G0-model 28.95, G1 35.70 [l21|l30.5|l40.5], G2 s 1.5 {'0.5': 36.5249989926815, '1': 37.499998956918716, '1.5': 38.32499906420708}, G2shuf 35.52; anchor cos to G* G0 0.793, Gstar 1.000, G1 0.822, G2 0.840, G2shuf 0.822
+
+zero, cos: top-1 % (people 2-10)
+query    s4R1   s4R4  s4R20  bench
+gallery                           
+G0       3.77   9.20  15.67  18.28
+G1       4.69  11.87  19.41  21.96
+G2       4.86  12.85  21.37  26.44
+G2shuf   4.65  11.86  19.35  21.93
+Gstar    6.59  19.14  33.91  42.63
+
+zero, csls_batch: top-1 % (people 2-10)
+query    s4R1   s4R4  s4R20  bench
+gallery                           
+G0       4.04  10.12  18.89  23.07
+G1       5.19  12.96  23.04  28.37
+G2       5.22  14.30  25.83  33.50
+G2shuf   5.17  12.94  22.98  28.28
+Gstar    7.38  21.02  41.65  53.06
+
+rigid, cos: top-1 % (people 2-10)
+query    s4R1   s4R4  s4R20  bench
+gallery                           
+G0       4.99  10.02  13.50  17.02
+G1       5.59  11.77  17.00  21.00
+G2       6.13  12.94  19.04  23.39
+G2shuf   5.60  11.77  17.00  20.93
+Gstar    6.42  22.94  45.96  62.22
+
+rigid, csls_batch: top-1 % (people 2-10)
+query    s4R1   s4R4  s4R20  bench
+gallery                           
+G0       5.07  11.86  19.52  25.81
+G1       5.89  14.34  24.93  31.11
+G2       6.48  16.16  27.87  36.09
+G2shuf   5.88  14.34  24.91  31.13
+Gstar    8.11  28.07  57.69  75.11
+
+margin of the correct image over the hardest distractor (zero, cos, s4R4):
+gallery
+G0       -0.0914
+G1       -0.0802
+G2       -0.0806
+G2shuf   -0.0803
+Gstar    -0.0737
+
+REPRODUCTION: G0 9.20 (Round 8: 9.20), G* 19.14 (Round 8: 19.14); gap 9.94
+LOCKED TARGETS: +3 -> 12.20, +5 -> 14.20
+
+PRIMARY
+  [PRIMARY] G2 - G0, zero, s4R4, cos: mean +3.64 (95% CI +2.62 to +4.62), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.35 to +3.93
+     per person: t2:+1.778, t3:+2.333, t4:+5.389, t5:+1.333, t6:+2.833, t7:+4.444, t8:+4.389, t9:+4.278, t10:+6.000
+SECONDARY (Holm over three)
+  G2 - G1 (spatial beyond pooled multilevel): mean +0.98 (95% CI +0.64 to +1.25), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +0.90 to +1.10
+     per person: t2:+1.056, t3:+1.222, t4:+1.389, t5:-0.056, t6:+0.722, t7:+1.222, t8:+0.556, t9:+1.611, t10:+1.056
+  G2 - G2shuf (cell positions matter): mean +0.98 (95% CI +0.65 to +1.27), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0078, LOPO +0.90 to +1.10
+     per person: t2:+1.056, t3:+1.222, t4:+1.389, t5:-0.000, t6:+0.611, t7:+1.333, t8:+0.556, t9:+1.611, t10:+1.056
+  G1 - G0 (pooled multilevel): mean +2.67 (95% CI +1.80 to +3.54), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.38 to +2.91
+     per person: t2:+0.722, t3:+1.111, t4:+4.000, t5:+1.389, t6:+2.111, t7:+3.222, t8:+3.833, t9:+2.667, t10:+4.944
+  HOLM: {'G1 - G0': 0.0117, 'G2 - G1': 0.0156, 'G2 - G2shuf': 0.0156}
+OTHER
+  G2 - G0, csls_batch: mean +4.18 (95% CI +3.46 to +4.86), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +3.95 to +4.42
+     per person: t2:+4.889, t3:+3.556, t4:+4.056, t5:+2.222, t6:+3.111, t7:+4.611, t8:+5.222, t9:+3.944, t10:+6.000
+  G2 - G0, rigid k = 500, cos: mean +2.91 (95% CI +1.88 to +3.69), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +2.76 to +3.27
+     per person: t2:+0.056, t3:+3.611, t4:+3.833, t5:+0.833, t6:+3.278, t7:+3.833, t8:+3.278, t9:+4.167, t10:+3.333
+  G2 - G0, s4R1: mean +1.10 (95% CI +0.43 to +1.81), +8/0:0/-1, sign p=0.0391 (non-ties), Wilcoxon p=0.0195, LOPO +0.84 to +1.27
+     per person: t2:+0.056, t3:+0.833, t4:+1.611, t5:-0.278, t6:+0.389, t7:+1.722, t8:+2.167, t9:+0.222, t10:+3.167
+  G2 - G0, s4R20: mean +5.70 (95% CI +4.57 to +6.85), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +5.31 to +6.10
+     per person: t2:+5.167, t3:+6.000, t4:+4.833, t5:+2.500, t6:+6.000, t7:+8.000, t8:+8.833, t9:+5.167, t10:+4.833
+  G2 - G0, bench: mean +8.17 (95% CI +6.24 to +10.19), +9/0:0/-0, sign p=0.0039 (non-ties), Wilcoxon p=0.0039, LOPO +7.65 to +8.71
+     per person: t2:+6.667, t3:+3.833, t4:+6.000, t5:+12.167, t6:+6.333, t7:+11.500, t8:+5.500, t9:+12.333, t10:+9.167
+  gap recovered: 37% of the observed G* - G0 gap (not a claim that all of it is recoverable from images)
+  G2 fixes 621/2182 (28.5%) of queries with G0wrong, Gstar, right
+  G2 fixes 432/12527 (3.4%) of queries with G0wrong, Gstar, wrong

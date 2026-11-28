@@ -1,0 +1,8 @@
+{
+ "target": 9,
+ "variant": "mm0|pop|rho1|q1|s2|ag1",
+ "rho": 1.0,
+ "n3": 20,
+ "gate": "max |diff| vs Round 13 raw_pop (k 100, draw 0, s4R4): 0.00e+00",
+ "minutes": 2.5
+}
